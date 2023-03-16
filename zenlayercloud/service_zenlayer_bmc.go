@@ -50,10 +50,6 @@ func (s *BmcService) DestroyInstance(ctx context.Context, instanceId string) (er
 	request.InstanceIds = []string{instanceId}
 	response, err := s.client.WithBmcClient().ReleaseInstances(request)
 	defer logApiRequest(ctx, "ReleaseInstances", request, response, err)
-	if err != nil {
-		// todo  not found , resource not found
-		return
-	}
 	return
 }
 
@@ -160,7 +156,7 @@ func (s *BmcService) DescribeInstancesByFilter(instanceFilter *InstancesFilter) 
 	}
 	wg.Wait()
 
-	log.Printf("[DEBUG] DescribeInstance requet finished")
+	log.Printf("[DEBUG] DescribeInstance request finished")
 	for _, v := range instanceSetList {
 		instances = append(instances, v.([]*bmc.InstanceInfo)...)
 	}
@@ -230,7 +226,7 @@ func (s *BmcService) DescribeEipAddressesByFilter(filter *EipFilter) (eipAddress
 	}
 	wg.Wait()
 
-	log.Printf("[DEBUG] DescribeEipAddresses requet finished")
+	log.Printf("[DEBUG] DescribeEipAddresses request finished")
 	for _, v := range eipAddressSetList {
 		eipAddresses = append(eipAddresses, v.([]*bmc.EipAddress)...)
 	}
@@ -292,7 +288,7 @@ func (s *BmcService) DescribeDdosIpAddressesByFilter(filter *DDosIpFilter) (ddos
 	}
 	wg.Wait()
 
-	log.Printf("[DEBUG] DescribeEipAddresses requet finished")
+	log.Printf("[DEBUG] DescribeEipAddresses request finished")
 	for _, v := range eipAddressSetList {
 		ddosIpAddress = append(ddosIpAddress, v.([]*bmc.DdosIpAddress)...)
 	}
@@ -439,7 +435,7 @@ func (s *BmcService) DescribeSubnets(ctx context.Context, filter *SubnetFilter) 
 	}
 	wg.Wait()
 
-	log.Printf("[DEBUG] DescribeEipAddresses requet finished")
+	log.Printf("[DEBUG] DescribeEipAddresses request finished")
 	for _, v := range subnetList {
 		subnets = append(subnets, v.([]*bmc.Subnet)...)
 	}
@@ -501,7 +497,7 @@ func (s *BmcService) DescribeVpcsByFilter(ctx context.Context, filter *VpcFilter
 	}
 	wg.Wait()
 
-	log.Printf("[DEBUG] DescribeVpcs requet finished")
+	log.Printf("[DEBUG] DescribeVpcs request finished")
 	for _, v := range vpcList {
 		vpcs = append(vpcs, v.([]*bmc.VpcInfo)...)
 	}
@@ -589,10 +585,6 @@ func (s *BmcService) ReleaseEipAddressById(ctx context.Context, eipId string) (e
 	request.EipIds = []string{eipId}
 	response, err := s.client.WithBmcClient().ReleaseEipAddresses(request)
 	defer logApiRequest(ctx, "ReleaseEipAddresses", request, response, err)
-	if err != nil {
-		// todo  not found , resource not found
-		return
-	}
 	return
 }
 
@@ -636,10 +628,6 @@ func (s *BmcService) ReleaseDDoSIpAddressById(ctx context.Context, ddosIpId stri
 	request.DdosIpIds = []string{ddosIpId}
 	response, err := s.client.WithBmcClient().ReleaseDdosIpAddresses(request)
 	defer logApiRequest(ctx, "ReleaseDdosIPAddresses", request, response, err)
-	if err != nil {
-		// todo  not found , resource not found
-		return
-	}
 	return
 }
 

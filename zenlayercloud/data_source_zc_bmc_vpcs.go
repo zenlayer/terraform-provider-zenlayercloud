@@ -114,7 +114,7 @@ func dataSourceZenlayerCloudVpcs() *schema.Resource {
 						"vpc_status": {
 							Type:        schema.TypeString,
 							Computed:    true,
-							Description: "VPC of the subnet.",
+							Description: "status of the VPC.",
 						},
 					},
 				},

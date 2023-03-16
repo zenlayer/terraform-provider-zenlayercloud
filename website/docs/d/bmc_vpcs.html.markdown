@@ -49,6 +49,6 @@ In addition to all arguments above, the following attributes are exported:
   * `resource_group_id` - The ID of resource group grouped VPC to be queried.
   * `resource_group_name` - The Name of resource group grouped VPC to be queried.
   * `vpc_id` - ID of the VPC.
-  * `vpc_status` - VPC of the subnet.
+  * `vpc_status` - status of the VPC.
 
 

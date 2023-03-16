@@ -172,7 +172,7 @@ func resourceZenlayerCloudDdosIpDelete(ctx context.Context, d *schema.ResourceDa
 			if !ok {
 				return retryError(ctx, errRet)
 			}
-			if ee.Code == "INVALID_DDOS_IP_NOT_FOUND" || ee.Code == "OPERATION_FAILED_RESOURCE_NOT_FOUND" {
+			if ee.Code == "INVALID_DDOS_IP_NOT_FOUND" || ee.Code == ResourceNotFound {
 				return nil
 			}
 			return retryError(ctx, errRet, InternalServerError)
