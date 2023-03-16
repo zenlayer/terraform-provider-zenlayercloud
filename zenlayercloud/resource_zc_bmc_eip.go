@@ -173,7 +173,7 @@ func resourceZenlayerCloudEipDelete(ctx context.Context, d *schema.ResourceData,
 			if !ok {
 				return retryError(ctx, errRet)
 			}
-			if ee.Code == "INVALID_EIP_NOT_FOUND" || ee.Code == "OPERATION_FAILED_RESOURCE_NOT_FOUND" {
+			if ee.Code == "INVALID_EIP_NOT_FOUND" || ee.Code == ResourceNotFound {
 				// EIP doesn't exist
 				return nil
 			}

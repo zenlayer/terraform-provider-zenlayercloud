@@ -419,7 +419,7 @@ func resourceZenlayerCloudInstanceDelete(ctx context.Context, d *schema.Resource
 			if !ok {
 				return retryError(ctx, errRet)
 			}
-			if ee.Code == "INVALID_INSTANCE_NOT_FOUND" {
+			if ee.Code == "INVALID_INSTANCE_NOT_FOUND" || ee.Code == ResourceNotFound {
 				// instance doesn't exist
 				return nil
 			}

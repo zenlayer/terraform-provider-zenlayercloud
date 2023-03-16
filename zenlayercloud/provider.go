@@ -27,6 +27,26 @@ Resources List
 
 Provider Data Sources
 
+Zenlayer Virtual Machine(VM)
+  Data Source
+	zenlayercloud_zones
+	zenlayercloud_images
+	zenlayercloud_instance_types
+	zenlayercloud_security_groups
+	zenlayercloud_instance_types
+	zenlayercloud_disks
+	zenlayercloud_subnets
+
+  Resource
+	zenlayercloud_image
+	zenlayercloud_security_group
+	zenlayercloud_security_group_attachment
+	zenlayercloud_security_group_rule
+	zenlayercloud_instance
+	zenlayercloud_disk
+	zenlayercloud_disk_attachment
+	zenlayercloud_subnet
+
 Bare Metal Cloud(BMC)
   Data Source
 	zenlayercloud_bmc_zones
@@ -47,6 +67,7 @@ Bare Metal Cloud(BMC)
 	zenlayercloud_bmc_eip_association
 	zenlayercloud_bmc_vpc
 	zenlayercloud_bmc_subnet
+
 
 */
 package zenlayercloud
@@ -131,12 +152,19 @@ func resourcesMap() map[string]*schema.Resource {
 		"zenlayercloud_bmc_ddos_ip":             resourceZenlayerCloudDDosIp(),
 		"zenlayercloud_bmc_ddos_ip_association": resourceZenlayerCloudDdosIpAssociationAssociation(),
 		"zenlayercloud_bmc_vpc":                 resourceZenlayerCloudVpc(),
-		"zenlayercloud_bmc_subnet":              resourceZenlayerCloudSubnet(),
-		//"zenlayercloud_cidr"
+		"zenlayercloud_bmc_subnet":              resourceZenlayerCloudBmcSubnet(),
 
-		// zenvm product
+		// vm product
+		"zenlayercloud_image":                     resourceZenlayerCloudVmImage(),
+		"zenlayercloud_instance":                  resourceZenlayerCloudVmInstance(),
+		"zenlayercloud_security_group":            resourceZenlayerCloudSecurityGroup(),
+		"zenlayercloud_security_group_attachment": resourceZenlayerCloudSecurityGroupAttachment(),
+		"zenlayercloud_security_group_rule":       resourceZenlayerCloudSecurityGroupRule(),
+		"zenlayercloud_subnet":                    resourceZenlayerCloudSubnet(),
+		"zenlayercloud_disk":                      resourceZenlayerCloudVmDisk(),
+		"zenlayercloud_disk_attachment":           resourceZenlayerCloudVmDiskAttachment(),
 
-		// sdn product
+		// cloud networking product
 	}
 }
 
@@ -152,9 +180,16 @@ func dataSourcesMap() map[string]*schema.Resource {
 		"zenlayercloud_bmc_vpc_regions":    dataSourceZenlayerCloudVpcRegions(),
 		"zenlayercloud_bmc_vpcs":           dataSourceZenlayerCloudVpcs(),
 		"zenlayercloud_bmc_subnets":        dataSourceZenlayerCloudVpcSubnets(),
-		// zenvm product
 
-		// networking product
+		// vm product
+		"zenlayercloud_security_groups": dataSourceZenlayerCloudSecurityGroups(),
+		"zenlayercloud_zones":           dataSourceZenlayerCloudZones(),
+		"zenlayercloud_images":          dataSourceZenlayerCloudVmImages(),
+		"zenlayercloud_instance_types":  dataSourceZenlayerCloudVmInstanceTypes(),
+		"zenlayercloud_disks":           dataSourceZenlayerCloudDisks(),
+		"zenlayercloud_subnets":         dataSourceZenlayerCloudSubnets(),
+
+		// cloud networking product
 
 	}
 }

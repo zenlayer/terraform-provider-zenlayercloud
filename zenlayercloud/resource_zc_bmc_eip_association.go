@@ -83,7 +83,7 @@ func resourceZenlayerCloudEipAssociationDelete(ctx context.Context, d *schema.Re
 
 	eipState, err := stateConf.WaitForStateContext(ctx)
 	if err != nil {
-		return diag.Errorf("error waiting for association (%s) to be deleted", d.Id(), err)
+		return diag.Errorf("error waiting for association (%s) to be deleted", d.Id())
 	}
 	if eipState.(*bmc.EipAddress).EipStatus != BmcEipStatusAvailable {
 		return diag.Errorf("disassociate eip (%s) failed, current status is %s", request.EipId, eipState.(*bmc.EipAddress).EipStatus)

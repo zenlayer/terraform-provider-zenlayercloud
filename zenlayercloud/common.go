@@ -21,6 +21,8 @@ const (
 	PROVIDER_READ_RETRY_TIMEOUT  = "ZENLAYERCLOUD_READ_RETRY_TIMEOUT"
 	PROVIDER_BMC_CREATE_TIMEOUT  = "ZENLAYERCLOUD_BMC_CREATE_TIMEOUT"
 	PROVIDER_BMC_UPDATE_TIMEOUT  = "ZENLAYERCLOUD_BMC_UPDATE_TIMEOUT"
+	PROVIDER_VM_CREATE_TIMEOUT  = "ZENLAYERCLOUD_VM_CREATE_TIMEOUT"
+	PROVIDER_VM_UPDATE_TIMEOUT  = "ZENLAYERCLOUD_VM_UPDATE_TIMEOUT"
 )
 
 var writeRetry = getEnvDefault(PROVIDER_WRITE_RETRY_TIMEOUT, 5)
@@ -31,6 +33,9 @@ var readRetryTimeout = time.Duration(readRetry) * time.Minute
 
 var bmcCreateTimeout = time.Duration(getEnvDefault(PROVIDER_BMC_CREATE_TIMEOUT, 90)) * time.Minute
 var bmcUpdateTimeout = time.Duration(getEnvDefault(PROVIDER_BMC_UPDATE_TIMEOUT, 90)) * time.Minute
+
+var vmCreateTimeout = time.Duration(getEnvDefault(PROVIDER_VM_CREATE_TIMEOUT, 90)) * time.Minute
+var vmUpdateTimeout = time.Duration(getEnvDefault(PROVIDER_VM_UPDATE_TIMEOUT, 90)) * time.Minute
 
 func getEnvDefault(key string, defVal int) int {
 	val, ex := os.LookupEnv(key)

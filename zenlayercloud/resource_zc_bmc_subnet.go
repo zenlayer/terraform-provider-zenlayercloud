@@ -55,12 +55,12 @@ import (
 	"time"
 )
 
-func resourceZenlayerCloudSubnet() *schema.Resource {
+func resourceZenlayerCloudBmcSubnet() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceZenlayerCloudSubnetCreate,
-		ReadContext:   resourceZenlayerCloudSubnetRead,
-		UpdateContext: resourceZenlayerCloudSubnetUpdate,
-		DeleteContext: resourceZenlayerCloudSubnetDelete,
+		CreateContext: resourceZenlayerCloudBmcSubnetCreate,
+		ReadContext:   resourceZenlayerCloudBmcSubnetRead,
+		UpdateContext: resourceZenlayerCloudBmcSubnetUpdate,
+		DeleteContext: resourceZenlayerCloudBmcSubnetDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -121,7 +121,7 @@ func resourceZenlayerCloudSubnet() *schema.Resource {
 	}
 }
 
-func resourceZenlayerCloudSubnetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceZenlayerCloudBmcSubnetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	subnetId := d.Id()
 
 	bmcService := BmcService{
@@ -183,8 +183,8 @@ func resourceZenlayerCloudSubnetDelete(ctx context.Context, d *schema.ResourceDa
 	return nil
 }
 
-func resourceZenlayerCloudSubnetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	//var _ diag.Diagnostics
+func resourceZenlayerCloudBmcSubnetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+
 	bmcService := BmcService{
 		client: meta.(*connectivity.ZenlayerCloudClient),
 	}
@@ -219,10 +219,10 @@ func resourceZenlayerCloudSubnetUpdate(ctx context.Context, d *schema.ResourceDa
 	}
 
 	d.Partial(false)
-	return resourceZenlayerCloudSubnetRead(ctx, d, meta)
+	return resourceZenlayerCloudBmcSubnetRead(ctx, d, meta)
 }
 
-func resourceZenlayerCloudSubnetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceZenlayerCloudBmcSubnetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 
 	bmcService := BmcService{
 		client: meta.(*connectivity.ZenlayerCloudClient),
@@ -289,10 +289,10 @@ func resourceZenlayerCloudSubnetCreate(ctx context.Context, d *schema.ResourceDa
 		return diag.FromErr(fmt.Errorf("error waiting for bmc subnet (%s) to be created: %v", d.Id(), err))
 	}
 
-	return resourceZenlayerCloudSubnetRead(ctx, d, meta)
+	return resourceZenlayerCloudBmcSubnetRead(ctx, d, meta)
 }
 
-func resourceZenlayerCloudSubnetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceZenlayerCloudBmcSubnetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	instanceId := d.Id()
