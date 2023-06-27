@@ -14,7 +14,7 @@ builds:
     flags:
       - -trimpath
     ldflags:
-      - '-s -w -X main.version={{.Version}} -X main.commit={{.Commit}}'
+      - '-s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/connectivity.ReqClient=Terraform-{{.Version}}'
     goos:
       - freebsd
       - windows

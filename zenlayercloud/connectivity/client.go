@@ -18,6 +18,8 @@ import (
 	vm "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/vm20230313"
 )
 
+var ReqClient = "Terraform-latest"
+
 type ZenlayerCloudClient struct {
 	SecretKeyId       string
 	SecretKeyPassword string
@@ -34,6 +36,7 @@ func (client *ZenlayerCloudClient) WithBmcClient() *bmc.Client {
 	}
 	config := client.NewConfig()
 	client.BmcConn, _ = bmc.NewClient(config, client.SecretKeyId, client.SecretKeyPassword)
+	client.BmcConn.WithRequestClient(ReqClient)
 	return client.BmcConn
 }
 
@@ -43,6 +46,7 @@ func (client *ZenlayerCloudClient) WithVmClient() *vm.Client {
 	}
 	config := client.NewConfig()
 	client.VmConn, _ = vm.NewClient(config, client.SecretKeyId, client.SecretKeyPassword)
+	client.VmConn.WithRequestClient(ReqClient)
 	return client.VmConn
 }
 

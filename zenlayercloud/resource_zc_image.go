@@ -34,6 +34,7 @@ import (
 	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/connectivity"
 	"github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/common"
 	vm "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/vm20230313"
+	"strconv"
 	"time"
 )
 
@@ -59,7 +60,7 @@ func resourceZenlayerCloudVmImage() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(2, 24),
-				Description:  "Image name.",
+				Description:  "Image name. Cannot be modified unless recreated.",
 			},
 			"image_description": {
 				Type:         schema.TypeString,
@@ -179,7 +180,7 @@ func resourceZenlayerCloudImageRead(ctx context.Context, d *schema.ResourceData,
 		client: meta.(*connectivity.ZenlayerCloudClient),
 	}
 
-	var imageInfo *vm.ImageInfo
+	var imageInfo *vm.DescribeImageResponseParams
 	var errRet error
 
 	err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutRead)-time.Minute, func() *resource.RetryError {
@@ -214,7 +215,8 @@ func resourceZenlayerCloudImageRead(ctx context.Context, d *schema.ResourceData,
 	// image info
 	_ = d.Set("image_name", imageInfo.ImageName)
 	_ = d.Set("image_description", imageInfo.ImageDescription)
-	_ = d.Set("image_size", imageInfo.ImageSize)
+	imageSize, _ := strconv.Atoi(imageInfo.ImageSize)
+	_ = d.Set("image_size", common.Integer(imageSize))
 
 	return diags
 

@@ -209,19 +209,16 @@ func (s *VmService) CreateSecurityGroupRule(ctx context.Context, info securityGr
 	return ruleId, err
 }
 
-func (s *VmService) DescribeImageById(ctx context.Context, imageId string) (image *vm.ImageInfo, err error) {
-	var request = vm.NewDescribeImagesRequest()
-	request.ImageIds = []string{imageId}
-	response, err := s.client.WithVmClient().DescribeImages(request)
-	logApiRequest(ctx, "DescribeImages", request, response, err)
+func (s *VmService) DescribeImageById(ctx context.Context, imageId string) (image *vm.DescribeImageResponseParams, err error) {
+	var request = vm.NewDescribeImageRequest()
+	request.ImageId = imageId
+	response, err := s.client.WithVmClient().DescribeImage(request)
+	logApiRequest(ctx, "DescribeImage", request, response, err)
 	if err != nil {
 		return nil, err
 	}
-	if len(response.Response.DataSet) < 0 {
-		return
-	}
-	return response.Response.DataSet[0], nil
 
+	return response.Response, nil
 }
 
 func (s *VmService) ModifyImage(ctx context.Context, imageId string, imageName string, imageDesc string) error {
@@ -576,6 +573,15 @@ func (s *VmService) ModifyDiskName(ctx context.Context, diskId string, diskName 
 	request.DiskName = diskName
 	response, err := s.client.WithVmClient().ModifyDisksAttributes(request)
 	defer logApiRequest(ctx, "ModifyDisksAttributes", request, response, err)
+	return err
+}
+
+func (s *VmService) ModifyDiskResourceGroupId(ctx context.Context, diskId string, resourceGroupId string) error {
+	request := vm.NewModifyDisksResourceGroupRequest()
+	request.DiskIds = []string{diskId}
+	request.ResourceGroupId = resourceGroupId
+	response, err := s.client.WithVmClient().ModifyDisksResourceGroup(request)
+	defer logApiRequest(ctx, "ModifyDisksResourceGroup", request, response, err)
 	return err
 }
 
