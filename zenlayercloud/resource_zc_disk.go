@@ -74,7 +74,7 @@ func resourceZenlayerCloudVmDisk() *schema.Resource {
 			"resource_group_id": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "The ID of resource group grouped disks to be queried.",
+				Description: "The resource group id the disk belongs to.",
 			},
 			"charge_type": {
 				Type:         schema.TypeString,
@@ -194,6 +194,20 @@ func resourceZenlayerCloudVmDiskUpdate(ctx context.Context, d *schema.ResourceDa
 	if d.HasChange("name") {
 		err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate)-time.Minute, func() *resource.RetryError {
 			err := vmService.ModifyDiskName(ctx, diskId, d.Get("name").(string))
+			if err != nil {
+				return retryError(ctx, err, InternalServerError, common.NetworkError)
+			}
+			return nil
+		})
+
+		if err != nil {
+			return diag.FromErr(err)
+		}
+	}
+
+	if d.HasChange("resource_group_id") {
+		err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate)-time.Minute, func() *resource.RetryError {
+			err := vmService.ModifyDiskResourceGroupId(ctx, diskId, d.Get("resource_group_id").(string))
 			if err != nil {
 				return retryError(ctx, err, InternalServerError, common.NetworkError)
 			}

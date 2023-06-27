@@ -31,6 +31,7 @@ The following arguments are supported:
 * `charge_type` - (Optional, String, ForceNew) Charge type of disk.
 * `force_delete` - (Optional, Bool) Indicate whether to force delete the data disk. Default is `false`. If set true, the disk will be permanently deleted instead of being moved into the recycle bin.
 * `name` - (Optional, String) The name of the disk.
+* `resource_group_id` - (Optional, String) The resource group id the disk belongs to.
 
 ## Attributes Reference
 
