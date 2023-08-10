@@ -25,6 +25,7 @@ const (
 	BmcInstanceStatusBooting       = "BOOTING"
 	BmcInstanceStatusStopping      = "STOPPING"
 	BmcInstanceStatusRecycle       = "RECYCLE"
+	BmcInstanceStatusRecycling     = "RECYCLING"
 
 	BmcSubnetStatusAvailable         = "AVAILABLE"
 	BmcSubnetStatusCreating          = "CREATING"
@@ -84,6 +85,7 @@ var (
 		BmcInstanceStatusStopping,
 		BmcInstanceStatusBooting,
 		BmcInstanceStatusInstalling,
+		BmcInstanceStatusRecycling,
 	}
 	SubnetOperatingStatus = []string{
 		BmcSubnetStatusCreating,
