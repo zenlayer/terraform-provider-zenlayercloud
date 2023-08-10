@@ -148,6 +148,10 @@ func resourceZenlayerCloudVmDiskDelete(ctx context.Context, d *schema.ResourceDa
 			return nil
 		}
 
+		if diskIsOperating(disk.DiskStatus) {
+			return resource.RetryableError(fmt.Errorf("waiting for disk %s recycling, current status: %s", disk.DiskId, disk.DiskStatus))
+		}
+
 		return resource.NonRetryableError(fmt.Errorf("disk status is not recycle, current status %s", disk.DiskStatus))
 	})
 
@@ -371,6 +375,7 @@ func BuildDiskState(vmService *VmService, diskId string, ctx context.Context, d 
 
 func diskIsOperating(status string) bool {
 	return IsContains([]string{
+		VmDiskStatusRecycling,
 		VmDiskStatusAttaching,
 		VmDiskStatusDetaching,
 		VmDiskStatusCreating,

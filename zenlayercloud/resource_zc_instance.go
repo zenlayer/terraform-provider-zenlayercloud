@@ -84,6 +84,7 @@ func resourceZenlayerCloudVmInstance() *schema.Resource {
 			vmInternetMaxBandwidthOutForceNew(),
 			vmTrafficPackageSizeForceNew(),
 			vmTrafficPackageSizeValidFunc(),
+			vmTrafficPackageSizeForPostPaidFunc(),
 		),
 		Schema: map[string]*schema.Schema{
 			"availability_zone": {
@@ -153,7 +154,7 @@ func resourceZenlayerCloudVmInstance() *schema.Resource {
 			"traffic_package_size": {
 				Type:        schema.TypeFloat,
 				Optional:    true,
-				Description: "Traffic package size. Only valid when the charge type of instance is `ByTrafficPackage`.",
+				Description: "Traffic package size. Only valid when the charge type of instance is `ByTrafficPackage` and the instance charge type is `PREPAID`.",
 			},
 			"subnet_id": {
 				Type:        schema.TypeString,
@@ -244,7 +245,22 @@ func vmTrafficPackageSizeValidFunc() schema.CustomizeDiffFunc {
 		return value != VmInternetChargeTypeTrafficPackage
 	}, func(ctx context.Context, diff *schema.ResourceDiff, i interface{}) error {
 		if _, ok := diff.GetOk("traffic_package_size"); ok {
-			return fmt.Errorf("traffic_package_size can't be set as the internet charge type of instance is not `ByTrafficPackage`")
+			return fmt.Errorf("traffic_package_size can't be set as the internet charge type of instance is not `%s`", VmInternetChargeTypeTrafficPackage)
+		}
+		return nil
+	})
+}
+
+func vmTrafficPackageSizeForPostPaidFunc() schema.CustomizeDiffFunc {
+
+	return customdiff.If(func(ctx context.Context, d *schema.ResourceDiff, meta interface{}) bool {
+		internetType := d.Get("internet_charge_type")
+		chargeType := d.Get("instance_charge_type")
+		return internetType == VmInternetChargeTypeTrafficPackage && chargeType == VmChargeTypePostpaid
+
+	}, func(ctx context.Context, diff *schema.ResourceDiff, i interface{}) error {
+		if _, ok := diff.GetOk("traffic_package_size"); ok {
+			return fmt.Errorf("traffic_package_size can't be set for post paid instance with internet type `%s`", VmInternetChargeTypeTrafficPackage)
 		}
 		return nil
 	})
@@ -304,6 +320,10 @@ func resourceZenlayerCloudVmInstanceDelete(ctx context.Context, d *schema.Resour
 		if instance.InstanceStatus == VmInstanceStatusRecycle {
 			//in recycling
 			return nil
+		}
+
+		if vmInstanceIsOperating(instance.InstanceStatus) {
+			return resource.RetryableError(fmt.Errorf("waiting for instance %s recycling, current status: %s", instance.InstanceId, instance.InstanceStatus))
 		}
 
 		return resource.NonRetryableError(fmt.Errorf("vm instance status is not recycle, current status %s", instance.InstanceStatus))
@@ -519,7 +539,7 @@ func resourceZenlayerCloudVmInstanceCreate(ctx context.Context, d *schema.Resour
 		request.Password = v.(string)
 	}
 	request.InternetChargeType = d.Get("internet_charge_type").(string)
-	if request.InternetChargeType == VmInternetChargeTypeTrafficPackage {
+	if request.InternetChargeType == VmInternetChargeTypeTrafficPackage && request.InstanceChargeType == VmChargeTypePrepaid {
 		if v, ok := d.GetOk("traffic_package_size"); ok {
 			request.TrafficPackageSize = common.Float64(v.(float64))
 		} else {
@@ -617,7 +637,7 @@ func resourceZenlayerCloudVmInstanceRead(ctx context.Context, d *schema.Resource
 			return retryError(ctx, errRet)
 		}
 		if instance != nil && vmInstanceIsOperating(instance.InstanceStatus) {
-			return resource.RetryableError(fmt.Errorf("waiting for instance %s operation", instance.InstanceId))
+			return resource.RetryableError(fmt.Errorf("waiting for instance %s operation, current status: %s", instance.InstanceId, instance.InstanceStatus))
 		}
 		return nil
 	})
@@ -647,7 +667,7 @@ func resourceZenlayerCloudVmInstanceRead(ctx context.Context, d *schema.Resource
 	_ = d.Set("instance_name", instance.InstanceName)
 	_ = d.Set("internet_charge_type", instance.InternetChargeType)
 	_ = d.Set("internet_max_bandwidth_out", instance.InternetMaxBandwidthOut)
-	if instance.InternetChargeType == VmInternetChargeTypeTrafficPackage {
+	if instance.InternetChargeType == VmInternetChargeTypeTrafficPackage && instance.InstanceChargeType == VmChargeTypePrepaid {
 		_ = d.Set("traffic_package_size", *instance.TrafficPackageSize)
 	}
 	_ = d.Set("subnet_id", instance.SubnetId)
@@ -656,7 +676,7 @@ func resourceZenlayerCloudVmInstanceRead(ctx context.Context, d *schema.Resource
 	_ = d.Set("public_ip_addresses", instance.PublicIpAddresses)
 	_ = d.Set("private_ip_addresses", instance.PrivateIpAddresses)
 	_ = d.Set("instance_status", instance.InstanceStatus)
-	if instance.SystemDisk != nil{
+	if instance.SystemDisk != nil {
 		_ = d.Set("system_disk_size", instance.SystemDisk.DiskSize)
 	}
 	_ = d.Set("create_time", instance.CreateTime)

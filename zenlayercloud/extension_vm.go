@@ -18,6 +18,7 @@ const (
 	VmInstanceStatusStopping     = "STOPPING"
 	VmInstanceStatusReleasing    = "RELEASING"
 	VmInstanceStatusRecycle      = "RECYCLE"
+	VmInstanceStatusRecycling    = "RECYCLING"
 
 	VmImageTypePublic = "PUBLIC_IMAGE"
 	VmImageTypeCustom = "CUSTOM_IMAGE"
@@ -39,6 +40,7 @@ const (
 	VmDiskStatusCreating  = "CREATING"
 	VmDiskStatusDeleting  = "DELETING"
 	VmDiskStatusRecycle   = "RECYCLED"
+	VmDiskStatusRecycling = "RECYCLING"
 )
 
 var (
@@ -83,6 +85,7 @@ var (
 		VmInstanceStatusBooting,
 		VmInstanceStatusReleasing,
 		VmInstanceStatusRebuilding,
+		VmInstanceStatusRecycling,
 	}
 )
 
