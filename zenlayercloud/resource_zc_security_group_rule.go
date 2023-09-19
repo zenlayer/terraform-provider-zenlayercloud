@@ -19,7 +19,6 @@ Example Usage
 	  cidr_ip    		= "10.0.0.0/16"
 	  ip_protocol       = "tcp"
 	  port_range        = "80"
-	  priority          = 50
 	}
 
 ```
@@ -58,20 +57,13 @@ func resourceZenlayerCloudSecurityGroupRule() *schema.Resource {
 				ValidateFunc: validation.StringInSlice(SecurityGroupRuleDirection, false),
 				Description:  "The direction of the rule.",
 			},
-			"priority": {
-				Type:         schema.TypeInt,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.IntBetween(1, 100),
-				Description:  "The priority of the rule.",
-			},
 			"policy": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Default:      "accept",
 				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice(SecurityGroupRulePolicy, false),
-				Description:  "The priority of the rule, currently only `accept` is supported.",
+				Description:  "The policy of the rule, currently only `accept` is supported.",
 			},
 			"ip_protocol": {
 				Type:         schema.TypeString,
@@ -154,7 +146,6 @@ func resourceZenlayerCloudSecurityGroupRuleCreate(ctx context.Context, d *schema
 		info := securityGroupRuleBasicInfo{
 			SecurityGroupId: d.Get("security_group_id").(string),
 			Direction:       d.Get("direction").(string),
-			Priority:        d.Get("priority").(int),
 			IpProtocol:      d.Get("ip_protocol").(string),
 			PortRange:       d.Get("port_range").(string),
 			CidrIp:          d.Get("cidr_ip").(string),
@@ -201,7 +192,6 @@ func resourceZenlayerCloudSecurityGroupRuleRead(ctx context.Context, d *schema.R
 
 		_ = d.Set("security_group_id", securityGroupId)
 		_ = d.Set("direction", rule.Direction)
-		_ = d.Set("priority", rule.Priority)
 		_ = d.Set("ip_protocol", rule.IpProtocol)
 		_ = d.Set("port_range", rule.PortRange)
 		_ = d.Set("cidr_ip", rule.CidrIp)

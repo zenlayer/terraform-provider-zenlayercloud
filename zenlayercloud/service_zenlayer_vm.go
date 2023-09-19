@@ -180,7 +180,6 @@ func (s *VmService) CreateSecurityGroupRule(ctx context.Context, info securityGr
 	request.Policy = info.Policy
 	request.PortRange = info.PortRange
 	request.CidrIp = info.CidrIp
-	request.Priority = info.Priority
 	request.Direction = info.Direction
 	response, ret := s.client.WithVmClient().AuthorizeSecurityGroupRule(request)
 	if ret != nil {
@@ -822,6 +821,14 @@ func (s *VmService) resetInstance(ctx context.Context, request *vm.ResetInstance
 	return err
 }
 
+func (s *VmService) shutdownInstance(ctx context.Context, instanceId string) error {
+	request := vm.NewStopInstancesRequest()
+	request.InstanceIds = []string{instanceId}
+	response, err := s.client.WithVmClient().StopInstances(request)
+	logApiRequest(ctx, "ShutdownInstance", request, response, err)
+	return err
+}
+
 func (s *VmService) DescribeInstanceInternetStatus(ctx context.Context, instanceId string) (*vm.DescribeInstanceInternetStatusResponseParams, error) {
 	request := vm.NewDescribeInstanceInternetStatusRequest()
 	request.InstanceId = instanceId
@@ -830,6 +837,58 @@ func (s *VmService) DescribeInstanceInternetStatus(ctx context.Context, instance
 		return nil, err
 	}
 	return status.Response, nil
+}
+
+func (s *VmService) DescribeKeyPairs(ctx context.Context, request *vm.DescribeKeyPairsRequest) (keyPairs []*vm.KeyPair, err error) {
+	response, err := s.client.WithVmClient().DescribeKeyPairs(request)
+	logApiRequest(ctx, "DescribeKeyPairs", request, response, err)
+	if err != nil {
+		return
+	}
+	keyPairs = response.Response.DataSet
+	return
+}
+
+func (s *VmService) DescribeKeyPairById(ctx context.Context, keyId string) (keyPair *vm.KeyPair, err error) {
+	var request = vm.NewDescribeKeyPairsRequest()
+	request.KeyIds = []string{keyId}
+	response, err := s.client.WithVmClient().DescribeKeyPairs(request)
+	defer logApiRequest(ctx, "DescribeKeyPair", request, response, err)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(response.Response.DataSet) < 1 {
+		return
+	}
+	keyPair = response.Response.DataSet[0]
+	return
+}
+
+func (s *VmService) DeleteKeyPair(keyId string) error {
+	request := vm.NewDeleteKeyPairsRequest()
+	request.KeyIds = []string{keyId}
+
+	_, err := s.client.WithVmClient().DeleteKeyPairs(request)
+	if err != nil {
+		log.Printf("[CRITAL] api[%s] fail, request body [%s], reason[%s]\n",
+			request.GetAction(), keyId, err.Error())
+		return err
+	}
+
+	return nil
+}
+
+func (s *VmService) ModifyKeyPair(ctx context.Context, keyId string, keyDesc *string) error {
+	var request = vm.NewModifyKeyPairAttributeRequest()
+	request.KeyId = keyId
+	request.KeyDescription = keyDesc
+	response, e := s.client.WithVmClient().ModifyKeyPairAttribute(request)
+	logApiRequest(ctx, "ModifyKeyPair", request, response, e)
+	if e != nil {
+		return e
+	}
+	return nil
 }
 
 func buildSecurityGroupRuleId(info securityGroupRuleBasicInfo) (ruleId string, err error) {
@@ -866,9 +925,6 @@ func compareRuleAndSecurityGroupInfo(rule *vm.RuleInfo, info securityGroupRuleBa
 	if rule.IpProtocol != info.IpProtocol {
 		return false
 	}
-	if rule.Priority != info.Priority {
-		return false
-	}
 	if rule.CidrIp != info.CidrIp {
 		return false
 	}
@@ -879,7 +935,6 @@ func convertRuleInfo2RuleRequest(ruleInfo securityGroupRuleBasicInfo) (request *
 	request = &vm.RuleInfo{
 		Direction:  ruleInfo.Direction,
 		Policy:     ruleInfo.Policy,
-		Priority:   ruleInfo.Priority,
 		IpProtocol: ruleInfo.IpProtocol,
 		PortRange:  ruleInfo.PortRange,
 		CidrIp:     ruleInfo.CidrIp,
@@ -894,5 +949,4 @@ type securityGroupRuleBasicInfo struct {
 	IpProtocol      string `json:"ip_protocol"`
 	PortRange       string `json:"port_range"`
 	Direction       string `json:"direction"`
-	Priority        int    `json:"priority"`
 }

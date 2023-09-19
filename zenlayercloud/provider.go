@@ -36,6 +36,7 @@ Zenlayer Virtual Machine(VM)
 	zenlayercloud_instance_types
 	zenlayercloud_disks
 	zenlayercloud_subnets
+	zenlayercloud_key_pairs
 
   Resource
 	zenlayercloud_image
@@ -46,6 +47,7 @@ Zenlayer Virtual Machine(VM)
 	zenlayercloud_disk
 	zenlayercloud_disk_attachment
 	zenlayercloud_subnet
+	zenlayercloud_key_pair
 
 Bare Metal Cloud(BMC)
   Data Source
@@ -163,6 +165,7 @@ func resourcesMap() map[string]*schema.Resource {
 		"zenlayercloud_subnet":                    resourceZenlayerCloudSubnet(),
 		"zenlayercloud_disk":                      resourceZenlayerCloudVmDisk(),
 		"zenlayercloud_disk_attachment":           resourceZenlayerCloudVmDiskAttachment(),
+		"zenlayercloud_key_pair":                  resourceZenlayerCloudKeyPair(),
 
 		// cloud networking product
 	}
@@ -188,6 +191,7 @@ func dataSourcesMap() map[string]*schema.Resource {
 		"zenlayercloud_instance_types":  dataSourceZenlayerCloudVmInstanceTypes(),
 		"zenlayercloud_disks":           dataSourceZenlayerCloudDisks(),
 		"zenlayercloud_subnets":         dataSourceZenlayerCloudSubnets(),
+		"zenlayercloud_key_pairs":       dataSourceZenlayerCloudKeyPairs(),
 
 		// cloud networking product
 
