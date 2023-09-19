@@ -28,7 +28,6 @@ resource "zenlayercloud_security_group_rule" "bar" {
   cidr_ip           = "10.0.0.0/16"
   ip_protocol       = "tcp"
   port_range        = "80"
-  priority          = 50
 }
 ```
 
@@ -40,9 +39,8 @@ The following arguments are supported:
 * `direction` - (Required, String, ForceNew) The direction of the rule.
 * `ip_protocol` - (Required, String, ForceNew) The protocol of the rule.
 * `port_range` - (Required, String, ForceNew) The port range of the rule.
-* `priority` - (Required, Int, ForceNew) The priority of the rule.
 * `security_group_id` - (Required, String, ForceNew) ID of the security group to be queried.
-* `policy` - (Optional, String, ForceNew) The priority of the rule, currently only `accept` is supported.
+* `policy` - (Optional, String, ForceNew) The policy of the rule, currently only `accept` is supported.
 
 ## Attributes Reference
 

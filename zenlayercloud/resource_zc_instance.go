@@ -113,6 +113,7 @@ func resourceZenlayerCloudVmInstance() *schema.Resource {
 				ForceNew:    true,
 				Description: "The type of the instance.",
 			},
+
 			"image_id": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -136,6 +137,12 @@ func resourceZenlayerCloudVmInstance() *schema.Resource {
 				Sensitive:    true,
 				ValidateFunc: validation.All(validation.StringLenBetween(8, 16)),
 				Description:  "Password for the instance. The max length of password is 16.",
+			},
+			"key_id": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				Description:   "The key pair id to use for the instance. Changing `key_id` will cause the instance reset.",
+				ConflictsWith: []string{"password"},
 			},
 			"internet_charge_type": {
 				Type:         schema.TypeString,
@@ -440,7 +447,28 @@ func resourceZenlayerCloudVmInstanceUpdate(ctx context.Context, d *schema.Resour
 		}
 	}
 
-	if d.HasChange("image_id") {
+	if d.HasChanges("image_id", "key_id") {
+		err := vmService.shutdownInstance(ctx, instanceId)
+		if err != nil {
+			return nil
+		}
+
+		err = resource.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate)-time.Minute, func() *resource.RetryError {
+			instance, errRet := vmService.DescribeInstanceById(ctx, instanceId)
+			if errRet != nil {
+				return retryError(ctx, errRet, InternalServerError)
+			}
+
+			if instance.InstanceStatus == VmInstanceStatusStopped {
+				return nil
+			}
+
+			if vmInstanceIsOperating(instance.InstanceStatus) {
+				return resource.RetryableError(fmt.Errorf("waiting for instance %s stopping, current status: %s", instance.InstanceId, instance.InstanceStatus))
+			}
+
+			return resource.NonRetryableError(fmt.Errorf("vm instance status is not stopped, current status %s", instance.InstanceStatus))
+		})
 
 		request := vm.NewResetInstanceRequest()
 		request.InstanceId = d.Id()
@@ -448,7 +476,11 @@ func resourceZenlayerCloudVmInstanceUpdate(ctx context.Context, d *schema.Resour
 			request.ImageId = v.(string)
 		}
 
-		err := vmService.resetInstance(ctx, request)
+		if v, ok := d.GetOk("key_id"); ok {
+			request.KeyId = v.(string)
+		}
+
+		err = vmService.resetInstance(ctx, request)
 		if err != nil {
 			return diag.FromErr(err)
 		}
@@ -538,6 +570,10 @@ func resourceZenlayerCloudVmInstanceCreate(ctx context.Context, d *schema.Resour
 	if v, ok := d.GetOk("password"); ok {
 		request.Password = v.(string)
 	}
+	if v, ok := d.GetOk("key_id"); ok {
+		request.KeyId = v.(string)
+	}
+
 	request.InternetChargeType = d.Get("internet_charge_type").(string)
 	if request.InternetChargeType == VmInternetChargeTypeTrafficPackage && request.InstanceChargeType == VmChargeTypePrepaid {
 		if v, ok := d.GetOk("traffic_package_size"); ok {
@@ -662,6 +698,7 @@ func resourceZenlayerCloudVmInstanceRead(ctx context.Context, d *schema.Resource
 		_ = d.Set("instance_charge_prepaid_period", instance.Period)
 	}
 	_ = d.Set("instance_type", instance.InstanceType)
+	_ = d.Set("key_id", instance.KeyId)
 	_ = d.Set("image_id", instance.ImageId)
 	_ = d.Set("image_name", instance.ImageName)
 	_ = d.Set("instance_name", instance.InstanceName)

@@ -94,11 +94,6 @@ func dataSourceZenlayerCloudSecurityGroups() *schema.Resource {
 										Computed:    true,
 										Description: "The policy of the rule.",
 									},
-									"priority": {
-										Type:        schema.TypeInt,
-										Computed:    true,
-										Description: "The priority of the rule.",
-									},
 									"ip_protocol": {
 										Type:        schema.TypeString,
 										Computed:    true,
@@ -194,7 +189,6 @@ func map2RuleInfo(rules []*vm.RuleInfo) []interface{} {
 		m := make(map[string]interface{}, 7)
 		m["direction"] = rule.Direction
 		m["policy"] = rule.Policy
-		m["priority"] = rule.Priority
 		m["ip_protocol"] = rule.IpProtocol
 		m["port_range"] = rule.PortRange
 		m["cidr_ip"] = rule.CidrIp

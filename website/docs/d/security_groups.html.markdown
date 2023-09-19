@@ -45,7 +45,6 @@ In addition to all arguments above, the following attributes are exported:
     * `ip_protocol` - The protocol of the rule.
     * `policy` - The policy of the rule.
     * `port_range` - The port range of the rule.
-    * `priority` - The priority of the rule.
   * `security_group_id` - ID of the security group.
 
 

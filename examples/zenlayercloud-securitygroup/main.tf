@@ -15,7 +15,6 @@ resource "zenlayercloud_security_group_rule" "rule1" {
   cidr_ip           = "10.0.0.0/16"
   ip_protocol       = "tcp"
   port_range        = "81"
-  priority          = 50
 }
 
 resource "zenlayercloud_security_group_attachment" "attachment1" {

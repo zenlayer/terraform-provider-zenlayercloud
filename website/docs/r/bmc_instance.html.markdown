@@ -73,7 +73,7 @@ The following arguments are supported:
 * `resource_group_id` - (Optional, String) The resource group id the instance belongs to, default to Default Resource Group.
 * `ssh_keys` - (Optional, Set: [`String`]) The ssh keys to use for the instance. The max number of ssh keys is 5. Modifying will cause the instance reset.
 * `subnet_id` - (Optional, String) The ID of a VPC subnet. If you want to create instances in a VPC network, this parameter must be set.
-* `traffic_package_size` - (Optional, Float64) Traffic package size. Only valid when the charge type of instance is `ByTrafficPackage`.
+* `traffic_package_size` - (Optional, Float64) Traffic package size. Only valid when the charge type of instance is `ByTrafficPackage` and the instance charge type is `PREPAID`.
 
 The `partitions` object supports the following:
 
