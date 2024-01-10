@@ -317,8 +317,16 @@ func resourceZenlayerCloudVmInstanceDelete(ctx context.Context, d *schema.Resour
 	err = resource.RetryContext(ctx, d.Timeout(schema.TimeoutDelete)-time.Minute, func() *resource.RetryError {
 		instance, errRet := vmService.DescribeInstanceById(ctx, instanceId)
 		if errRet != nil {
-			return retryError(ctx, errRet, InternalServerError)
+			ee, ok := errRet.(*common.ZenlayerCloudSdkError)
+			if !ok {
+				return retryError(ctx, errRet)
+			} else if ee.Code == "INVALID_INSTANCE_NOT_FOUND" || ee.Code == ResourceNotFound {
+				notExist = true
+				return nil
+			}
+			return retryError(ctx, errRet)
 		}
+
 		if instance == nil {
 			notExist = true
 			return nil
