@@ -678,6 +678,12 @@ func resourceZenlayerCloudVmInstanceRead(ctx context.Context, d *schema.Resource
 	err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutRead)-time.Minute, func() *resource.RetryError {
 		instance, errRet = vmService.DescribeInstanceById(ctx, instanceId)
 		if errRet != nil {
+			ee, ok := errRet.(*common.ZenlayerCloudSdkError)
+			if !ok {
+				return retryError(ctx, errRet)
+			} else if ee.Code == "INVALID_INSTANCE_NOT_FOUND" || ee.Code == ResourceNotFound {
+				return nil
+			}
 			return retryError(ctx, errRet)
 		}
 		if instance != nil && vmInstanceIsOperating(instance.InstanceStatus) {
