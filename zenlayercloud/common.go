@@ -5,15 +5,18 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"hash/crc32"
 	"io/ioutil"
+	"math"
 	"os"
 	"os/user"
 	"reflect"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
+
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
 const (
@@ -21,8 +24,10 @@ const (
 	PROVIDER_READ_RETRY_TIMEOUT  = "ZENLAYERCLOUD_READ_RETRY_TIMEOUT"
 	PROVIDER_BMC_CREATE_TIMEOUT  = "ZENLAYERCLOUD_BMC_CREATE_TIMEOUT"
 	PROVIDER_BMC_UPDATE_TIMEOUT  = "ZENLAYERCLOUD_BMC_UPDATE_TIMEOUT"
-	PROVIDER_VM_CREATE_TIMEOUT  = "ZENLAYERCLOUD_VM_CREATE_TIMEOUT"
-	PROVIDER_VM_UPDATE_TIMEOUT  = "ZENLAYERCLOUD_VM_UPDATE_TIMEOUT"
+	PROVIDER_VM_CREATE_TIMEOUT   = "ZENLAYERCLOUD_VM_CREATE_TIMEOUT"
+	PROVIDER_VM_UPDATE_TIMEOUT   = "ZENLAYERCLOUD_VM_UPDATE_TIMEOUT"
+	PROVIDER_ZGA_CREATE_TIMEOUT  = "ZENLAYERCLOUD_ZGA_CREATE_TIMEOUT"
+	PROVIDER_ZGA_UPDATE_TIMEOUT  = "ZENLAYERCLOUD_ZGA_UPDATE_TIMEOUT"
 )
 
 var writeRetry = getEnvDefault(PROVIDER_WRITE_RETRY_TIMEOUT, 5)
@@ -36,6 +41,9 @@ var bmcUpdateTimeout = time.Duration(getEnvDefault(PROVIDER_BMC_UPDATE_TIMEOUT, 
 
 var vmCreateTimeout = time.Duration(getEnvDefault(PROVIDER_VM_CREATE_TIMEOUT, 90)) * time.Minute
 var vmUpdateTimeout = time.Duration(getEnvDefault(PROVIDER_VM_UPDATE_TIMEOUT, 90)) * time.Minute
+
+var zgaCreateTimeout = time.Duration(getEnvDefault(PROVIDER_ZGA_CREATE_TIMEOUT, 90)) * time.Minute
+var zgaUpdateTimeout = time.Duration(getEnvDefault(PROVIDER_ZGA_UPDATE_TIMEOUT, 90)) * time.Minute
 
 func getEnvDefault(key string, defVal int) int {
 	val, ex := os.LookupEnv(key)
@@ -222,4 +230,46 @@ func ParseResourceId(id string, length int) (parts []string, err error) {
 		err = fmt.Errorf("invalid Resource Id %s. Expected parts' length %d, got %d", id, length, len(parts))
 	}
 	return parts, err
+}
+
+type QueryPaginatedFunc[T any] func(ctx context.Context, pageNum, pageSize int) (items []T, total int, err error)
+
+func QueryAllPaginatedResource[T any](ctx context.Context, queryFunc QueryPaginatedFunc[T]) ([]T, error) {
+	limit := 100
+	firstPageNum := 1
+	items, total, err := queryFunc(ctx, firstPageNum, limit)
+	if err != nil {
+		return nil, err
+	}
+	if total <= limit {
+		return items, nil
+	}
+
+	var (
+		num              = int(math.Ceil(float64(total)/float64(limit))) - 1
+		maxConcurrentNum = 50
+		g                = NewGoRoutine(maxConcurrentNum)
+		wg               = sync.WaitGroup{}
+		itemSetList      = make([]interface{}, num)
+	)
+	for i := 0; i < num; i++ {
+		wg.Add(1)
+		value := i
+		goFunc := func() {
+			pageNum := value + 2
+			newItems, _, err := queryFunc(ctx, pageNum, limit)
+			if err != nil {
+				return
+			}
+			itemSetList[value] = newItems
+			wg.Done()
+		}
+		g.Run(goFunc)
+	}
+	wg.Wait()
+
+	for _, v := range itemSetList {
+		items = append(items, v.([]T)...)
+	}
+	return items, nil
 }

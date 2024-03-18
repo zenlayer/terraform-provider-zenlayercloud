@@ -35,10 +35,10 @@ The following arguments are supported:
 In addition to all arguments above, the following attributes are exported:
 
 * `key_pairs` - An information list of key pairs. Each element contains the following attributes:
-  * `create_time` - Create time of the key pair.
-  * `key_description` - Description of the key pair.
-  * `key_id` - ID of the key pair, such as `key-xxxxxxxx`.
-  * `key_name` - Name of the key pair.
-  * `public_key` - Public SSH keys in OpenSSH format, such as `ssh-rsa XXXXXXXXXXXX`.
+   * `create_time` - Create time of the key pair.
+   * `key_description` - Description of the key pair.
+   * `key_id` - ID of the key pair, such as `key-xxxxxxxx`.
+   * `key_name` - Name of the key pair.
+   * `public_key` - Public SSH keys in OpenSSH format, such as `ssh-rsa XXXXXXXXXXXX`.
 
 

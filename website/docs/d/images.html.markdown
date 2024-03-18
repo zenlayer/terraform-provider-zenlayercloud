@@ -38,13 +38,13 @@ The following arguments are supported:
 In addition to all arguments above, the following attributes are exported:
 
 * `images` - An information list of image. Each element contains the following attributes:
-  * `category` - The catalog which the image belongs to. With values: 'CentOS', 'Windows', 'Ubuntu', 'Debian'.
-  * `image_description` - The description of image.
-  * `image_id` - ID of the image.
-  * `image_name` - Name of the image.
-  * `image_size` - The size of image.
-  * `image_type` - Type of the image. With value: `PUBLIC_IMAGE` and `CUSTOM_IMAGE`.
-  * `image_version` - The version of image, such as 2019.
-  * `os_type` - Type of the image, windows or linux.
+   * `category` - The catalog which the image belongs to. With values: 'CentOS', 'Windows', 'Ubuntu', 'Debian'.
+   * `image_description` - The description of image.
+   * `image_id` - ID of the image.
+   * `image_name` - Name of the image.
+   * `image_size` - The size of image.
+   * `image_type` - Type of the image. With value: `PUBLIC_IMAGE` and `CUSTOM_IMAGE`.
+   * `image_version` - The version of image, such as 2019.
+   * `os_type` - Type of the image, windows or linux.
 
 

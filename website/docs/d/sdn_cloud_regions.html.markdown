@@ -33,9 +33,9 @@ The following arguments are supported:
 In addition to all arguments above, the following attributes are exported:
 
 * `region_list` - An information list of cloud region. Each element contains the following attributes:
-  * `cloud_region` - ID of the cloud region.
-  * `datacenter_name` - The name of datacenter.
-  * `datacenter` - The id of datacenter that can be connect to cloud region.
-  * `products` - The connect product.
+   * `cloud_region` - ID of the cloud region.
+   * `datacenter_name` - The name of datacenter.
+   * `datacenter` - The id of datacenter that can be connect to cloud region.
+   * `products` - The connect product.
 
 

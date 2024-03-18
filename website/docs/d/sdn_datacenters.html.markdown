@@ -34,11 +34,11 @@ The following arguments are supported:
 In addition to all arguments above, the following attributes are exported:
 
 * `datacenters` - An information list of availability datacenter. Each element contains the following attributes:
-  * `address` - The location of the datacenter.
-  * `area_name` - The region name, like `Asia Pacific`.
-  * `city_name` - The name of city where the datacenter located, like `Singapore`.
-  * `country_name` - The name of country, like `Singapore`.
-  * `id` - ID of the datacenter, which is a uuid format.
-  * `name` - The name of the datacenter, like `AP-Singapore1`, usually not used in api parameter.
+   * `address` - The location of the datacenter.
+   * `area_name` - The region name, like `Asia Pacific`.
+   * `city_name` - The name of city where the datacenter located, like `Singapore`.
+   * `country_name` - The name of country, like `Singapore`.
+   * `id` - ID of the datacenter, which is a uuid format.
+   * `name` - The name of the datacenter, like `AP-Singapore1`, usually not used in api parameter.
 
 

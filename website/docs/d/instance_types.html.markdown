@@ -41,11 +41,11 @@ The following arguments are supported:
 In addition to all arguments above, the following attributes are exported:
 
 * `instance_type_quotas` - An information list of zone available vm instance types. Each element contains the following attributes:
-  * `availability_zone` - The zone id that the vm instance locates at.
-  * `cpu_count` - The number of CPU cores of the instance.
-  * `instance_type` - Type of the instance.
-  * `internet_charge_type` - Internet charge type of the instance, Valid values are `ByBandwidth`, `ByTrafficPackage`, `ByInstanceBandwidth95` and `ByClusterBandwidth95`.
-  * `maximum_bandwidth_out` - The maximum public bandwidth of the instance type.
-  * `memory` - Instance memory capacity, unit in GB.
+   * `availability_zone` - The zone id that the vm instance locates at.
+   * `cpu_count` - The number of CPU cores of the instance.
+   * `instance_type` - Type of the instance.
+   * `internet_charge_type` - Internet charge type of the instance, Valid values are `ByBandwidth`, `ByTrafficPackage`, `ByInstanceBandwidth95` and `ByClusterBandwidth95`.
+   * `maximum_bandwidth_out` - The maximum public bandwidth of the instance type.
+   * `memory` - Instance memory capacity, unit in GB.
 
 

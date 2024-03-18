@@ -37,10 +37,10 @@ The following arguments are supported:
 In addition to all arguments above, the following attributes are exported:
 
 * `images` - An information list of image. Each element contains the following attributes:
-  * `catalog` - Created time of the image.
-  * `image_id` - ID of the image.
-  * `image_name` - Name of the image.
-  * `image_type` - Type of the image. with value: `PUBLIC_IMAGE` and `CUSTOM_IMAGE`.
-  * `os_type` - Type of the image, windows or linux.
+   * `catalog` - Created time of the image.
+   * `image_id` - ID of the image.
+   * `image_name` - Name of the image.
+   * `image_type` - Type of the image. with value: `PUBLIC_IMAGE` and `CUSTOM_IMAGE`.
+   * `os_type` - Type of the image, windows or linux.
 
 

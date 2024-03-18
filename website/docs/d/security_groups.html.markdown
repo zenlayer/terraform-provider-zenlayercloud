@@ -35,16 +35,16 @@ The following arguments are supported:
 In addition to all arguments above, the following attributes are exported:
 
 * `security_groups` - An information list of security group. Each element contains the following attributes:
-  * `create_time` - Creation time of the security group.
-  * `description` - Description of the security group.
-  * `instance_ids` - Instance ids of the security group.
-  * `name` - Name of the security group.
-  * `rule_infos` - Rules set of the security.
-    * `cidr_ip` - The cidr ip of the rule.
-    * `direction` - The direction of the rule.
-    * `ip_protocol` - The protocol of the rule.
-    * `policy` - The policy of the rule.
-    * `port_range` - The port range of the rule.
-  * `security_group_id` - ID of the security group.
+   * `create_time` - Creation time of the security group.
+   * `description` - Description of the security group.
+   * `instance_ids` - Instance ids of the security group.
+   * `name` - Name of the security group.
+   * `rule_infos` - Rules set of the security.
+      * `cidr_ip` - The cidr ip of the rule.
+      * `direction` - The direction of the rule.
+      * `ip_protocol` - The protocol of the rule.
+      * `policy` - The policy of the rule.
+      * `port_range` - The port range of the rule.
+   * `security_group_id` - ID of the security group.
 
 

@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"go/parser"
 	"go/token"
 	"os"
@@ -13,6 +12,8 @@ import (
 	"sort"
 	"strings"
 	"text/template"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
 	"github.com/fatih/color"
 	"github.com/hashicorp/hcl/v2/hclwrite"
@@ -299,7 +300,7 @@ func genDoc(product, dtype, fpath, name string, resource *schema.Resource) {
 // getAttributes get attributes from schema
 func getAttributes(step int, k string, v *schema.Schema) []string {
 	var attributes []string
-	ident := strings.Repeat(" ", step*2)
+	ident := strings.Repeat(" ", step*3)
 
 	if v.Description == "" {
 		return attributes

@@ -36,16 +36,16 @@ The following arguments are supported:
 In addition to all arguments above, the following attributes are exported:
 
 * `ip_list` - An information list of DDoS IP. Each element contains the following attributes:
-  * `availability_zone` - The ID of zone that the DDoS IP locates at.
-  * `create_time` - Create time of the DDoS IP.
-  * `expired_time` - Expired time of the DDoS IP.
-  * `instance_id` - The instance id to bind with the DDoS IP.
-  * `instance_name` - The instance name to bind with the DDoS IP.
-  * `ip_charge_type` - The charge type of DDoS IP.
-  * `ip_id` - ID  of the DDoS IP.
-  * `ip_status` - Current status of the DDoS IP.
-  * `public_ip` - The elastic ip address.
-  * `resource_group_id` - The ID of resource group grouped instances to be queried.
-  * `resource_group_name` - The name of resource group grouped instances to be queried.
+   * `availability_zone` - The ID of zone that the DDoS IP locates at.
+   * `create_time` - Create time of the DDoS IP.
+   * `expired_time` - Expired time of the DDoS IP.
+   * `instance_id` - The instance id to bind with the DDoS IP.
+   * `instance_name` - The instance name to bind with the DDoS IP.
+   * `ip_charge_type` - The charge type of DDoS IP.
+   * `ip_id` - ID  of the DDoS IP.
+   * `ip_status` - Current status of the DDoS IP.
+   * `public_ip` - The elastic ip address.
+   * `resource_group_id` - The ID of resource group grouped instances to be queried.
+   * `resource_group_name` - The name of resource group grouped instances to be queried.
 
 
