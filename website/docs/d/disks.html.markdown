@@ -47,19 +47,19 @@ The following arguments are supported:
 In addition to all arguments above, the following attributes are exported:
 
 * `disks` - An information list of disk. Each element contains the following attributes:
-  * `availability_zone` - The availability zone of disk.
-  * `charge_type` - Charge type of the disk. Values are: `PREPAID`, `POSTPAID`.
-  * `create_time` - Creation time of the disk.
-  * `disk_category` - The category of disk. Values are: cloud_efficiency.
-  * `disk_size` - Size of the disk.
-  * `disk_type` - Type of the disk. Values are: `SYSTEM`, `DATA`.
-  * `expired_time` - Expired Time of the disk.
-  * `id` - ID of the disk.
-  * `instance_id` - The ID of instance that the disk attached to.
-  * `instance_name` - The name of instance that the disk attached to.
-  * `name` - name of the disk.
-  * `period` - The period cycle of the disk. Unit: month.
-  * `portable` - Whether the disk is deleted with instance or not, true means not delete with instance, false otherwise.
-  * `status` - Status of disk.
+   * `availability_zone` - The availability zone of disk.
+   * `charge_type` - Charge type of the disk. Values are: `PREPAID`, `POSTPAID`.
+   * `create_time` - Creation time of the disk.
+   * `disk_category` - The category of disk. Values are: cloud_efficiency.
+   * `disk_size` - Size of the disk.
+   * `disk_type` - Type of the disk. Values are: `SYSTEM`, `DATA`.
+   * `expired_time` - Expired Time of the disk.
+   * `id` - ID of the disk.
+   * `instance_id` - The ID of instance that the disk attached to.
+   * `instance_name` - The name of instance that the disk attached to.
+   * `name` - name of the disk.
+   * `period` - The period cycle of the disk. Unit: month.
+   * `portable` - Whether the disk is deleted with instance or not, true means not delete with instance, false otherwise.
+   * `status` - Status of disk.
 
 

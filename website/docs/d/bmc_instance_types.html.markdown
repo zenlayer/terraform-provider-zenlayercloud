@@ -40,11 +40,11 @@ The following arguments are supported:
 In addition to all arguments above, the following attributes are exported:
 
 * `instance_types` - An information list of available bmc instance types. Each element contains the following attributes:
-  * `availability_zone` - The zone id that the bmc instance locates at.
-  * `default_traffic_package_size` - The default value of traffic package size.
-  * `instance_type_id` - Type ID of the instance.
-  * `internet_charge_types` - The supported internet charge types of the instance at specified zone.
-  * `maximum_bandwidth_out` - The maximum public bandwidth of the instance type.
-  * `sell_status` - Sell status of the instance.
+   * `availability_zone` - The zone id that the bmc instance locates at.
+   * `default_traffic_package_size` - The default value of traffic package size.
+   * `instance_type_id` - Type ID of the instance.
+   * `internet_charge_types` - The supported internet charge types of the instance at specified zone.
+   * `maximum_bandwidth_out` - The maximum public bandwidth of the instance type.
+   * `sell_status` - Sell status of the instance.
 
 

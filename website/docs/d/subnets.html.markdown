@@ -50,11 +50,11 @@ The following arguments are supported:
 In addition to all arguments above, the following attributes are exported:
 
 * `subnet_list` - An information list of subnet. Each element contains the following attributes:
-  * `availability_zone` - The availability zone of the subnet.
-  * `cidr_block` - A network address block of the subnet.
-  * `create_time` - Creation time of the subnet.
-  * `subnet_id` - ID of the subnet.
-  * `subnet_name` - Name of the subnet.
-  * `subnet_status` - Status of the subnet.
+   * `availability_zone` - The availability zone of the subnet.
+   * `cidr_block` - A network address block of the subnet.
+   * `create_time` - Creation time of the subnet.
+   * `subnet_id` - ID of the subnet.
+   * `subnet_name` - Name of the subnet.
+   * `subnet_status` - Status of the subnet.
 
 

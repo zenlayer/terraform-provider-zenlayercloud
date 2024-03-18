@@ -34,7 +34,7 @@ The following arguments are supported:
 In addition to all arguments above, the following attributes are exported:
 
 * `zones` - An information list of availability zone. Each element contains the following attributes:
-  * `description` - The name of the zone, like `Frankfurt`, usually not used in api parameter.
-  * `name` - ID of the zone, such as `FRA-A`.
+   * `description` - The name of the zone, like `Frankfurt`, usually not used in api parameter.
+   * `name` - ID of the zone, such as `FRA-A`.
 
 

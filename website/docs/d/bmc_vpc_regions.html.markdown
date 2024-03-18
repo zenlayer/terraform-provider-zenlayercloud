@@ -32,8 +32,8 @@ The following arguments are supported:
 In addition to all arguments above, the following attributes are exported:
 
 * `regions` - An information list of vpc regions. Each element contains the following attributes:
-  * `availability_zones` - The zones that the vpc region contains.
-  * `id` - The ID of the region.
-  * `name` - The name of the region.
+   * `availability_zones` - The zones that the vpc region contains.
+   * `id` - The ID of the region.
+   * `name` - The name of the region.
 
 

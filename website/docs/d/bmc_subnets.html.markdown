@@ -32,15 +32,15 @@ The following arguments are supported:
 In addition to all arguments above, the following attributes are exported:
 
 * `subnet_list` - An information list of subnet. Each element contains the following attributes:
-  * `availability_zone` - The availability zone of the subnet.
-  * `cidr_block` - A network address block of the subnet.
-  * `create_time` - Creation time of the subnet.
-  * `resource_group_id` - The ID of resource group grouped subnet to be queried.
-  * `resource_group_name` - The Name of resource group grouped subnet to be queried.
-  * `subnet_id` - ID of the subnet.
-  * `subnet_name` - Name of the subnet.
-  * `subnet_status` - Status of the subnet.
-  * `vpc_id` - ID of the VPC.
-  * `vpc_name` - Name of the VPC.
+   * `availability_zone` - The availability zone of the subnet.
+   * `cidr_block` - A network address block of the subnet.
+   * `create_time` - Creation time of the subnet.
+   * `resource_group_id` - The ID of resource group grouped subnet to be queried.
+   * `resource_group_name` - The Name of resource group grouped subnet to be queried.
+   * `subnet_id` - ID of the subnet.
+   * `subnet_name` - Name of the subnet.
+   * `subnet_status` - Status of the subnet.
+   * `vpc_id` - ID of the VPC.
+   * `vpc_name` - Name of the VPC.
 
 

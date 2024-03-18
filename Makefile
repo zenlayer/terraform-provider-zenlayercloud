@@ -5,6 +5,7 @@ NAME=zenlayercloud
 BINARY=terraform-provider-${NAME}
 VERSION=0.1.0
 OS_ARCH=darwin_amd64
+WEBSITE_REPO=github.com/Click2Cloud/terraform-website
 
 default: install
 
@@ -38,3 +39,15 @@ testacc:
 
 fmtcheck:
 	"$(CURDIR)/scripts/gofmtcheck.sh"
+
+gendoc:
+	cd gendoc && go run .
+	
+website:
+ifeq (,$(wildcard $(GOPATH)/src/$(WEBSITE_REPO)))
+	echo "$(WEBSITE_REPO) not found in your GOPATH (necessary for layouts and assets), getting..."
+	git clone https://$(WEBSITE_REPO) $(GOPATH)/src/$(WEBSITE_REPO)
+endif
+	@$(MAKE) -C $(GOPATH)/src/$(WEBSITE_REPO) website-provider PROVIDER_PATH=$(shell pwd) PROVIDER_NAME=$(NAME)
+
+.PHONY: website gendoc

@@ -80,6 +80,17 @@ Cloud Networking(SDN)
 	zenlayercloud_sdn_port
 	zenlayercloud_sdn_private_connect
 
+Zenlayer Global Accelerator(ZGA)
+
+  Data Source
+ 	zenlayercloud_zga_certificates
+	zenlayercloud_zga_origin_regions
+	zenlayercloud_zga_accelerate_regions
+	zenlayercloud_zga_accelerators
+
+  Resource
+	zenlayercloud_zga_certificate
+	zenlayercloud_zga_accelerator
 */
 package zenlayercloud
 
@@ -97,12 +108,13 @@ package zenlayercloud
 
 import (
 	"context"
+	"os"
+	"strings"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/connectivity"
-	"os"
-	"strings"
 )
 
 const (
@@ -179,6 +191,10 @@ func resourcesMap() map[string]*schema.Resource {
 		// cloud networking product
 		"zenlayercloud_sdn_port":            resourceZenlayerCloudDcPorts(),
 		"zenlayercloud_sdn_private_connect": resourceZenlayerCloudPrivateConnect(),
+
+		// zenlayer global accelerator
+		"zenlayercloud_zga_certificate": resourceZenlayerCloudCertificate(),
+		"zenlayercloud_zga_accelerator": resourceZenlayerCloudAccelerator(),
 	}
 }
 
@@ -210,6 +226,12 @@ func dataSourcesMap() map[string]*schema.Resource {
 		"zenlayercloud_sdn_private_connects": dataSourceZenlayerCloudSdnPrivateConnects(),
 		//"zenlayercloud_sdn_cloud_routers":    dataSourceZenlayerCloudSdnCloudRouters(),
 		"zenlayercloud_sdn_cloud_regions": dataSourceZenlayerCloudCloudRegions(),
+
+		// zenlayer global accelerator
+		"zenlayercloud_zga_certificates":       dataSourceZenlayerCloudZgaCertificates(),
+		"zenlayercloud_zga_origin_regions":     dataSourceZenlayerCloudZgaOriginRegions(),
+		"zenlayercloud_zga_accelerate_regions": dataSourceZenlayerCloudZgaAccelerateRegions(),
+		"zenlayercloud_zga_accelerators":       dataSourceZenlayerCloudZgaAccelerators(),
 	}
 }
 

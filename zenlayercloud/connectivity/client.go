@@ -17,6 +17,7 @@ import (
 	"github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/common"
 	sdn "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/sdn20230830"
 	vm "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/vm20230313"
+	zga "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/zga20230706"
 )
 
 var ReqClient = "Terraform-latest"
@@ -30,6 +31,7 @@ type ZenlayerCloudClient struct {
 	BmcConn           *bmc.Client
 	VmConn            *vm.Client
 	SdnConn           *sdn.Client
+	ZgaConn           *zga.Client
 }
 
 func (client *ZenlayerCloudClient) WithSdnClient() *sdn.Client {
@@ -60,6 +62,16 @@ func (client *ZenlayerCloudClient) WithVmClient() *vm.Client {
 	client.VmConn, _ = vm.NewClient(config, client.SecretKeyId, client.SecretKeyPassword)
 	client.VmConn.WithRequestClient(ReqClient)
 	return client.VmConn
+}
+
+func (client *ZenlayerCloudClient) WithZgaClient() *zga.Client {
+	if client.ZgaConn != nil {
+		return client.ZgaConn
+	}
+	config := client.NewConfig()
+	client.ZgaConn, _ = zga.NewClient(config, client.SecretKeyId, client.SecretKeyPassword)
+	client.ZgaConn.WithRequestClient(ReqClient)
+	return client.ZgaConn
 }
 
 func (client *ZenlayerCloudClient) NewConfig() *common.Config {

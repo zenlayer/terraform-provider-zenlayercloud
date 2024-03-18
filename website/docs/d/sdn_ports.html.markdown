@@ -32,19 +32,19 @@ The following arguments are supported:
 In addition to all arguments above, the following attributes are exported:
 
 * `port_list` - An information list of port. Each element contains the following attributes:
-  * `business_entity_name` - Business entity name. The entity name to be used on the Letter of Authorization (LOA).
-  * `connect_status` - The network connectivity state of port.
-  * `create_time` - Create time of the port.
-  * `datacenter_name` - The name of datacenter.
-  * `datacenter` - The id of datacenter that the port locates at.
-  * `expired_time` - Expired time of the port.
-  * `loa_status` - The LOA state.
-  * `loa_url` - The LOA URL address.
-  * `port_charge_type` - The charge type of port.
-  * `port_id` - ID of the port.
-  * `port_name` - The name type of port.
-  * `port_status` - The business status of port.
-  * `port_type` - The type of port. eg. 1G/10G/40G.
-  * `remarks` - The description of port.
+   * `business_entity_name` - Business entity name. The entity name to be used on the Letter of Authorization (LOA).
+   * `connect_status` - The network connectivity state of port.
+   * `create_time` - Create time of the port.
+   * `datacenter_name` - The name of datacenter.
+   * `datacenter` - The id of datacenter that the port locates at.
+   * `expired_time` - Expired time of the port.
+   * `loa_status` - The LOA state.
+   * `loa_url` - The LOA URL address.
+   * `port_charge_type` - The charge type of port.
+   * `port_id` - ID of the port.
+   * `port_name` - The name type of port.
+   * `port_status` - The business status of port.
+   * `port_type` - The type of port. eg. 1G/10G/40G.
+   * `remarks` - The description of port.
 
 
