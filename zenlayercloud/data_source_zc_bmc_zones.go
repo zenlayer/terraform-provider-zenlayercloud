@@ -79,7 +79,7 @@ func dataSourceZenlayerCloudBmcZonesRead(ctx context.Context, d *schema.Resource
 	if v, ok := d.GetOk("name_regex"); ok {
 		nameRegex, errRet = regexp.Compile(v.(string))
 		if errRet != nil {
-			return diag.Errorf("image_name_regex format error,%s", errRet.Error())
+			return diag.Errorf("name_regex format error,%s", errRet.Error())
 		}
 	}
 

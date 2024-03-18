@@ -2,7 +2,7 @@ module github.com/zenlayer/terraform-provider-zenlayercloud
 
 go 1.18
 
-require github.com/zenlayer/zenlayercloud-sdk-go v0.1.7
+require github.com/zenlayer/zenlayercloud-sdk-go v0.1.13
 
 require (
 	github.com/fatih/color v1.13.0
