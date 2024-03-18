@@ -70,6 +70,15 @@ Bare Metal Cloud(BMC)
 	zenlayercloud_bmc_vpc
 	zenlayercloud_bmc_subnet
 
+Cloud Networking(SDN)
+  Data Source
+	zenlayercloud_sdn_datacenters
+	zenlayercloud_sdn_ports
+	zenlayercloud_sdn_private_connects
+	zenlayercloud_sdn_cloud_regions
+  Resource
+	zenlayercloud_sdn_port
+	zenlayercloud_sdn_private_connect
 
 */
 package zenlayercloud
@@ -168,6 +177,8 @@ func resourcesMap() map[string]*schema.Resource {
 		"zenlayercloud_key_pair":                  resourceZenlayerCloudKeyPair(),
 
 		// cloud networking product
+		"zenlayercloud_sdn_port":            resourceZenlayerCloudDcPorts(),
+		"zenlayercloud_sdn_private_connect": resourceZenlayerCloudPrivateConnect(),
 	}
 }
 
@@ -194,7 +205,11 @@ func dataSourcesMap() map[string]*schema.Resource {
 		"zenlayercloud_key_pairs":       dataSourceZenlayerCloudKeyPairs(),
 
 		// cloud networking product
-
+		"zenlayercloud_sdn_datacenters":      dataSourceZenlayerCloudSdnDatacenters(),
+		"zenlayercloud_sdn_ports":            dataSourceZenlayerCloudDcPorts(),
+		"zenlayercloud_sdn_private_connects": dataSourceZenlayerCloudSdnPrivateConnects(),
+		//"zenlayercloud_sdn_cloud_routers":    dataSourceZenlayerCloudSdnCloudRouters(),
+		"zenlayercloud_sdn_cloud_regions": dataSourceZenlayerCloudCloudRegions(),
 	}
 }
 

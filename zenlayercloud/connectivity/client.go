@@ -15,6 +15,7 @@ package connectivity
 import (
 	bmc "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/bmc20221120"
 	"github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/common"
+	sdn "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/sdn20230830"
 	vm "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/vm20230313"
 )
 
@@ -28,6 +29,17 @@ type ZenlayerCloudClient struct {
 	Timeout           int
 	BmcConn           *bmc.Client
 	VmConn            *vm.Client
+	SdnConn           *sdn.Client
+}
+
+func (client *ZenlayerCloudClient) WithSdnClient() *sdn.Client {
+	if client.SdnConn != nil {
+		return client.SdnConn
+	}
+	config := client.NewConfig()
+	client.SdnConn, _ = sdn.NewClient(config, client.SecretKeyId, client.SecretKeyPassword)
+	client.SdnConn.WithRequestClient(ReqClient)
+	return client.SdnConn
 }
 
 func (client *ZenlayerCloudClient) WithBmcClient() *bmc.Client {
