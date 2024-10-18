@@ -5,7 +5,7 @@ Provides a BMC instance resource.
 
 ~> **NOTE:** At present, 'PREPAID' instance cannot be deleted and must wait it to be outdated and released automatically.
 
-Example Usage
+# Example Usage
 
 ```hcl
 
@@ -13,35 +13,38 @@ data "zenlayercloud_bmc_zones" "default" {
 
 }
 
-data "zenlayercloud_bmc_instance_types" "default" {
-  availability_zone = data.zenlayercloud_bmc_zones.default.zones.0.id
-}
+	data "zenlayercloud_bmc_instance_types" "default" {
+	  availability_zone = data.zenlayercloud_bmc_zones.default.zones.0.id
+	}
 
 # Get a centos image which also supported to install on given instance type
-data "zenlayercloud_bmc_images" "default" {
-  catalog          = "centos"
-  instance_type_id = data.zenlayercloud_bmc_instance_types.default.instance_types.0.id
-}
 
-resource "zenlayercloud_bmc_subnet" "default" {
-  availability_zone = data.zenlayercloud_bmc_zones.default.zones.0.id
-  name              = "test-subnet"
-  cidr_block        = "10.0.10.0/24"
-}
+	data "zenlayercloud_bmc_images" "default" {
+	  catalog          = "centos"
+	  instance_type_id = data.zenlayercloud_bmc_instance_types.default.instance_types.0.id
+	}
+
+	resource "zenlayercloud_bmc_subnet" "default" {
+	  availability_zone = data.zenlayercloud_bmc_zones.default.zones.0.id
+	  name              = "test-subnet"
+	  cidr_block        = "10.0.10.0/24"
+	}
 
 # Create a web server
-resource "zenlayercloud_bmc_instance" "web" {
-  availability_zone    = data.zenlayercloud_bmc_zones.default.zones.0.id
-  image_id             = data.zenlayercloud_bmc_images.default.images.0.image_id
-  internet_charge_type = "ByBandwidth"
-  instance_type_id     = data.zenlayercloud_bmc_instance_types.default.instance_types.0.id
-  password             = "Example~123"
-  instance_name        = "web"
-  subnet_id            =  zenlayercloud_bmc_subnet.default.id
-}
+
+	resource "zenlayercloud_bmc_instance" "web" {
+	  availability_zone    = data.zenlayercloud_bmc_zones.default.zones.0.id
+	  image_id             = data.zenlayercloud_bmc_images.default.images.0.image_id
+	  internet_charge_type = "ByBandwidth"
+	  instance_type_id     = data.zenlayercloud_bmc_instance_types.default.instance_types.0.id
+	  password             = "Example~123"
+	  instance_name        = "web"
+	  subnet_id            =  zenlayercloud_bmc_subnet.default.id
+	}
+
 ```
 
-Import
+# Import
 
 BMC instance can be imported using the id, e.g.
 
@@ -54,6 +57,9 @@ package zenlayercloud
 import (
 	"context"
 	"fmt"
+	"strconv"
+	"time"
+
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
@@ -63,8 +69,6 @@ import (
 	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/connectivity"
 	bmc "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/bmc20221120"
 	"github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/common"
-	"strconv"
-	"time"
 )
 
 func resourceZenlayerCloudInstance() *schema.Resource {
@@ -101,9 +105,11 @@ func resourceZenlayerCloudInstance() *schema.Resource {
 				Description: "The type of the instance.",
 			},
 			"image_id": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "The image to use for the instance. Changing `image_id` will cause the instance reset.",
+				Type:          schema.TypeString,
+				Optional:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"ipxe_url"},
+				Description:   "The image to use for the instance. Changing `image_id` will cause the instance reset. Conflicts with `ipxe_url`.",
 			},
 			"image_name": {
 				Type:        schema.TypeString,
@@ -301,6 +307,13 @@ func resourceZenlayerCloudInstance() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "Expired time of the instance.",
+			},
+			"ipxe_url": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"image_id"},
+				Description:   "The iPXE URL to use for booting the instance. Conflicts with `image_id`.",
 			},
 		},
 	}
@@ -738,8 +751,12 @@ func resourceZenlayerCloudInstanceCreate(ctx context.Context, d *schema.Resource
 	if v, ok := d.GetOk("hostname"); ok {
 		request.Hostname = v.(string)
 	}
-	if v, ok := d.GetOk("image_id"); ok {
+	if v, ok := d.GetOk("ipxe_url"); ok {
+		request.IpxeUrl = v.(string)
+	} else if v, ok := d.GetOk("image_id"); ok {
 		request.ImageId = v.(string)
+	} else {
+		return diag.FromErr(fmt.Errorf("either 'image_id' or 'ipxe_url' must be specified"))
 	}
 	if v, ok := d.GetOk("resource_group_id"); ok {
 		request.ResourceGroupId = v.(string)
