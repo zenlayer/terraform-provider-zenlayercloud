@@ -48,6 +48,17 @@ resource "zenlayercloud_bmc_instance" "web" {
   instance_name        = "web"
   subnet_id            = zenlayercloud_bmc_subnet.default.id
 }
+
+resource "zenlayercloud_bmc_instance" "ipxe_example" {
+  availability_zone    = "SEL-A"
+  ipxe_url             = "http://example.com/boot.ipxe"
+  internet_charge_type = "ByBandwidth"
+  instance_type_id     = "M6C"
+  password             = "Example~123"
+  instance_name        = "ipxe-instance"
+  subnet_id            = zenlayercloud_bmc_subnet.default.id
+}
+
 ```
 
 ## Argument Reference
@@ -59,7 +70,7 @@ The following arguments are supported:
 * `internet_charge_type` - (Required, String, ForceNew) Internet charge type of the instance, Valid values are `ByBandwidth`, `ByTrafficPackage`, `ByInstanceBandwidth95` and `ByClusterBandwidth95`. This value currently not support to change.
 * `force_delete` - (Optional, Bool) Indicate whether to force delete the instance. Default is `false`. If set true, the instance will be permanently deleted instead of being moved into the recycle bin.
 * `hostname` - (Optional, String) The hostname of the instance. The name should be a combination of 2 to 64 characters comprised of letters (case insensitive), numbers, hyphens (-) and Period (.), and the name must be start with letter. The default value is `Terraform-Instance`. Modifying will cause the instance reset.
-* `image_id` - (Optional, String) The image to use for the instance. Changing `image_id` will cause the instance reset.
+* `image_id` - (Optional, String) The image to use for the instance. Changing `image_id` will cause the instance reset. Conflicts with `ipxe_url`.
 * `instance_charge_prepaid_period` - (Optional, Int) The tenancy (time unit is month) of the prepaid instance, NOTE: it only works when instance_charge_type is set to `PREPAID`.
 * `instance_charge_type` - (Optional, String, ForceNew) The charge type of instance. Valid values are `PREPAID`, `POSTPAID`. The default is `POSTPAID`. Note: `PREPAID` instance may not allow to delete before expired.
 * `instance_name` - (Optional, String) The name of the instance. The max length of instance_name is 64, and default value is `Terraform-Instance`.
@@ -74,6 +85,7 @@ The following arguments are supported:
 * `ssh_keys` - (Optional, Set: [`String`]) The ssh keys to use for the instance. The max number of ssh keys is 5. Modifying will cause the instance reset.
 * `subnet_id` - (Optional, String) The ID of a VPC subnet. If you want to create instances in a VPC network, this parameter must be set.
 * `traffic_package_size` - (Optional, Float64) Traffic package size. Only valid when the charge type of instance is `ByTrafficPackage` and the instance charge type is `PREPAID`.
+* `ipxe_url` - (Optional, String, ForceNew) The iPXE URL to use for booting the instance. Conflicts with `image_id`.
 
 The `partitions` object supports the following:
 
