@@ -521,9 +521,9 @@ func dataSourceZenlayerCloudZgaAcceleratorsRead(ctx context.Context, d *schema.R
 	}
 
 	var (
-		len             = len(accelerators)
-		acceleratorList = make([]map[string]interface{}, 0, len)
-		ids             = make([]string, 0, len)
+		length          = len(accelerators)
+		acceleratorList = make([]map[string]interface{}, 0, length)
+		ids             = make([]string, 0, length)
 	)
 	for _, accelerator := range accelerators {
 		acceleratorList = append(acceleratorList, flattenAccelerator(accelerator))
