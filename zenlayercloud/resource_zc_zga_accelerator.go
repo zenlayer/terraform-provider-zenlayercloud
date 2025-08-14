@@ -207,9 +207,10 @@ func resourceZenlayerCloudAccelerator() *schema.Resource {
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 			"accelerate_regions": {
-				Type:        schema.TypeList,
+				Type:        schema.TypeSet,
 				Description: "Accelerate region of the accelerator.",
 				Required:    true,
+				Set:         AccelerateRegionsSchemaSetFuncfunc,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"accelerate_region_id": {
@@ -399,7 +400,7 @@ func resourceZenlayerCloudAccelerator() *schema.Resource {
 						"enable": {
 							Type:        schema.TypeBool,
 							Required:    true,
-							Description: "Whether to enable access control. Default is `false`.",
+							Description: "Whether to enable access control. Default is `true`.",
 						},
 						"rules": {
 							Type:        schema.TypeSet,
@@ -486,7 +487,7 @@ func SharpenOrigin(d *schema.ResourceData) zga.Origin {
 
 func SharpenAccelerateRegion(d *schema.ResourceData) []zga.AccelerateRegion {
 	var (
-		accRegionsV = d.Get("accelerate_regions").([]interface{})
+		accRegionsV = d.Get("accelerate_regions").(*schema.Set).List()
 		result      = make([]zga.AccelerateRegion, 0, len(accRegionsV))
 	)
 	for _, accRegionV := range accRegionsV {
@@ -825,11 +826,11 @@ func resourceZenlayerCloudAcceleratorRead(ctx context.Context, d *schema.Resourc
 	return diags
 }
 
-func flattenResourceAccelerateRegions(acceelrateRegions []*zga.AccelerateRegionInfo) []interface{} {
+func flattenResourceAccelerateRegions(acceelrateRegions []*zga.AccelerateRegionInfo) []map[string]interface{} {
 	if acceelrateRegions == nil {
 		return nil
 	}
-	var result = make([]interface{}, 0, len(acceelrateRegions))
+	var result = make([]map[string]interface{}, 0, len(acceelrateRegions))
 	for _, region := range acceelrateRegions {
 		result = append(result, map[string]interface{}{
 			"accelerate_region_id": region.AccelerateRegionId,
@@ -1047,10 +1048,9 @@ func AccessControlValidFunc(_ context.Context, diff *schema.ResourceDiff, _ inte
 	if !ok {
 		return nil
 	}
-	acEnable := accessControl["enable"].(bool)
 	rulesSet, ok := accessControl["rules"].(*schema.Set)
-	if acEnable && ok && rulesSet.Len() == 0 {
-		return errors.New("required rules when open access control")
+	if !ok {
+		return nil
 	}
 	rulesV := rulesSet.List()
 	for _, ruleV := range rulesV {

@@ -101,7 +101,7 @@ resource "zenlayercloud_zga_accelerator" "default" {
 
 The following arguments are supported:
 
-* `accelerate_regions` - (Required, List) Accelerate region of the accelerator.
+* `accelerate_regions` - (Required, Set) Accelerate region of the accelerator.
 * `origin_region_id` - (Required, String) ID of the orgin region. Modification is not supported.
 * `origin` - (Required, Set: [`String`]) Endpoints of the origin. Only one endpoint is allowed to be configured, when the endpoint is CNAME.
 * `accelerator_name` - (Optional, String) The name of accelerator. The max length of accelerator name is 64.
@@ -125,7 +125,7 @@ The `accelerate_regions` object supports the following:
 
 The `access_control` object supports the following:
 
-* `enable` - (Required, Bool) Whether to enable access control. Default is `false`.
+* `enable` - (Required, Bool) Whether to enable access control. Default is `true`.
 * `rules` - (Optional, Set) Rules of the access control.
 
 The `health_check` object supports the following:
