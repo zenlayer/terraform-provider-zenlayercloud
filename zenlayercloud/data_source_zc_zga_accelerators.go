@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/connectivity"
+
 	zga "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/zga20230706"
 )
 
@@ -161,9 +162,10 @@ func dataSourceZenlayerCloudZgaAccelerators() *schema.Resource {
 							Elem:        &schema.Schema{Type: schema.TypeString},
 						},
 						"accelerate_regions": {
-							Type:        schema.TypeList,
+							Type:        schema.TypeSet,
 							Description: "Accelerate region of the accelerator.",
 							Computed:    true,
+							Set:         AccelerateRegionsSchemaSetFuncfunc,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"accelerate_region_id": {
@@ -519,9 +521,9 @@ func dataSourceZenlayerCloudZgaAcceleratorsRead(ctx context.Context, d *schema.R
 	}
 
 	var (
-		length          = len(accelerators)
-		acceleratorList = make([]map[string]interface{}, 0, length)
-		ids             = make([]string, 0, length)
+		len             = len(accelerators)
+		acceleratorList = make([]map[string]interface{}, 0, len)
+		ids             = make([]string, 0, len)
 	)
 	for _, accelerator := range accelerators {
 		acceleratorList = append(acceleratorList, flattenAccelerator(accelerator))
@@ -744,4 +746,10 @@ func splitStringByCommaOrSemicolon(value string) (result []string) {
 
 func joinArrayByComma(values []string) string {
 	return strings.Join(values, ",")
+}
+
+func AccelerateRegionsSchemaSetFuncfunc(val interface{}) int {
+	m := val.(map[string]interface{})
+	regionID := m["accelerate_region_id"].(string)
+	return schema.HashString(regionID)
 }
