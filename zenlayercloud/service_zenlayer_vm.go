@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	common2 "github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/common"
 	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/connectivity"
 	"github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/common"
 	vm "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/vm20230313"
@@ -29,7 +30,7 @@ func (s *VmService) DescribeSecurityGroupsByFilter(filter *SecurityGroupFilter) 
 
 	if err != nil {
 		log.Printf("[CRITAL] Api[%s] fail, request body [%s], error[%s]\n",
-			request.GetAction(), toJsonString(request), err.Error())
+			request.GetAction(), common2.ToJsonString(request), err.Error())
 		return
 	}
 	if response == nil || len(response.Response.DataSet) < 1 {
@@ -42,7 +43,7 @@ func (s *VmService) DescribeSecurityGroupsByFilter(filter *SecurityGroupFilter) 
 		return securityGroups, nil
 	}
 	maxConcurrentNum := 50
-	g := NewGoRoutine(maxConcurrentNum)
+	g := common2.NewGoRoutine(maxConcurrentNum)
 	wg := sync.WaitGroup{}
 
 	var securityGroupList = make([]interface{}, num)
@@ -59,11 +60,11 @@ func (s *VmService) DescribeSecurityGroupsByFilter(filter *SecurityGroupFilter) 
 			response, err := s.client.WithVmClient().DescribeSecurityGroups(request)
 			if err != nil {
 				log.Printf("[CRITAL] Api[%s] fail, request body [%s], error[%s]\n",
-					request.GetAction(), toJsonString(request), err.Error())
+					request.GetAction(), common2.ToJsonString(request), err.Error())
 				return
 			}
 			log.Printf("[DEBUG] Api[%s] success, request body [%s], response body [%s]\n",
-				request.GetAction(), toJsonString(request), toJsonString(response))
+				request.GetAction(), common2.ToJsonString(request), common2.ToJsonString(response))
 
 			securityGroupList[value] = response.Response.DataSet
 
@@ -88,7 +89,7 @@ func (s *VmService) DescribeSecurityGroupById(ctx context.Context, securityGroup
 
 	var response *vm.DescribeSecurityGroupsResponse
 
-	defer logApiRequest(ctx, "DescribeSecurityGroups", request, response, err)
+	defer common2.LogApiRequest(ctx, "DescribeSecurityGroups", request, response, err)
 
 	response, err = s.client.WithVmClient().DescribeSecurityGroups(request)
 
@@ -107,7 +108,7 @@ func (s *VmService) DeleteSecurityGroup(ctx context.Context, securityGroupId str
 	request := vm.NewDeleteSecurityGroupRequest()
 	request.SecurityGroupId = securityGroupId
 	response, err := s.client.WithVmClient().DeleteSecurityGroup(request)
-	defer logApiRequest(ctx, "DeleteSecurityGroup", request, response, err)
+	defer common2.LogApiRequest(ctx, "DeleteSecurityGroup", request, response, err)
 	return
 }
 
@@ -117,7 +118,7 @@ func (s *VmService) ModifySecurityGroupAttribute(ctx context.Context, securityGr
 	request.SecurityGroupName = securityGroupName
 	request.Description = &description
 	response, err := s.client.WithVmClient().ModifySecurityGroupsAttribute(request)
-	defer logApiRequest(ctx, "ModifySecurityGroupsAttribute", request, response, err)
+	defer common2.LogApiRequest(ctx, "ModifySecurityGroupsAttribute", request, response, err)
 	return err
 }
 
@@ -144,7 +145,7 @@ func (s *VmService) DescribeSecurityGroupRule(ruleId string) (securityGroupId st
 	response, err := s.client.WithVmClient().DescribeSecurityGroups(request)
 	if err != nil {
 		log.Printf("[CRITAL] Api[%s] fail, request body [%s], error[%s]\n",
-			request.GetAction(), toJsonString(request), err.Error())
+			request.GetAction(), common2.ToJsonString(request), err.Error())
 		return
 	}
 
@@ -185,7 +186,7 @@ func (s *VmService) CreateSecurityGroupRule(ctx context.Context, info securityGr
 	if ret != nil {
 		tflog.Info(ctx, "Fail to authorize security group rule.", map[string]interface{}{
 			"action":  request.GetAction(),
-			"request": toJsonString(request),
+			"request": common2.ToJsonString(request),
 			"err":     ret.Error(),
 		})
 		err = ret
@@ -196,8 +197,8 @@ func (s *VmService) CreateSecurityGroupRule(ctx context.Context, info securityGr
 
 	tflog.Info(ctx, "Authorize security group rule success", map[string]interface{}{
 		"action":   request.GetAction(),
-		"request":  toJsonString(request),
-		"response": toJsonString(response),
+		"request":  common2.ToJsonString(request),
+		"response": common2.ToJsonString(response),
 	})
 
 	ruleId, err = buildSecurityGroupRuleId(info)
@@ -212,7 +213,7 @@ func (s *VmService) DescribeImageById(ctx context.Context, imageId string) (imag
 	var request = vm.NewDescribeImageRequest()
 	request.ImageId = imageId
 	response, err := s.client.WithVmClient().DescribeImage(request)
-	logApiRequest(ctx, "DescribeImage", request, response, err)
+	common2.LogApiRequest(ctx, "DescribeImage", request, response, err)
 	if err != nil {
 		return nil, err
 	}
@@ -226,7 +227,7 @@ func (s *VmService) ModifyImage(ctx context.Context, imageId string, imageName s
 	//request.Image = imageName
 	request.ImageDescription = imageDesc
 	response, e := s.client.WithVmClient().ModifyImagesAttributes(request)
-	logApiRequest(ctx, "DescribeImages", request, response, e)
+	common2.LogApiRequest(ctx, "DescribeImages", request, response, e)
 	if e != nil {
 		return e
 	}
@@ -256,7 +257,7 @@ func (s *VmService) DescribeImagesByFilter(filter *VmImageFilter) (images []*vm.
 
 	if err != nil {
 		log.Printf("[CRITAL] Api[%s] fail, request body [%s], error[%s]\n",
-			request.GetAction(), toJsonString(request), err.Error())
+			request.GetAction(), common2.ToJsonString(request), err.Error())
 		return
 	}
 	if response == nil || len(response.Response.DataSet) < 1 {
@@ -269,7 +270,7 @@ func (s *VmService) DescribeImagesByFilter(filter *VmImageFilter) (images []*vm.
 		return images, nil
 	}
 	maxConcurrentNum := 50
-	g := NewGoRoutine(maxConcurrentNum)
+	g := common2.NewGoRoutine(maxConcurrentNum)
 	wg := sync.WaitGroup{}
 
 	var imageSetList = make([]interface{}, num)
@@ -286,11 +287,11 @@ func (s *VmService) DescribeImagesByFilter(filter *VmImageFilter) (images []*vm.
 			response, err := s.client.WithVmClient().DescribeImages(request)
 			if err != nil {
 				log.Printf("[CRITAL] Api[%s] fail, request body [%s], error[%s]\n",
-					request.GetAction(), toJsonString(request), err.Error())
+					request.GetAction(), common2.ToJsonString(request), err.Error())
 				return
 			}
 			log.Printf("[DEBUG] Api[%s] success, request body [%s], response body [%s]\n",
-				request.GetAction(), toJsonString(request), toJsonString(response))
+				request.GetAction(), common2.ToJsonString(request), common2.ToJsonString(response))
 
 			imageSetList[value] = response.Response.DataSet
 
@@ -334,7 +335,7 @@ func (s *VmService) DescribeSubnets(ctx context.Context, filter *VmSubnetFilter)
 
 	if err != nil {
 		log.Printf("[CRITAL] Api[%s] fail, request body [%s], error[%s]\n",
-			request.GetAction(), toJsonString(request), err.Error())
+			request.GetAction(), common2.ToJsonString(request), err.Error())
 		return
 	}
 	if response == nil || len(response.Response.DataSet) < 1 {
@@ -347,7 +348,7 @@ func (s *VmService) DescribeSubnets(ctx context.Context, filter *VmSubnetFilter)
 		return subnets, nil
 	}
 	maxConcurrentNum := 50
-	g := NewGoRoutine(maxConcurrentNum)
+	g := common2.NewGoRoutine(maxConcurrentNum)
 	wg := sync.WaitGroup{}
 
 	var subnetList = make([]interface{}, num)
@@ -364,11 +365,11 @@ func (s *VmService) DescribeSubnets(ctx context.Context, filter *VmSubnetFilter)
 			response, err := s.client.WithVmClient().DescribeSubnets(request)
 			if err != nil {
 				log.Printf("[CRITAL] Api[%s] fail, request body [%s], error[%s]\n",
-					request.GetAction(), toJsonString(request), err.Error())
+					request.GetAction(), common2.ToJsonString(request), err.Error())
 				return
 			}
 			log.Printf("[DEBUG] Api[%s] success, request body [%s], response body [%s]\n",
-				request.GetAction(), toJsonString(request), toJsonString(response))
+				request.GetAction(), common2.ToJsonString(request), common2.ToJsonString(response))
 
 			subnetList[value] = response.Response.DataSet
 
@@ -409,7 +410,7 @@ func (s *VmService) DeleteSubnet(ctx context.Context, subnetId string) (err erro
 	request := vm.NewDeleteSubnetRequest()
 	request.SubnetId = subnetId
 	response, err := s.client.WithVmClient().DeleteSubnet(request)
-	logApiRequest(ctx, "DeleteSubnet", request, response, err)
+	common2.LogApiRequest(ctx, "DeleteSubnet", request, response, err)
 	return
 }
 
@@ -418,7 +419,7 @@ func (s *VmService) ModifySubnetName(ctx context.Context, subnetId string, subne
 	request.SubnetIds = []string{subnetId}
 	request.SubnetName = subnetName
 	response, err := s.client.WithVmClient().ModifySubnetsAttribute(request)
-	logApiRequest(ctx, "ModifySubnetsAttribute", request, response, err)
+	common2.LogApiRequest(ctx, "ModifySubnetsAttribute", request, response, err)
 	return err
 }
 
@@ -428,7 +429,7 @@ func (s *VmService) DescribeSubnetById(ctx context.Context, subnetId string) (su
 
 	var response *vm.DescribeSubnetsResponse
 
-	defer logApiRequest(ctx, "DescribeSubnets", request, response, err)
+	defer common2.LogApiRequest(ctx, "DescribeSubnets", request, response, err)
 
 	response, err = s.client.WithVmClient().DescribeSubnets(request)
 
@@ -456,7 +457,7 @@ func (s *VmService) SubnetStateRefreshFunc(ctx context.Context, subnetId string,
 		}
 		for _, failState := range failStates {
 			if object.SubnetStatus == failState {
-				return object, object.SubnetStatus, Error("Failed to reach target status. Last status: %s.", object.SubnetStatus)
+				return object, object.SubnetStatus, common2.Error("Failed to reach target status. Last status: %s.", object.SubnetStatus)
 			}
 		}
 
@@ -470,11 +471,11 @@ func (s *VmService) DescribeDisks(ctx context.Context, filter *VmDiskFilter) (di
 	request.PageSize = limit
 	request.PageNum = 1
 	response, err := s.client.WithVmClient().DescribeDisks(request)
-	defer logApiRequest(ctx, "DescribeDisks", request, response, err)
+	defer common2.LogApiRequest(ctx, "DescribeDisks", request, response, err)
 
 	if err != nil {
 		log.Printf("[CRITAL] Api[%s] fail, request body [%s], error[%s]\n",
-			request.GetAction(), toJsonString(request), err.Error())
+			request.GetAction(), common2.ToJsonString(request), err.Error())
 		return
 	}
 	if response == nil || len(response.Response.DataSet) < 1 {
@@ -487,7 +488,7 @@ func (s *VmService) DescribeDisks(ctx context.Context, filter *VmDiskFilter) (di
 		return disks, nil
 	}
 	maxConcurrentNum := 50
-	g := NewGoRoutine(maxConcurrentNum)
+	g := common2.NewGoRoutine(maxConcurrentNum)
 	wg := sync.WaitGroup{}
 
 	var diskList = make([]interface{}, num)
@@ -504,11 +505,11 @@ func (s *VmService) DescribeDisks(ctx context.Context, filter *VmDiskFilter) (di
 			response, err := s.client.WithVmClient().DescribeDisks(request)
 			if err != nil {
 				log.Printf("[CRITAL] Api[%s] fail, request body [%s], error[%s]\n",
-					request.GetAction(), toJsonString(request), err.Error())
+					request.GetAction(), common2.ToJsonString(request), err.Error())
 				return
 			}
 			log.Printf("[DEBUG] Api[%s] success, request body [%s], response body [%s]\n",
-				request.GetAction(), toJsonString(request), toJsonString(response))
+				request.GetAction(), common2.ToJsonString(request), common2.ToJsonString(response))
 
 			diskList[value] = response.Response.DataSet
 
@@ -540,7 +541,7 @@ func (s *VmService) DiskStateRefreshFunc(ctx context.Context, diskId string, fai
 		}
 		for _, failState := range failStates {
 			if object.DiskStatus == failState {
-				return object, object.DiskStatus, Error("Failed to reach target status. Last status: %s.", object.DiskStatus)
+				return object, object.DiskStatus, common2.Error("Failed to reach target status. Last status: %s.", object.DiskStatus)
 			}
 		}
 
@@ -554,7 +555,7 @@ func (s *VmService) DescribeDiskById(ctx context.Context, diskId string) (*vm.Di
 
 	response, err := s.client.WithVmClient().DescribeDisks(request)
 
-	defer logApiRequest(ctx, "DescribeDisks", request, response, err)
+	defer common2.LogApiRequest(ctx, "DescribeDisks", request, response, err)
 	if err != nil {
 		return nil, err
 	}
@@ -571,7 +572,7 @@ func (s *VmService) ModifyDiskName(ctx context.Context, diskId string, diskName 
 	request.DiskIds = []string{diskId}
 	request.DiskName = diskName
 	response, err := s.client.WithVmClient().ModifyDisksAttributes(request)
-	defer logApiRequest(ctx, "ModifyDisksAttributes", request, response, err)
+	defer common2.LogApiRequest(ctx, "ModifyDisksAttributes", request, response, err)
 	return err
 }
 
@@ -580,7 +581,7 @@ func (s *VmService) ModifyDiskResourceGroupId(ctx context.Context, diskId string
 	request.DiskIds = []string{diskId}
 	request.ResourceGroupId = resourceGroupId
 	response, err := s.client.WithVmClient().ModifyDisksResourceGroup(request)
-	defer logApiRequest(ctx, "ModifyDisksResourceGroup", request, response, err)
+	defer common2.LogApiRequest(ctx, "ModifyDisksResourceGroup", request, response, err)
 	return err
 }
 
@@ -588,7 +589,7 @@ func (s *VmService) DeleteDisk(ctx context.Context, diskId string) (err error) {
 	request := vm.NewTerminateDiskRequest()
 	request.DiskId = diskId
 	response, err := s.client.WithVmClient().TerminateDisk(request)
-	defer logApiRequest(ctx, "TerminateInstance", request, response, err)
+	defer common2.LogApiRequest(ctx, "TerminateInstance", request, response, err)
 
 	if err != nil {
 		if sdkError, ok := err.(*common.ZenlayerCloudSdkError); ok {
@@ -605,7 +606,7 @@ func (s *VmService) ReleaseDisk(ctx context.Context, diskId string) (err error) 
 	request := vm.NewReleaseDiskRequest()
 	request.DiskId = diskId
 	response, err := s.client.WithVmClient().ReleaseDisk(request)
-	defer logApiRequest(ctx, "ReleaseDisk", request, response, err)
+	defer common2.LogApiRequest(ctx, "ReleaseDisk", request, response, err)
 	return
 }
 
@@ -652,7 +653,7 @@ func convertVmImageFilter(filter *VmImageFilter) *vm.DescribeImagesRequest {
 func (s *VmService) DescribeZones(ctx context.Context) (zones []*vm.ZoneInfo, err error) {
 	request := vm.NewDescribeZonesRequest()
 	response, err := s.client.WithVmClient().DescribeZones(request)
-	logApiRequest(ctx, "DescribeZones", request, response, err)
+	common2.LogApiRequest(ctx, "DescribeZones", request, response, err)
 	if err != nil {
 		return
 	}
@@ -666,7 +667,7 @@ func (s *VmService) DescribeInstanceById(ctx context.Context, instanceId string)
 
 	response, err := s.client.WithVmClient().DescribeInstances(request)
 
-	defer logApiRequest(ctx, "DescribeInstances", request, response, err)
+	defer common2.LogApiRequest(ctx, "DescribeInstances", request, response, err)
 	if err != nil {
 		return
 	}
@@ -683,7 +684,7 @@ func (s *VmService) DeleteInstance(ctx context.Context, instanceId string) (err 
 	request := vm.NewTerminateInstanceRequest()
 	request.InstanceId = instanceId
 	response, err := s.client.WithVmClient().TerminateInstance(request)
-	defer logApiRequest(ctx, "TerminateInstance", request, response, err)
+	defer common2.LogApiRequest(ctx, "TerminateInstance", request, response, err)
 
 	if err != nil {
 		if sdkError, ok := err.(*common.ZenlayerCloudSdkError); ok {
@@ -700,7 +701,7 @@ func (s *VmService) DestroyInstance(ctx context.Context, instanceId string) (err
 	request := vm.NewReleaseInstancesRequest()
 	request.InstanceIds = []string{instanceId}
 	response, err := s.client.WithVmClient().ReleaseInstances(request)
-	defer logApiRequest(ctx, "ReleaseInstances", request, response, err)
+	defer common2.LogApiRequest(ctx, "ReleaseInstances", request, response, err)
 	if err != nil {
 		return
 	}
@@ -720,7 +721,7 @@ func (s *VmService) InstanceStateRefreshFunc(ctx context.Context, instanceId str
 		}
 		for _, failState := range failStates {
 			if object.InstanceStatus == failState {
-				return object, object.InstanceStatus, Error("Failed to reach target status. Last status: %s.", object.InstanceStatus)
+				return object, object.InstanceStatus, common2.Error("Failed to reach target status. Last status: %s.", object.InstanceStatus)
 			}
 		}
 
@@ -733,7 +734,7 @@ func (s *VmService) ModifyInstanceName(ctx context.Context, instanceId string, i
 	request.InstanceIds = []string{instanceId}
 	request.InstanceName = instanceName
 	response, err := s.client.WithVmClient().ModifyInstancesAttribute(request)
-	defer logApiRequest(ctx, "ModifyInstancesAttribute", request, response, err)
+	defer common2.LogApiRequest(ctx, "ModifyInstancesAttribute", request, response, err)
 	return err
 }
 
@@ -742,7 +743,7 @@ func (s *VmService) ModifyInstanceResourceGroup(ctx context.Context, instanceId 
 	request.InstanceIds = []string{instanceId}
 	request.ResourceGroupId = resourceGroupId
 	response, err := s.client.WithVmClient().ModifyInstancesResourceGroup(request)
-	defer logApiRequest(ctx, "ModifyInstancesResourceGroup", request, response, err)
+	defer common2.LogApiRequest(ctx, "ModifyInstancesResourceGroup", request, response, err)
 
 	if err != nil {
 		return err
@@ -756,7 +757,7 @@ func (s *VmService) updateInstanceInternetMaxBandwidthOut(ctx context.Context, i
 	request.InstanceId = instanceId
 	request.InternetMaxBandwidthOut = internetBandwidthOut
 	response, err := s.client.WithVmClient().ModifyInstanceBandwidth(request)
-	defer logApiRequest(ctx, "ModifyInstanceBandwidth", request, response, err)
+	defer common2.LogApiRequest(ctx, "ModifyInstanceBandwidth", request, response, err)
 	if err != nil {
 		return err
 	}
@@ -785,7 +786,7 @@ func (s *VmService) InstanceNetworkStateRefreshFunc(ctx context.Context, instanc
 			return nil, "", nil
 		}
 		if condition.matchFail(internetStatus) {
-			return internetStatus, VmNetworkStatusFail, Error("Failed to reach target status. Last internet status: %v.", internetStatus)
+			return internetStatus, VmNetworkStatusFail, common2.Error("Failed to reach target status. Last internet status: %v.", internetStatus)
 		}
 		if condition.matchOk(internetStatus) {
 			return internetStatus, VmNetworkStatusOK, nil
@@ -800,7 +801,7 @@ func (s *VmService) updateInstanceTrafficPackageSize(ctx context.Context, instan
 	request.InstanceId = instanceId
 	request.TrafficPackageSize = &trafficPackageSize
 	response, err := s.client.WithVmClient().ModifyInstanceTrafficPackage(request)
-	defer logApiRequest(ctx, "ModifyInstanceTrafficPackageSize", request, response, err)
+	defer common2.LogApiRequest(ctx, "ModifyInstanceTrafficPackageSize", request, response, err)
 	return err
 }
 
@@ -810,14 +811,14 @@ func (s *VmService) resetInstancePassword(ctx context.Context, instanceId string
 	request.InstanceIds = []string{instanceId}
 	request.Password = newPassword
 	response, err := s.client.WithVmClient().ResetInstancesPassword(request)
-	defer logApiRequest(ctx, "ResetInstancesPassword", request, response, err)
+	defer common2.LogApiRequest(ctx, "ResetInstancesPassword", request, response, err)
 	return err
 }
 
 func (s *VmService) resetInstance(ctx context.Context, request *vm.ResetInstanceRequest) error {
 
 	response, err := s.client.WithVmClient().ResetInstance(request)
-	logApiRequest(ctx, "ReinstallInstance", request, response, err)
+	common2.LogApiRequest(ctx, "ReinstallInstance", request, response, err)
 	return err
 }
 
@@ -825,7 +826,7 @@ func (s *VmService) shutdownInstance(ctx context.Context, instanceId string) err
 	request := vm.NewStopInstancesRequest()
 	request.InstanceIds = []string{instanceId}
 	response, err := s.client.WithVmClient().StopInstances(request)
-	logApiRequest(ctx, "ShutdownInstance", request, response, err)
+	common2.LogApiRequest(ctx, "ShutdownInstance", request, response, err)
 	return err
 }
 
@@ -841,7 +842,7 @@ func (s *VmService) DescribeInstanceInternetStatus(ctx context.Context, instance
 
 func (s *VmService) DescribeKeyPairs(ctx context.Context, request *vm.DescribeKeyPairsRequest) (keyPairs []*vm.KeyPair, err error) {
 	response, err := s.client.WithVmClient().DescribeKeyPairs(request)
-	logApiRequest(ctx, "DescribeKeyPairs", request, response, err)
+	common2.LogApiRequest(ctx, "DescribeKeyPairs", request, response, err)
 	if err != nil {
 		return
 	}
@@ -853,7 +854,7 @@ func (s *VmService) DescribeKeyPairById(ctx context.Context, keyId string) (keyP
 	var request = vm.NewDescribeKeyPairsRequest()
 	request.KeyIds = []string{keyId}
 	response, err := s.client.WithVmClient().DescribeKeyPairs(request)
-	defer logApiRequest(ctx, "DescribeKeyPair", request, response, err)
+	defer common2.LogApiRequest(ctx, "DescribeKeyPair", request, response, err)
 	if err != nil {
 		return nil, err
 	}
@@ -884,7 +885,7 @@ func (s *VmService) ModifyKeyPair(ctx context.Context, keyId string, keyDesc *st
 	request.KeyId = keyId
 	request.KeyDescription = keyDesc
 	response, e := s.client.WithVmClient().ModifyKeyPairAttribute(request)
-	logApiRequest(ctx, "ModifyKeyPair", request, response, e)
+	common2.LogApiRequest(ctx, "ModifyKeyPair", request, response, e)
 	if e != nil {
 		return e
 	}

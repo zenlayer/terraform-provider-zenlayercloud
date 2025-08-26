@@ -30,6 +30,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	common2 "github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/common"
 	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/connectivity"
 	"github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/common"
 	vm "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/vm20230313"
@@ -123,7 +124,7 @@ func resourceZenlayerCloudVmDiskDelete(ctx context.Context, d *schema.ResourceDa
 	err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutDelete)-time.Minute, func() *resource.RetryError {
 		errRet := vmService.DeleteDisk(ctx, diskId)
 		if errRet != nil {
-			return retryError(ctx, errRet)
+			return common2.RetryError(ctx, errRet)
 		}
 		return nil
 	})
@@ -136,7 +137,7 @@ func resourceZenlayerCloudVmDiskDelete(ctx context.Context, d *schema.ResourceDa
 	err = resource.RetryContext(ctx, d.Timeout(schema.TimeoutDelete)-time.Minute, func() *resource.RetryError {
 		disk, errRet := vmService.DescribeDiskById(ctx, diskId)
 		if errRet != nil {
-			return retryError(ctx, errRet, InternalServerError)
+			return common2.RetryError(ctx, errRet, common2.InternalServerError)
 		}
 		if disk == nil {
 			notExist = true
@@ -172,13 +173,13 @@ func resourceZenlayerCloudVmDiskDelete(ctx context.Context, d *schema.ResourceDa
 
 			ee, ok := errRet.(*common.ZenlayerCloudSdkError)
 			if !ok {
-				return retryError(ctx, errRet)
+				return common2.RetryError(ctx, errRet)
 			}
-			if ee.Code == "INVALID_DISK_NOT_FOUND" || ee.Code == ResourceNotFound {
+			if ee.Code == "INVALID_DISK_NOT_FOUND" || ee.Code == common2.ResourceNotFound {
 				// disk doesn't exist
 				return nil
 			}
-			return retryError(ctx, errRet, InternalServerError)
+			return common2.RetryError(ctx, errRet, common2.InternalServerError)
 		}
 		return nil
 	})
@@ -199,7 +200,7 @@ func resourceZenlayerCloudVmDiskUpdate(ctx context.Context, d *schema.ResourceDa
 		err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate)-time.Minute, func() *resource.RetryError {
 			err := vmService.ModifyDiskName(ctx, diskId, d.Get("name").(string))
 			if err != nil {
-				return retryError(ctx, err, InternalServerError, common.NetworkError)
+				return common2.RetryError(ctx, err, common2.InternalServerError, common.NetworkError)
 			}
 			return nil
 		})
@@ -213,7 +214,7 @@ func resourceZenlayerCloudVmDiskUpdate(ctx context.Context, d *schema.ResourceDa
 		err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate)-time.Minute, func() *resource.RetryError {
 			err := vmService.ModifyDiskResourceGroupId(ctx, diskId, d.Get("resource_group_id").(string))
 			if err != nil {
-				return retryError(ctx, err, InternalServerError, common.NetworkError)
+				return common2.RetryError(ctx, err, common2.InternalServerError, common.NetworkError)
 			}
 			return nil
 		})
@@ -269,16 +270,16 @@ func resourceZenlayerCloudVmDiskCreate(ctx context.Context, d *schema.ResourceDa
 		if err != nil {
 			tflog.Info(ctx, "Fail to create data disk.", map[string]interface{}{
 				"action":  request.GetAction(),
-				"request": toJsonString(request),
+				"request": common2.ToJsonString(request),
 				"err":     err.Error(),
 			})
-			return retryError(ctx, err)
+			return common2.RetryError(ctx, err)
 		}
 
 		tflog.Info(ctx, "Create data disk success", map[string]interface{}{
 			"action":   request.GetAction(),
-			"request":  toJsonString(request),
-			"response": toJsonString(response),
+			"request":  common2.ToJsonString(request),
+			"response": common2.ToJsonString(response),
 		})
 
 		if len(response.Response.DiskIds) < 1 {
@@ -318,7 +319,7 @@ func resourceZenlayerCloudVmDiskRead(ctx context.Context, d *schema.ResourceData
 	err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutRead)-time.Minute, func() *resource.RetryError {
 		disk, errRet = vmService.DescribeDiskById(ctx, diskId)
 		if errRet != nil {
-			return retryError(ctx, errRet)
+			return common2.RetryError(ctx, errRet)
 		}
 
 		if disk != nil && diskIsOperating(disk.DiskStatus) {
@@ -374,7 +375,7 @@ func BuildDiskState(vmService *VmService, diskId string, ctx context.Context, d 
 }
 
 func diskIsOperating(status string) bool {
-	return IsContains([]string{
+	return common2.IsContains([]string{
 		VmDiskStatusRecycling,
 		VmDiskStatusAttaching,
 		VmDiskStatusDetaching,

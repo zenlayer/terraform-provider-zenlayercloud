@@ -3,6 +3,7 @@ package zenlayercloud
 import (
 	"context"
 	"fmt"
+	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/common"
 	"reflect"
 	"regexp"
 	"strings"
@@ -145,7 +146,7 @@ func (rc *resourceCheck) checkResourceDestroy() resource.TestCheckFunc {
 		}
 
 		if resourceType == "" {
-			return Error("The resourceId %s is not correct and it should prefix with zenlayercloud_", rc.resourceId)
+			return common.Error("The resourceId %s is not correct and it should prefix with zenlayercloud_", rc.resourceId)
 		}
 
 		for _, rs := range s.RootModule().Resources {
@@ -162,7 +163,7 @@ func (rc *resourceCheck) checkResourceDestroy() resource.TestCheckFunc {
 			}
 			resourceValue := outValue[0]
 			if !resourceValue.IsNil() {
-				return Error("the resource %s %s was not destroyed ! ", rc.resourceId, rs.Primary.ID)
+				return common.Error("the resource %s %s was not destroyed ! ", rc.resourceId, rs.Primary.ID)
 			}
 		}
 		return nil
@@ -179,7 +180,7 @@ func (rc *resourceCheck) callDescribeMethod(rs *terraform.ResourceState) ([]refl
 	typeName := value.Type().String()
 	value = value.MethodByName(rc.describeMethod)
 	if !value.IsValid() {
-		return nil, Error("The service type %s does not have method %s", typeName, rc.describeMethod)
+		return nil, common.Error("The service type %s does not have method %s", typeName, rc.describeMethod)
 	}
 	inValue := []reflect.Value{reflect.ValueOf(context.Background()), reflect.ValueOf(rs.Primary.ID)}
 	return value.Call(inValue), nil

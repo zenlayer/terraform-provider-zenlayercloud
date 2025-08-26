@@ -13,7 +13,25 @@ Use this data source to query vpc subnets information.
 
 ## Example Usage
 
+```hcl
+variable "availability_zone" {
+  default = "SEL-A"
+}
 
+resource "zenlayercloud_bmc_subnet" "foo" {
+  availability_zone = var.availability_zone
+  name              = "subnet_test"
+  cidr_block        = "10.0.0.0/16"
+}
+
+data "zenlayercloud_bmc_subnets" "id_subnets" {
+  subnet_id = zenlayercloud_bmc_subnet.foo.id
+}
+
+data "zenlayercloud_bmc_subnets" "name_subnets" {
+  subnet_name = zenlayercloud_bmc_subnet.foo.name
+}
+```
 
 ## Argument Reference
 

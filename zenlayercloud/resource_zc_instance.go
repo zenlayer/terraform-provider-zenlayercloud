@@ -60,6 +60,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	common2 "github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/common"
 	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/connectivity"
 	"github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/common"
 	vm "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/vm20230313"
@@ -77,8 +78,8 @@ func resourceZenlayerCloudVmInstance() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(vmCreateTimeout),
-			Update: schema.DefaultTimeout(vmUpdateTimeout),
+			Create: schema.DefaultTimeout(common2.VmCreateTimeout),
+			Update: schema.DefaultTimeout(common2.VmUpdateTimeout),
 		},
 		CustomizeDiff: customdiff.All(
 			vmInternetMaxBandwidthOutForceNew(),
@@ -304,7 +305,7 @@ func resourceZenlayerCloudVmInstanceDelete(ctx context.Context, d *schema.Resour
 	err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutDelete)-time.Minute, func() *resource.RetryError {
 		errRet := vmService.DeleteInstance(ctx, instanceId)
 		if errRet != nil {
-			return retryError(ctx, errRet)
+			return common2.RetryError(ctx, errRet)
 		}
 		return nil
 	})
@@ -319,12 +320,12 @@ func resourceZenlayerCloudVmInstanceDelete(ctx context.Context, d *schema.Resour
 		if errRet != nil {
 			ee, ok := errRet.(*common.ZenlayerCloudSdkError)
 			if !ok {
-				return retryError(ctx, errRet)
-			} else if ee.Code == "INVALID_INSTANCE_NOT_FOUND" || ee.Code == ResourceNotFound {
+				return common2.RetryError(ctx, errRet)
+			} else if ee.Code == "INVALID_INSTANCE_NOT_FOUND" || ee.Code == common2.ResourceNotFound {
 				notExist = true
 				return nil
 			}
-			return retryError(ctx, errRet)
+			return common2.RetryError(ctx, errRet)
 		}
 
 		if instance == nil {
@@ -362,13 +363,13 @@ func resourceZenlayerCloudVmInstanceDelete(ctx context.Context, d *schema.Resour
 			//check InvalidInstanceState.Terminating
 			ee, ok := errRet.(*common.ZenlayerCloudSdkError)
 			if !ok {
-				return retryError(ctx, errRet)
+				return common2.RetryError(ctx, errRet)
 			}
 			if ee.Code == "INVALID_INSTANCE_NOT_FOUND" {
 				// instance doesn't exist
 				return nil
 			}
-			return retryError(ctx, errRet, InternalServerError)
+			return common2.RetryError(ctx, errRet, common2.InternalServerError)
 		}
 		return nil
 	})
@@ -387,7 +388,7 @@ func resourceZenlayerCloudVmInstanceUpdate(ctx context.Context, d *schema.Resour
 		err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate)-time.Minute, func() *resource.RetryError {
 			err := vmService.ModifyInstanceName(ctx, instanceId, d.Get("instance_name").(string))
 			if err != nil {
-				return retryError(ctx, err, InternalServerError, common.NetworkError)
+				return common2.RetryError(ctx, err, common2.InternalServerError, common.NetworkError)
 			}
 			return nil
 		})
@@ -401,7 +402,7 @@ func resourceZenlayerCloudVmInstanceUpdate(ctx context.Context, d *schema.Resour
 		err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate)-time.Minute, func() *resource.RetryError {
 			err := vmService.ModifyInstanceResourceGroup(ctx, instanceId, d.Get("resource_group_id").(string))
 			if err != nil {
-				return retryError(ctx, err, InternalServerError, common.NetworkError)
+				return common2.RetryError(ctx, err, common2.InternalServerError, common.NetworkError)
 			}
 			return nil
 		})
@@ -446,7 +447,7 @@ func resourceZenlayerCloudVmInstanceUpdate(ctx context.Context, d *schema.Resour
 		err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate)-time.Minute, func() *resource.RetryError {
 			err := vmService.resetInstancePassword(ctx, instanceId, d.Get("password").(string))
 			if err != nil {
-				return retryError(ctx, err, InternalServerError, common.NetworkError)
+				return common2.RetryError(ctx, err, common2.InternalServerError, common.NetworkError)
 			}
 			return nil
 		})
@@ -464,7 +465,7 @@ func resourceZenlayerCloudVmInstanceUpdate(ctx context.Context, d *schema.Resour
 		err = resource.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate)-time.Minute, func() *resource.RetryError {
 			instance, errRet := vmService.DescribeInstanceById(ctx, instanceId)
 			if errRet != nil {
-				return retryError(ctx, errRet, InternalServerError)
+				return common2.RetryError(ctx, errRet, common2.InternalServerError)
 			}
 
 			if instance.InstanceStatus == VmInstanceStatusStopped {
@@ -615,16 +616,16 @@ func resourceZenlayerCloudVmInstanceCreate(ctx context.Context, d *schema.Resour
 		if err != nil {
 			tflog.Info(ctx, "Fail to create vm instance.", map[string]interface{}{
 				"action":  request.GetAction(),
-				"request": toJsonString(request),
+				"request": common2.ToJsonString(request),
 				"err":     err.Error(),
 			})
-			return retryError(ctx, err)
+			return common2.RetryError(ctx, err)
 		}
 
 		tflog.Info(ctx, "Create vm instance success", map[string]interface{}{
 			"action":   request.GetAction(),
-			"request":  toJsonString(request),
-			"response": toJsonString(response),
+			"request":  common2.ToJsonString(request),
+			"response": common2.ToJsonString(response),
 		})
 
 		if len(response.Response.InstanceIdSet) < 1 {
@@ -680,11 +681,11 @@ func resourceZenlayerCloudVmInstanceRead(ctx context.Context, d *schema.Resource
 		if errRet != nil {
 			ee, ok := errRet.(*common.ZenlayerCloudSdkError)
 			if !ok {
-				return retryError(ctx, errRet)
-			} else if ee.Code == "INVALID_INSTANCE_NOT_FOUND" || ee.Code == ResourceNotFound {
+				return common2.RetryError(ctx, errRet)
+			} else if ee.Code == "INVALID_INSTANCE_NOT_FOUND" || ee.Code == common2.ResourceNotFound {
 				return nil
 			}
-			return retryError(ctx, errRet)
+			return common2.RetryError(ctx, errRet)
 		}
 		if instance != nil && vmInstanceIsOperating(instance.InstanceStatus) {
 			return resource.RetryableError(fmt.Errorf("waiting for instance %s operation, current status: %s", instance.InstanceId, instance.InstanceStatus))

@@ -31,6 +31,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	common2 "github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/common"
 	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/connectivity"
 	"github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/common"
 	vm "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/vm20230313"
@@ -78,7 +79,7 @@ func resourceZenlayerCloudVmImage() *schema.Resource {
 }
 
 func resourceZenlayerCloudImageDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	defer logElapsed(ctx, "resource.zenlayercloud_image.delete")()
+	defer common2.LogElapsed(ctx, "resource.zenlayercloud_image.delete")()
 
 	vmService := VmService{
 		client: meta.(*connectivity.ZenlayerCloudClient),
@@ -89,7 +90,7 @@ func resourceZenlayerCloudImageDelete(ctx context.Context, d *schema.ResourceDat
 	err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutDelete)-time.Minute, func() *resource.RetryError {
 		errRet := vmService.DeleteImage(ctx, imageId)
 		if errRet != nil {
-			return retryError(ctx, errRet)
+			return common2.RetryError(ctx, errRet)
 		}
 		return nil
 	})
@@ -112,7 +113,7 @@ func resourceZenlayerCloudImageUpdate(ctx context.Context, d *schema.ResourceDat
 			imageDesc := d.Get("image_description").(string)
 			err := vmService.ModifyImage(ctx, imageId, imageName, imageDesc)
 			if err != nil {
-				return retryError(ctx, err, InternalServerError, common.NetworkError)
+				return common2.RetryError(ctx, err, common2.InternalServerError, common.NetworkError)
 			}
 			return nil
 		})
@@ -126,7 +127,7 @@ func resourceZenlayerCloudImageUpdate(ctx context.Context, d *schema.ResourceDat
 }
 
 func resourceZenlayerCloudImageCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	defer logElapsed(ctx, "resource.zenlayercloud_image.create")()
+	defer common2.LogElapsed(ctx, "resource.zenlayercloud_image.create")()
 
 	request := vm.NewCreateImageRequest()
 	request.ImageName = d.Get("image_name").(string)
@@ -141,16 +142,16 @@ func resourceZenlayerCloudImageCreate(ctx context.Context, d *schema.ResourceDat
 		if err != nil {
 			tflog.Info(ctx, "Fail to create image.", map[string]interface{}{
 				"action":  request.GetAction(),
-				"request": toJsonString(request),
+				"request": common2.ToJsonString(request),
 				"err":     err.Error(),
 			})
-			return retryError(ctx, err)
+			return common2.RetryError(ctx, err)
 		}
 
 		tflog.Info(ctx, "Create image success", map[string]interface{}{
 			"action":   request.GetAction(),
-			"request":  toJsonString(request),
-			"response": toJsonString(response),
+			"request":  common2.ToJsonString(request),
+			"response": common2.ToJsonString(response),
 		})
 
 		if response.Response.ImageId == "" {
@@ -170,7 +171,7 @@ func resourceZenlayerCloudImageCreate(ctx context.Context, d *schema.ResourceDat
 }
 
 func resourceZenlayerCloudImageRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	defer logElapsed(ctx, "resource.zenlayer_image.read")()
+	defer common2.LogElapsed(ctx, "resource.zenlayer_image.read")()
 
 	var diags diag.Diagnostics
 
@@ -186,7 +187,7 @@ func resourceZenlayerCloudImageRead(ctx context.Context, d *schema.ResourceData,
 	err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutRead)-time.Minute, func() *resource.RetryError {
 		imageInfo, errRet = vmService.DescribeImageById(ctx, imageId)
 		if errRet != nil {
-			return retryError(ctx, errRet, InternalServerError)
+			return common2.RetryError(ctx, errRet, common2.InternalServerError)
 		}
 		if imageInfo == nil {
 			return nil

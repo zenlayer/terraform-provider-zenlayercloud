@@ -27,6 +27,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/common"
 	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/connectivity"
 	vm "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/vm20230313"
 	"log"
@@ -75,16 +76,16 @@ func resourceZenlayerCloudSecurityGroupAttachmentDelete(ctx context.Context, d *
 		if err != nil {
 			tflog.Info(ctx, "Fail to unassociate security group instance.", map[string]interface{}{
 				"action":  request.GetAction(),
-				"request": toJsonString(request),
+				"request": common.ToJsonString(request),
 				"err":     err.Error(),
 			})
-			return retryError(ctx, err)
+			return common.RetryError(ctx, err)
 		}
 
 		tflog.Info(ctx, "Unassociate security group instance success", map[string]interface{}{
 			"action":   request.GetAction(),
-			"request":  toJsonString(request),
-			"response": toJsonString(response),
+			"request":  common.ToJsonString(request),
+			"response": common.ToJsonString(response),
 		})
 
 		return nil
@@ -110,16 +111,16 @@ func resourceZenlayerCloudSecurityGroupAttachmentCreate(ctx context.Context, d *
 		if err != nil {
 			tflog.Info(ctx, "Fail to associate security group instance.", map[string]interface{}{
 				"action":  request.GetAction(),
-				"request": toJsonString(request),
+				"request": common.ToJsonString(request),
 				"err":     err.Error(),
 			})
-			return retryError(ctx, err)
+			return common.RetryError(ctx, err)
 		}
 
 		tflog.Info(ctx, "Associate security group instance success", map[string]interface{}{
 			"action":   request.GetAction(),
-			"request":  toJsonString(request),
-			"response": toJsonString(response),
+			"request":  common.ToJsonString(request),
+			"response": common.ToJsonString(response),
 		})
 
 		return nil
@@ -157,7 +158,7 @@ func resourceZenlayerCloudSecurityGroupAttachmentRead(ctx context.Context, d *sc
 		request := vm.NewDescribeSecurityGroupsRequest()
 		request.SecurityGroupIds = []string{securityGroupId}
 		if errRet != nil {
-			return retryError(ctx, errRet)
+			return common.RetryError(ctx, errRet)
 		}
 
 		return nil

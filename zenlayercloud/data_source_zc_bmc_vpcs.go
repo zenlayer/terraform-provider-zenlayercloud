@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	common2 "github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/common"
 	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/connectivity"
 	bmc "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/bmc20221120"
 	"github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/common"
@@ -53,7 +54,7 @@ func dataSourceZenlayerCloudVpcs() *schema.Resource {
 			"cidr_block": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validateCIDRNetworkAddress,
+				ValidateFunc: common2.ValidateCIDRNetworkAddress,
 				Description:  "Filter VPC with this CIDR.",
 			},
 			"result_output_file": {
@@ -124,7 +125,7 @@ func dataSourceZenlayerCloudVpcs() *schema.Resource {
 }
 
 func dataSourceZenlayerCloudVpcsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	defer logElapsed(ctx, "data_source.zenlayercloud_bmc_vpcs.read")()
+	defer common2.LogElapsed(ctx, "data_source.zenlayercloud_bmc_vpcs.read")()
 
 	bmcService := BmcService{
 		client: meta.(*connectivity.ZenlayerCloudClient),
@@ -154,7 +155,7 @@ func dataSourceZenlayerCloudVpcsRead(ctx context.Context, d *schema.ResourceData
 		var e error
 		vpcs, e = bmcService.DescribeVpcsByFilter(ctx, request)
 		if e != nil {
-			return retryError(ctx, e, InternalServerError)
+			return common2.RetryError(ctx, e, common2.InternalServerError)
 		}
 		return nil
 	})
@@ -179,7 +180,7 @@ func dataSourceZenlayerCloudVpcsRead(ctx context.Context, d *schema.ResourceData
 		ids = append(ids, vpc.VpcId)
 	}
 
-	d.SetId(dataResourceIdHash(ids))
+	d.SetId(common2.DataResourceIdHash(ids))
 	err = d.Set("vpc_list", vpcList)
 	if err != nil {
 		return diag.FromErr(err)
@@ -187,7 +188,7 @@ func dataSourceZenlayerCloudVpcsRead(ctx context.Context, d *schema.ResourceData
 
 	output, ok := d.GetOk("result_output_file")
 	if ok && output.(string) != "" {
-		if err := writeToFile(output.(string), vpcList); err != nil {
+		if err := common2.WriteToFile(output.(string), vpcList); err != nil {
 			return diag.FromErr(err)
 		}
 	}

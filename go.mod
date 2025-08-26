@@ -2,7 +2,6 @@ module github.com/zenlayer/terraform-provider-zenlayercloud
 
 go 1.18
 
-require github.com/zenlayer/zenlayercloud-sdk-go v0.1.13
 
 require (
 	github.com/fatih/color v1.13.0
@@ -10,6 +9,7 @@ require (
 	github.com/hashicorp/terraform-plugin-log v0.6.0
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.19.0
 	github.com/pkg/errors v0.9.1
+	github.com/zenlayer/zenlayercloud-sdk-go v0.1.29
 )
 
 require (

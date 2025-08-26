@@ -1,4 +1,4 @@
-package zenlayercloud
+package common
 
 import (
 	"fmt"
@@ -6,9 +6,9 @@ import (
 	"net"
 )
 
-// validateCIDRNetworkAddress ensures that the string value is a valid CIDR that
+// ValidateCIDRNetworkAddress ensures that the string value is a valid CIDR that
 // represents a network address - it adds an error otherwise
-func validateCIDRNetworkAddress(v interface{}, k string) (ws []string, errors []error) {
+func ValidateCIDRNetworkAddress(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 	_, ipnet, err := net.ParseCIDR(value)
 	if err != nil {

@@ -15,6 +15,7 @@ import (
 	"context"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	common2 "github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/common"
 	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/connectivity"
 	"github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/common"
 )
@@ -129,7 +130,7 @@ func dataSourceZenlayerCloudEips() *schema.Resource {
 }
 
 func dataSourceZenlayerCloudEipRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	defer logElapsed(ctx, "data_source.zenlayercloud_bmc_eips.read")()
+	defer common2.LogElapsed(ctx, "data_source.zenlayercloud_bmc_eips.read")()
 	//
 	bmcService := BmcService{
 		client: meta.(*connectivity.ZenlayerCloudClient),
@@ -138,7 +139,7 @@ func dataSourceZenlayerCloudEipRead(ctx context.Context, d *schema.ResourceData,
 	if v, ok := d.GetOk("eip_ids"); ok {
 		eipIds := v.(*schema.Set).List()
 		if len(eipIds) > 0 {
-			filter.EipIds = toStringList(eipIds)
+			filter.EipIds = common2.ToStringList(eipIds)
 
 		}
 	}
@@ -181,7 +182,7 @@ func dataSourceZenlayerCloudEipRead(ctx context.Context, d *schema.ResourceData,
 		eipList = append(eipList, mapping)
 		ids = append(ids, eip.InstanceId)
 	}
-	d.SetId(dataResourceIdHash(ids))
+	d.SetId(common2.DataResourceIdHash(ids))
 	err = d.Set("eip_list", eipList)
 	if err != nil {
 		return diag.FromErr(err)
@@ -189,7 +190,7 @@ func dataSourceZenlayerCloudEipRead(ctx context.Context, d *schema.ResourceData,
 
 	output, ok := d.GetOk("result_output_file")
 	if ok && output.(string) != "" {
-		if err := writeToFile(output.(string), eipList); err != nil {
+		if err := common2.WriteToFile(output.(string), eipList); err != nil {
 			return diag.FromErr(err)
 		}
 	}

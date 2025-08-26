@@ -2,6 +2,7 @@ package zenlayercloud
 
 import (
 	"context"
+	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/common"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/connectivity"
@@ -21,7 +22,7 @@ func NewZgaService(client *connectivity.ZenlayerCloudClient) *ZgaService {
 func (s *ZgaService) DescribeOriginRegions(ctx context.Context) ([]zga.Region, error) {
 	request := zga.NewDescribeOriginRegionsRequest()
 	response, err := s.client.WithZgaClient().DescribeOriginRegions(request)
-	logApiRequest(ctx, "DescribeOriginRegions", request, response, err)
+	common.LogApiRequest(ctx, "DescribeOriginRegions", request, response, err)
 	if err != nil {
 		return nil, err
 	}
@@ -32,7 +33,7 @@ func (s *ZgaService) DescribeAccelerateRegions(ctx context.Context, originRegion
 	request := zga.NewDescribeAccelerateRegionsRequest()
 	request.OriginRegionId = originRegionId
 	response, err := s.client.WithZgaClient().DescribeAccelerateRegions(request)
-	logApiRequest(ctx, "DescribeAccelerateRegions", request, response, err)
+	common.LogApiRequest(ctx, "DescribeAccelerateRegions", request, response, err)
 	if err != nil {
 		return nil, err
 	}
@@ -43,7 +44,7 @@ func (s *ZgaService) DeleteCertificatesById(ctx context.Context, certificateId s
 	request := zga.NewDeleteCertificateRequest()
 	request.CertificateId = certificateId
 	response, err := s.client.WithZgaClient().DeleteCertificate(request)
-	logApiRequest(ctx, request.GetAction(), request, response, err)
+	common.LogApiRequest(ctx, request.GetAction(), request, response, err)
 	if err != nil {
 		return err
 	}
@@ -54,7 +55,7 @@ func (s *ZgaService) DescribeCertificateById(ctx context.Context, certificateId 
 	request := zga.NewDescribeCertificatesRequest()
 	request.CertificateIds = []string{certificateId}
 	response, err := s.client.WithZgaClient().DescribeCertificates(request)
-	logApiRequest(ctx, request.GetAction(), request, response, err)
+	common.LogApiRequest(ctx, request.GetAction(), request, response, err)
 	if err != nil {
 		return nil, err
 	} else if len(response.Response.DataSet) == 0 {
@@ -69,14 +70,14 @@ func (s *ZgaService) DescribeCertificatesByFilter(ctx context.Context, filter *C
 		request.PageSize = pageSize
 		request.PageNum = pageNum
 		response, err := s.client.WithZgaClient().DescribeCertificates(request)
-		logApiRequest(ctx, request.GetAction(), request, response, err)
+		common.LogApiRequest(ctx, request.GetAction(), request, response, err)
 		if err != nil {
 			return nil, 0, err
 		}
 		return response.Response.DataSet, response.Response.TotalCount, nil
 	}
 
-	result, err := QueryAllPaginatedResource(ctx, queryFunc)
+	result, err := common.QueryAllPaginatedResource(ctx, queryFunc)
 	if err != nil {
 		return nil, err
 	}
@@ -116,7 +117,7 @@ func (s *ZgaService) AcceleratorStateRefreshFunc(ctx context.Context, accelerato
 		}
 		for _, failState := range failStates {
 			if object.AcceleratorStatus == failState {
-				return object, object.AcceleratorStatus, Error("Failed to reach target status. Last status: %s.", object.AcceleratorStatus)
+				return object, object.AcceleratorStatus, common.Error("Failed to reach target status. Last status: %s.", object.AcceleratorStatus)
 			}
 		}
 		return object, object.AcceleratorStatus, nil
@@ -127,7 +128,7 @@ func (s *ZgaService) DescribeAcceleratorById(ctx context.Context, acceleratorId 
 	request := zga.NewDescribeAcceleratorsRequest()
 	request.AcceleratorIds = []string{acceleratorId}
 	response, err := s.client.WithZgaClient().DescribeAccelerators(request)
-	logApiRequest(ctx, request.GetAction(), request, response, err)
+	common.LogApiRequest(ctx, request.GetAction(), request, response, err)
 	if err != nil {
 		return nil, err
 	} else if len(response.Response.DataSet) == 0 {
@@ -142,14 +143,14 @@ func (s *ZgaService) DescribeAcceleratorsByFilter(ctx context.Context, filter *A
 		request.PageSize = pageSize
 		request.PageNum = pageNum
 		response, err := s.client.WithZgaClient().DescribeAccelerators(request)
-		logApiRequest(ctx, request.GetAction(), request, response, err)
+		common.LogApiRequest(ctx, request.GetAction(), request, response, err)
 		if err != nil {
 			return nil, 0, err
 		}
 		return response.Response.DataSet, response.Response.TotalCount, nil
 	}
 
-	result, err := QueryAllPaginatedResource(ctx, queryFunc)
+	result, err := common.QueryAllPaginatedResource(ctx, queryFunc)
 	if err != nil {
 		return nil, err
 	}
@@ -196,7 +197,7 @@ func (s *ZgaService) ModifyAcceleratorAccessControl(ctx context.Context, acceler
 	request.AcceleratorId = acceleratorId
 	request.AccessControlRules = rules
 	response, err := s.client.WithZgaClient().ModifyAcceleratorAccessControl(request)
-	logApiRequest(ctx, request.GetAction(), request, response, err)
+	common.LogApiRequest(ctx, request.GetAction(), request, response, err)
 	if err != nil {
 		return err
 	}
@@ -207,7 +208,7 @@ func (s *ZgaService) OpenAcceleratorAccessControl(ctx context.Context, accelerat
 	request := zga.NewOpenAcceleratorAccessControlRequest()
 	request.AcceleratorId = acceleratorId
 	response, err := s.client.WithZgaClient().OpenAcceleratorAccessControl(request)
-	logApiRequest(ctx, request.GetAction(), request, response, err)
+	common.LogApiRequest(ctx, request.GetAction(), request, response, err)
 	if err != nil {
 		return err
 	}
@@ -218,7 +219,7 @@ func (s *ZgaService) CloseAcceleratorAccessControl(ctx context.Context, accelera
 	request := zga.NewCloseAcceleratorAccessControlRequest()
 	request.AcceleratorId = acceleratorId
 	response, err := s.client.WithZgaClient().CloseAcceleratorAccessControl(request)
-	logApiRequest(ctx, request.GetAction(), request, response, err)
+	common.LogApiRequest(ctx, request.GetAction(), request, response, err)
 	if err != nil {
 		return err
 	}
@@ -230,7 +231,7 @@ func (s *ZgaService) ModifyAcceleratorName(ctx context.Context, acceleratorId st
 	request.AcceleratorId = acceleratorId
 	request.AcceleratorName = name
 	response, err := s.client.WithZgaClient().ModifyAcceleratorName(request)
-	logApiRequest(ctx, request.GetAction(), request, response, err)
+	common.LogApiRequest(ctx, request.GetAction(), request, response, err)
 	if err != nil {
 		return err
 	}
@@ -242,7 +243,7 @@ func (s *ZgaService) ModifyAcceleratorCertificateId(ctx context.Context, acceler
 	request.AcceleratorId = acceleratorId
 	request.CertificateId = certificateId
 	response, err := s.client.WithZgaClient().ModifyAcceleratorCertificate(request)
-	logApiRequest(ctx, request.GetAction(), request, response, err)
+	common.LogApiRequest(ctx, request.GetAction(), request, response, err)
 	if err != nil {
 		return err
 	}
@@ -254,7 +255,7 @@ func (s *ZgaService) ModifyAcceleratorDomain(ctx context.Context, acceleratorId 
 	request.AcceleratorId = acceleratorId
 	request.Domain = domain
 	response, err := s.client.WithZgaClient().ModifyAcceleratorDomain(request)
-	logApiRequest(ctx, request.GetAction(), request, response, err)
+	common.LogApiRequest(ctx, request.GetAction(), request, response, err)
 	if err != nil {
 		return err
 	}
@@ -266,7 +267,7 @@ func (s *ZgaService) ModifyAcceleratorOrigin(ctx context.Context, acceleratorId 
 	request.AcceleratorId = acceleratorId
 	request.Origin = origin
 	response, err := s.client.WithZgaClient().ModifyAcceleratorOrigin(request)
-	logApiRequest(ctx, request.GetAction(), request, response, err)
+	common.LogApiRequest(ctx, request.GetAction(), request, response, err)
 	if err != nil {
 		return err
 	}
@@ -278,7 +279,7 @@ func (s *ZgaService) ModifyAcceleratorAccRegions(ctx context.Context, accelerato
 	request.AcceleratorId = acceleratorId
 	request.AccelerateRegions = accRegions
 	response, err := s.client.WithZgaClient().ModifyAcceleratorAccRegion(request)
-	logApiRequest(ctx, request.GetAction(), request, response, err)
+	common.LogApiRequest(ctx, request.GetAction(), request, response, err)
 	if err != nil {
 		return err
 	}
@@ -291,7 +292,7 @@ func (s *ZgaService) ModifyAcceleratorListener(ctx context.Context, acceleratorI
 	request.L4Listeners = l4Listeners
 	request.L7Listeners = l7Listener
 	response, err := s.client.WithZgaClient().ModifyAcceleratorRule(request)
-	logApiRequest(ctx, request.GetAction(), request, response, err)
+	common.LogApiRequest(ctx, request.GetAction(), request, response, err)
 	if err != nil {
 		return err
 	}
@@ -303,7 +304,7 @@ func (s *ZgaService) ModifyAcceleratorProtocolOpts(ctx context.Context, accelera
 	request.AcceleratorId = acceleratorId
 	request.ProtocolOpts = protocolOps
 	response, err := s.client.WithZgaClient().ModifyAcceleratorProtocolOpts(request)
-	logApiRequest(ctx, request.GetAction(), request, response, err)
+	common.LogApiRequest(ctx, request.GetAction(), request, response, err)
 	if err != nil {
 		return err
 	}
@@ -315,7 +316,7 @@ func (s *ZgaService) ModifyAcceleratorHealthCheck(ctx context.Context, accelerat
 	request.AcceleratorId = acceleratorId
 	request.HealthCheck = healthCheck
 	response, err := s.client.WithZgaClient().ModifyAcceleratorHealthCheck(request)
-	logApiRequest(ctx, request.GetAction(), request, response, err)
+	common.LogApiRequest(ctx, request.GetAction(), request, response, err)
 	if err != nil {
 		return err
 	}
@@ -326,7 +327,7 @@ func (s *ZgaService) DeleteAcceleratorById(ctx context.Context, acceleratorId st
 	request := zga.NewDeleteAcceleratorRequest()
 	request.AcceleratorId = acceleratorId
 	response, err := s.client.WithZgaClient().DeleteAccelerator(request)
-	logApiRequest(ctx, request.GetAction(), request, response, err)
+	common.LogApiRequest(ctx, request.GetAction(), request, response, err)
 	if err != nil {
 		return err
 	}

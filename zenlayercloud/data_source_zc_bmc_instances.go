@@ -15,7 +15,7 @@ import (
 	"context"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	common2 "github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/common"
 	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/connectivity"
 	bmc "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/bmc20221120"
 	"github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/common"
@@ -36,7 +36,6 @@ func dataSourceZenlayerCloudInstances() *schema.Resource {
 			"availability_zone": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validation.StringInSlice(ImageTypes, false),
 				Description:  "The ID of zone that the bmc instance locates at.",
 			},
 			"instance_type_id": {
@@ -275,7 +274,7 @@ func dataSourceZenlayerCloudInstances() *schema.Resource {
 }
 
 func dataSourceZenlayerCloudInstancesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	defer logElapsed(ctx, "data_source.zenlayercloud_bmc_images.read")()
+	defer common2.LogElapsed(ctx, "data_source.zenlayercloud_bmc_instances.read")()
 
 	bmcService := BmcService{
 		client: meta.(*connectivity.ZenlayerCloudClient),
@@ -284,7 +283,7 @@ func dataSourceZenlayerCloudInstancesRead(ctx context.Context, d *schema.Resourc
 	if v, ok := d.GetOk("instance_ids"); ok {
 		instanceIds := v.(*schema.Set).List()
 		if len(instanceIds) > 0 {
-			filter.InstancesIds = toStringList(instanceIds)
+			filter.InstancesIds = common2.ToStringList(instanceIds)
 		}
 	}
 	if v, ok := d.GetOk("availability_zone"); ok {
@@ -373,7 +372,7 @@ func dataSourceZenlayerCloudInstancesRead(ctx context.Context, d *schema.Resourc
 		ids = append(ids, instance.InstanceId)
 	}
 
-	d.SetId(dataResourceIdHash(ids))
+	d.SetId(common2.DataResourceIdHash(ids))
 	err = d.Set("instance_list", instanceList)
 	if err != nil {
 		return diag.FromErr(err)
@@ -381,7 +380,7 @@ func dataSourceZenlayerCloudInstancesRead(ctx context.Context, d *schema.Resourc
 
 	output, ok := d.GetOk("result_output_file")
 	if ok && output.(string) != "" {
-		if err := writeToFile(output.(string), instanceList); err != nil {
+		if err :=  common2.WriteToFile(output.(string), instanceList); err != nil {
 			return diag.FromErr(err)
 		}
 	}

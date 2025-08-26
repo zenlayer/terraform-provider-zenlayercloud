@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/common"
 	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/connectivity"
 	sdn "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/sdn20230830"
 )
@@ -212,7 +213,7 @@ func dataSourceZenlayerCloudSdnCloudRouters() *schema.Resource {
 }
 
 func dataSourceZenlayerCloudSdnCloudRoutersRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	defer logElapsed(ctx, "data_source.zenlayercloud_sdn_private_connects.read")()
+	defer common.LogElapsed(ctx, "data_source.zenlayercloud_sdn_private_connects.read")()
 	//
 	sdnService := SdnService{
 		client: meta.(*connectivity.ZenlayerCloudClient),
@@ -221,7 +222,7 @@ func dataSourceZenlayerCloudSdnCloudRoutersRead(ctx context.Context, d *schema.R
 	if v, ok := d.GetOk("cr_ids"); ok {
 		portIds := v.(*schema.Set).List()
 		if len(portIds) > 0 {
-			filter.CloudRouterIds = toStringList(portIds)
+			filter.CloudRouterIds = common.ToStringList(portIds)
 		}
 	}
 
@@ -248,7 +249,7 @@ func dataSourceZenlayerCloudSdnCloudRoutersRead(ctx context.Context, d *schema.R
 		crList = append(crList, mapping)
 		ids = append(ids, cr.CloudRouterId)
 	}
-	d.SetId(dataResourceIdHash(ids))
+	d.SetId(common.DataResourceIdHash(ids))
 	err = d.Set("cr_list", crList)
 	if err != nil {
 		return diag.FromErr(err)
@@ -256,7 +257,7 @@ func dataSourceZenlayerCloudSdnCloudRoutersRead(ctx context.Context, d *schema.R
 
 	output, ok := d.GetOk("result_output_file")
 	if ok && output.(string) != "" {
-		if err := writeToFile(output.(string), crList); err != nil {
+		if err := common.WriteToFile(output.(string), crList); err != nil {
 			return diag.FromErr(err)
 		}
 	}

@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/common"
 	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/connectivity"
 	vm "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/vm20230313"
 )
@@ -84,7 +85,7 @@ func dataSourceZenlayerCloudKeyPairs() *schema.Resource {
 }
 
 func dataSourceZenlayerCloudKeyPairsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	defer logElapsed(ctx, "data_source.zenlayercloud_key_pairs.read")()
+	defer common.LogElapsed(ctx, "data_source.zenlayercloud_key_pairs.read")()
 
 	vmService := VmService{
 		client: meta.(*connectivity.ZenlayerCloudClient),
@@ -101,15 +102,15 @@ func dataSourceZenlayerCloudKeyPairsRead(ctx context.Context, d *schema.Resource
 	if v, ok := d.GetOk("key_ids"); ok {
 		keyIds := v.(*schema.Set).List()
 		if len(keyIds) > 0 {
-			request.KeyIds = toStringList(keyIds)
+			request.KeyIds = common.ToStringList(keyIds)
 		}
 	}
 
 	var keyPairs []*vm.KeyPair
-	err := resource.RetryContext(ctx, readRetryTimeout, func() *resource.RetryError {
+	err := resource.RetryContext(ctx, common.ReadRetryTimeout, func() *resource.RetryError {
 		keyPairs, errRet = vmService.DescribeKeyPairs(ctx, request)
 		if errRet != nil {
-			return retryError(ctx, errRet, InternalServerError, ReadTimedOut)
+			return common.RetryError(ctx, errRet, common.InternalServerError, common.ReadTimedOut)
 		}
 		return nil
 	})
@@ -128,7 +129,7 @@ func dataSourceZenlayerCloudKeyPairsRead(ctx context.Context, d *schema.Resource
 		ids = append(ids, keyPair.KeyId)
 	}
 
-	d.SetId(dataResourceIdHash(ids))
+	d.SetId(common.DataResourceIdHash(ids))
 	err = d.Set("key_pairs", keyPairList)
 	if err != nil {
 		return diag.FromErr(err)
@@ -136,7 +137,7 @@ func dataSourceZenlayerCloudKeyPairsRead(ctx context.Context, d *schema.Resource
 
 	output, ok := d.GetOk("result_output_file")
 	if ok && output.(string) != "" {
-		if err := writeToFile(output.(string), keyPairList); err != nil {
+		if err := common.WriteToFile(output.(string), keyPairList); err != nil {
 			return diag.FromErr(err)
 		}
 	}

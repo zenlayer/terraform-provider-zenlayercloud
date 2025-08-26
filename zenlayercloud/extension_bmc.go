@@ -1,5 +1,7 @@
 package zenlayercloud
 
+import "github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/common"
+
 const (
 	ResourceTypeInstance = "instance"
 	ResourceTypeEip      = "eip"
@@ -107,9 +109,9 @@ var (
 )
 
 func instanceIsOperating(instanceStatus string) bool {
-	return IsContains(InstanceOperatingStatus, instanceStatus)
+	return common.IsContains(InstanceOperatingStatus, instanceStatus)
 }
 
 func subnetIsOperating(subnetStatus string) bool {
-	return IsContains(SubnetOperatingStatus, subnetStatus)
+	return common.IsContains(SubnetOperatingStatus, subnetStatus)
 }

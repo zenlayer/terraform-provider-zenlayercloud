@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/common"
 	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/connectivity"
 	bmc "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/bmc20221120"
 	"regexp"
@@ -67,7 +68,7 @@ func dataSourceZenlayerCloudBmcZones() *schema.Resource {
 }
 
 func dataSourceZenlayerCloudBmcZonesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	defer logElapsed(ctx, "data_source.zenlayercloud_zones.read")()
+	defer common.LogElapsed(ctx, "data_source.zenlayercloud_zones.read")()
 
 	bmcService := BmcService{
 		client: meta.(*connectivity.ZenlayerCloudClient),
@@ -84,10 +85,10 @@ func dataSourceZenlayerCloudBmcZonesRead(ctx context.Context, d *schema.Resource
 	}
 
 	var zones []*bmc.ZoneInfo
-	err := resource.RetryContext(ctx, readRetryTimeout, func() *resource.RetryError {
+	err := resource.RetryContext(ctx, common.ReadRetryTimeout, func() *resource.RetryError {
 		zones, errRet = bmcService.DescribeZones(ctx)
 		if errRet != nil {
-			return retryError(ctx, errRet, InternalServerError, ReadTimedOut)
+			return common.RetryError(ctx, errRet, common.InternalServerError, common.ReadTimedOut)
 		}
 		return nil
 	})
@@ -106,7 +107,7 @@ func dataSourceZenlayerCloudBmcZonesRead(ctx context.Context, d *schema.Resource
 		ids = append(ids, zone.ZoneId)
 	}
 
-	d.SetId(dataResourceIdHash(ids))
+	d.SetId(common.DataResourceIdHash(ids))
 	err = d.Set("zones", zoneList)
 	if err != nil {
 		return diag.FromErr(err)
@@ -114,7 +115,7 @@ func dataSourceZenlayerCloudBmcZonesRead(ctx context.Context, d *schema.Resource
 
 	output, ok := d.GetOk("result_output_file")
 	if ok && output.(string) != "" {
-		if err := writeToFile(output.(string), zoneList); err != nil {
+		if err := common.WriteToFile(output.(string), zoneList); err != nil {
 			return diag.FromErr(err)
 		}
 	}

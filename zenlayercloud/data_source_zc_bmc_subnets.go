@@ -21,7 +21,7 @@ data "zenlayercloud_bmc_subnets" "id_subnets" {
 data "zenlayercloud_bmc_subnets" "name_subnets" {
   subnet_name = zenlayercloud_bmc_subnet.foo.name
 }
-
+```
 */
 package zenlayercloud
 
@@ -30,6 +30,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/common"
 	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/connectivity"
 	bmc "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/bmc20221120"
 	"time"
@@ -140,7 +141,7 @@ func dataSourceZenlayerCloudVpcSubnets() *schema.Resource {
 }
 
 func dataSourceZenlayerCloudVpcSubnetsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	defer logElapsed(ctx, "data_source.zenlayercloud_bmc_subnets.read")()
+	defer common.LogElapsed(ctx, "data_source.zenlayercloud_bmc_subnets.read")()
 
 	bmcService := BmcService{
 		client: meta.(*connectivity.ZenlayerCloudClient),
@@ -178,7 +179,7 @@ func dataSourceZenlayerCloudVpcSubnetsRead(ctx context.Context, d *schema.Resour
 		var e error
 		subnets, e = bmcService.DescribeSubnets(ctx, request)
 		if e != nil {
-			return retryError(ctx, e, InternalServerError)
+			return common.RetryError(ctx, e, common.InternalServerError)
 		}
 		return nil
 	})
@@ -205,7 +206,7 @@ func dataSourceZenlayerCloudVpcSubnetsRead(ctx context.Context, d *schema.Resour
 		ids = append(ids, subnet.SubnetId)
 	}
 
-	d.SetId(dataResourceIdHash(ids))
+	d.SetId(common.DataResourceIdHash(ids))
 	err = d.Set("subnet_list", subnetList)
 	if err != nil {
 		return diag.FromErr(err)
@@ -213,7 +214,7 @@ func dataSourceZenlayerCloudVpcSubnetsRead(ctx context.Context, d *schema.Resour
 
 	output, ok := d.GetOk("result_output_file")
 	if ok && output.(string) != "" {
-		if err := writeToFile(output.(string), subnetList); err != nil {
+		if err := common.WriteToFile(output.(string), subnetList); err != nil {
 			return diag.FromErr(err)
 		}
 	}

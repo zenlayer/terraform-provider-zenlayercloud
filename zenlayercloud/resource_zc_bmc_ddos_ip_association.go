@@ -26,6 +26,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/common"
 	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/connectivity"
 	bmc "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/bmc20221120"
 	"time"
@@ -61,7 +62,7 @@ func resourceZenlayerCloudDdosIpAssociationDelete(ctx context.Context, d *schema
 		client: meta.(*connectivity.ZenlayerCloudClient),
 	}
 
-	association, err := ParseResourceId(d.Id(), 2)
+	association, err := common.ParseResourceId(d.Id(), 2)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -72,7 +73,7 @@ func resourceZenlayerCloudDdosIpAssociationDelete(ctx context.Context, d *schema
 	if err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutDelete)-time.Minute, func() *resource.RetryError {
 		_, errRet := bmcService.client.WithBmcClient().UnassociateDdosIpAddress(request)
 		if errRet != nil {
-			return retryError(ctx, errRet)
+			return common.RetryError(ctx, errRet)
 		}
 		return nil
 	}); err != nil {
@@ -104,10 +105,10 @@ func resourceZenlayerCloudDdosIpAssociationCreate(ctx context.Context, d *schema
 	var ddosIp *bmc.DdosIpAddress
 	var errRet error
 
-	err := resource.RetryContext(ctx, readRetryTimeout, func() *resource.RetryError {
+	err := resource.RetryContext(ctx, common.ReadRetryTimeout, func() *resource.RetryError {
 		ddosIp, errRet = bmcService.DescribeDdosIpAddressById(ctx, ddosIpId)
 		if errRet != nil {
-			return retryError(ctx, errRet, InternalServerError)
+			return common.RetryError(ctx, errRet, common.InternalServerError)
 		}
 		if ddosIp == nil {
 			return resource.NonRetryableError(fmt.Errorf("ddos ip is not found"))
@@ -130,7 +131,7 @@ func resourceZenlayerCloudDdosIpAssociationCreate(ctx context.Context, d *schema
 		if err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutDelete)-time.Minute, func() *resource.RetryError {
 			_, errRet := bmcService.client.WithBmcClient().AssociateDdosIpAddress(request)
 			if errRet != nil {
-				return retryError(ctx, errRet)
+				return common.RetryError(ctx, errRet)
 			}
 			return nil
 		}); err != nil {
@@ -162,7 +163,7 @@ func resourceZenlayerCloudDdosIpAssociationRead(ctx context.Context, d *schema.R
 	bmcService := BmcService{
 		client: meta.(*connectivity.ZenlayerCloudClient),
 	}
-	association, err := ParseResourceId(d.Id(), 2)
+	association, err := common.ParseResourceId(d.Id(), 2)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -173,7 +174,7 @@ func resourceZenlayerCloudDdosIpAssociationRead(ctx context.Context, d *schema.R
 	err = resource.RetryContext(ctx, d.Timeout(schema.TimeoutRead)-time.Minute, func() *resource.RetryError {
 		ddosIpAddress, errRet = bmcService.DescribeDdosIpAddressById(ctx, association[0])
 		if errRet != nil {
-			return retryError(ctx, errRet)
+			return common.RetryError(ctx, errRet)
 		}
 		if ddosIpAddress == nil {
 			d.SetId("")

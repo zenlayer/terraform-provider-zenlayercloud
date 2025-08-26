@@ -29,6 +29,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	common2 "github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/common"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -122,7 +123,7 @@ func resourceZenlayerCloudDdosIpDelete(ctx context.Context, d *schema.ResourceDa
 	err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutDelete)-time.Minute, func() *resource.RetryError {
 		errRet := bmcService.TerminateDDoSIpAddress(ctx, ddosIpId)
 		if errRet != nil {
-			return retryError(ctx, errRet)
+			return common2.RetryError(ctx, errRet)
 		}
 		return nil
 	})
@@ -135,7 +136,7 @@ func resourceZenlayerCloudDdosIpDelete(ctx context.Context, d *schema.ResourceDa
 	err = resource.RetryContext(ctx, d.Timeout(schema.TimeoutDelete)-time.Minute, func() *resource.RetryError {
 		ddosIp, errRet := bmcService.DescribeDdosIpAddressById(ctx, ddosIpId)
 		if errRet != nil {
-			return retryError(ctx, errRet, InternalServerError)
+			return common2.RetryError(ctx, errRet, common2.InternalServerError)
 		}
 		if ddosIp == nil {
 			notExist = true
@@ -170,12 +171,12 @@ func resourceZenlayerCloudDdosIpDelete(ctx context.Context, d *schema.ResourceDa
 
 			ee, ok := errRet.(*common.ZenlayerCloudSdkError)
 			if !ok {
-				return retryError(ctx, errRet)
+				return common2.RetryError(ctx, errRet)
 			}
-			if ee.Code == "INVALID_DDOS_IP_NOT_FOUND" || ee.Code == ResourceNotFound {
+			if ee.Code == "INVALID_DDOS_IP_NOT_FOUND" || ee.Code == common2.ResourceNotFound {
 				return nil
 			}
-			return retryError(ctx, errRet, InternalServerError)
+			return common2.RetryError(ctx, errRet, common2.InternalServerError)
 		}
 		return nil
 	})
@@ -194,7 +195,7 @@ func resourceZenlayerCloudDdosIpUpdate(ctx context.Context, d *schema.ResourceDa
 		err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate)-time.Minute, func() *resource.RetryError {
 			err := bmcService.ModifyDdosIpResourceGroup(ctx, ddosIpId, d.Get("resource_group_id").(string))
 			if err != nil {
-				return retryError(ctx, err, InternalServerError, common.NetworkError)
+				return common2.RetryError(ctx, err, common2.InternalServerError, common.NetworkError)
 			}
 			return nil
 		})
@@ -238,16 +239,16 @@ func resourceZenlayerCloudDdosIpCreate(ctx context.Context, d *schema.ResourceDa
 		if err != nil {
 			tflog.Info(ctx, "Fail to create DDoS IP address.", map[string]interface{}{
 				"action":  request.GetAction(),
-				"request": toJsonString(request),
+				"request": common2.ToJsonString(request),
 				"err":     err.Error(),
 			})
-			return retryError(ctx, err)
+			return common2.RetryError(ctx, err)
 		}
 
 		tflog.Info(ctx, "Create DDoS IP success", map[string]interface{}{
 			"action":   request.GetAction(),
-			"request":  toJsonString(request),
-			"response": toJsonString(response),
+			"request":  common2.ToJsonString(request),
+			"response": common2.ToJsonString(response),
 		})
 
 		if len(response.Response.DdosIdSet) < 1 {
@@ -281,7 +282,7 @@ func resourceZenlayerCloudDdosIpRead(ctx context.Context, d *schema.ResourceData
 	err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutRead)-time.Minute, func() *resource.RetryError {
 		ddosIpAddress, errRet = bmcService.DescribeDdosIpAddressById(ctx, ddosIpId)
 		if errRet != nil {
-			return retryError(ctx, errRet)
+			return common2.RetryError(ctx, errRet)
 		}
 
 		if ddosIpAddress != nil && ipIsOperating(ddosIpAddress.DdosIpStatus) {

@@ -44,6 +44,7 @@ package zenlayercloud
 import (
 	"context"
 	"fmt"
+	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/common"
 	"strings"
 	"time"
 
@@ -65,7 +66,7 @@ func resourceZenlayerCloudCertificate() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(zgaCreateTimeout),
+			Create: schema.DefaultTimeout(common.ZgaCreateTimeout),
 		},
 		Schema: map[string]*schema.Schema{
 			"certificate": {
@@ -128,16 +129,16 @@ func resourceZenlayerCloudCertificateCreate(ctx context.Context, d *schema.Resou
 		if errRet != nil {
 			tflog.Error(ctx, "Fail to create certificate.", map[string]interface{}{
 				"action":  request.GetAction(),
-				"request": toJsonString(request),
+				"request": common.ToJsonString(request),
 				"err":     errRet.Error(),
 			})
-			return retryError(ctx, errRet, InternalServerError)
+			return common.RetryError(ctx, errRet, common.InternalServerError)
 		}
 
 		tflog.Info(ctx, "Create certificate success", map[string]interface{}{
 			"action":   request.GetAction(),
-			"request":  toJsonString(request),
-			"response": toJsonString(response),
+			"request":  common.ToJsonString(request),
+			"response": common.ToJsonString(response),
 		})
 
 		certificateId = response.Response.CertificateId
@@ -157,12 +158,12 @@ func resourceZenlayerCloudCertificateDelete(ctx context.Context, d *schema.Resou
 		errRet := NewZgaService(meta.(*connectivity.ZenlayerCloudClient)).DeleteCertificatesById(ctx, certificateId)
 		if errRet != nil {
 			switch {
-			case isExpectError(errRet, []string{"INVALID_CERTIFICATE_NOT_FOUND"}):
+			case common.IsExpectError(errRet, []string{"INVALID_CERTIFICATE_NOT_FOUND"}):
 				// DO NOTHING
-			case isExpectError(errRet, []string{"CERTIFICATE_IS_USING"}):
+			case common.IsExpectError(errRet, []string{"CERTIFICATE_IS_USING"}):
 				return resource.NonRetryableError(fmt.Errorf("certificate %s still in used", certificateId))
 			default:
-				return retryError(ctx, errRet, InternalServerError)
+				return common.RetryError(ctx, errRet, common.InternalServerError)
 			}
 		}
 		return nil
@@ -189,7 +190,7 @@ func resourceZenlayerCloudCertificateRead(ctx context.Context, d *schema.Resourc
 		var errRet error
 		certInfo, errRet = NewZgaService(meta.(*connectivity.ZenlayerCloudClient)).DescribeCertificateById(ctx, certificateId)
 		if errRet != nil {
-			return retryError(ctx, errRet, InternalServerError)
+			return common.RetryError(ctx, errRet, common.InternalServerError)
 		}
 		return nil
 	})

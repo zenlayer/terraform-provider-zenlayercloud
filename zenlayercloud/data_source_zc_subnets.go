@@ -32,6 +32,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/common"
 	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/connectivity"
 	vm "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/vm20230313"
 	"time"
@@ -112,7 +113,7 @@ func dataSourceZenlayerCloudSubnets() *schema.Resource {
 }
 
 func dataSourceZenlayerCloudSubnetsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	defer logElapsed(ctx, "data_source.zenlayercloud_subnets.read")()
+	defer common.LogElapsed(ctx, "data_source.zenlayercloud_subnets.read")()
 
 	vmService := VmService{
 		client: meta.(*connectivity.ZenlayerCloudClient),
@@ -142,7 +143,7 @@ func dataSourceZenlayerCloudSubnetsRead(ctx context.Context, d *schema.ResourceD
 		var e error
 		subnets, e = vmService.DescribeSubnets(ctx, request)
 		if e != nil {
-			return retryError(ctx, e, InternalServerError)
+			return common.RetryError(ctx, e, common.InternalServerError)
 		}
 		return nil
 	})
@@ -165,7 +166,7 @@ func dataSourceZenlayerCloudSubnetsRead(ctx context.Context, d *schema.ResourceD
 		ids = append(ids, subnet.SubnetId)
 	}
 
-	d.SetId(dataResourceIdHash(ids))
+	d.SetId(common.DataResourceIdHash(ids))
 	err = d.Set("subnet_list", subnetList)
 	if err != nil {
 		return diag.FromErr(err)
@@ -173,7 +174,7 @@ func dataSourceZenlayerCloudSubnetsRead(ctx context.Context, d *schema.ResourceD
 
 	output, ok := d.GetOk("result_output_file")
 	if ok && output.(string) != "" {
-		if err := writeToFile(output.(string), subnetList); err != nil {
+		if err := common.WriteToFile(output.(string), subnetList); err != nil {
 			return diag.FromErr(err)
 		}
 	}

@@ -16,8 +16,12 @@ import (
 	bmc "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/bmc20221120"
 	"github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/common"
 	sdn "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/sdn20230830"
+	traffic "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/traffic20240326"
+	user "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/user20240529"
 	vm "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/vm20230313"
+	zec "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/zec20240401"
 	zga "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/zga20230706"
+	zlb "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/zlb20250401"
 )
 
 var ReqClient = "Terraform-latest"
@@ -32,6 +36,10 @@ type ZenlayerCloudClient struct {
 	VmConn            *vm.Client
 	SdnConn           *sdn.Client
 	ZgaConn           *zga.Client
+	ZecConn           *zec.Client
+	ZlbConn           *zlb.Client
+	tfkConn           *traffic.Client
+	usrConn           *user.Client
 }
 
 func (client *ZenlayerCloudClient) WithSdnClient() *sdn.Client {
@@ -72,6 +80,46 @@ func (client *ZenlayerCloudClient) WithZgaClient() *zga.Client {
 	client.ZgaConn, _ = zga.NewClient(config, client.SecretKeyId, client.SecretKeyPassword)
 	client.ZgaConn.WithRequestClient(ReqClient)
 	return client.ZgaConn
+}
+
+func (client *ZenlayerCloudClient) WithZecClient() *zec.Client {
+	if client.ZecConn != nil {
+		return client.ZecConn
+	}
+	config := client.NewConfig()
+	client.ZecConn, _ = zec.NewClient(config, client.SecretKeyId, client.SecretKeyPassword)
+	client.ZecConn.WithRequestClient(ReqClient)
+	return client.ZecConn
+}
+
+func (client *ZenlayerCloudClient) WithZlbClient() *zlb.Client {
+	if client.ZlbConn != nil {
+		return client.ZlbConn
+	}
+	config := client.NewConfig()
+	client.ZlbConn, _ = zlb.NewClient(config, client.SecretKeyId, client.SecretKeyPassword)
+	client.ZlbConn.WithRequestClient(ReqClient)
+	return client.ZlbConn
+}
+
+func (client *ZenlayerCloudClient) WithTrafficClient() *traffic.Client {
+	if client.tfkConn != nil {
+		return client.tfkConn
+	}
+	config := client.NewConfig()
+	client.tfkConn, _ = traffic.NewClient(config, client.SecretKeyId, client.SecretKeyPassword)
+	client.tfkConn.WithRequestClient(ReqClient)
+	return client.tfkConn
+}
+
+func (client *ZenlayerCloudClient) WithUsrClient() *user.Client {
+	if client.usrConn != nil {
+		return client.usrConn
+	}
+	config := client.NewConfig()
+	client.usrConn, _ = user.NewClient(config, client.SecretKeyId, client.SecretKeyPassword)
+	client.usrConn.WithRequestClient(ReqClient)
+	return client.usrConn
 }
 
 func (client *ZenlayerCloudClient) NewConfig() *common.Config {

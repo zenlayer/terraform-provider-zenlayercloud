@@ -1,5 +1,7 @@
 package zenlayercloud
 
+import "github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/common"
+
 const (
 	SdnStatusCreating   = "CREATING"
 	SdnStatusDeleting   = "DELETING"
@@ -47,5 +49,5 @@ const (
 var PRODUCT_TYPES = []string{PRODUCT_PRIVATE_CONNECT, PRODUCT_CLOUD_ROUTER}
 
 func IsOperating(status string) bool {
-	return IsContains(SdnOperatingStatus, status)
+	return common.IsContains(SdnOperatingStatus, status)
 }

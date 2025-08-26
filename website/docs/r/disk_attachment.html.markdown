@@ -4,12 +4,12 @@ layout: "zenlayercloud"
 page_title: "ZenlayerCloud: zenlayercloud_disk_attachment"
 sidebar_current: "docs-zenlayercloud-resource-disk_attachment"
 description: |-
-  Provide a resource to create data disk.
+  Provide a resource to attach a disk to an instance.
 ---
 
 # zenlayercloud_disk_attachment
 
-Provide a resource to create data disk.
+Provide a resource to attach a disk to an instance.
 
 ## Example Usage
 
