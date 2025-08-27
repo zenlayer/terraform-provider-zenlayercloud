@@ -13,7 +13,8 @@ func main() {
 	flag.Parse()
 
 	plugin.Serve(&plugin.ServeOpts{
-		Debug: debug,
+		ProviderAddr: "registry.terraform.io/zenlayercloud/test",
+		Debug: true,
 		ProviderFunc: func() *schema.Provider {
 			return zenlayercloud.Provider()
 		},

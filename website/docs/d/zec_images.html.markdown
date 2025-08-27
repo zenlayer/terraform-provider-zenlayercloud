@@ -41,8 +41,8 @@ In addition to all arguments above, the following attributes are exported:
 
 * `images` - An information list of image. Each element contains the following attributes:
    * `category` - The catalog which the image belongs to. With values: 'CentOS', 'Windows', 'Ubuntu', 'Debian'.
+   * `id` - ID of the image.
    * `image_description` - The description of image.
-   * `image_id` - ID of the image.
    * `image_name` - Name of the image.
    * `image_size` - The size of image. Measured in GiB.
    * `image_type` - Type of the image. With value: `PUBLIC_IMAGE` and `CUSTOM_IMAGE`.

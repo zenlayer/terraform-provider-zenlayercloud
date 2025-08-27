@@ -81,13 +81,13 @@ In addition to all arguments above, the following attributes are exported:
 * `result` - An information list of subnets. Each element contains the following attributes:
    * `cidr_block` - The IPv4 network segment.
    * `create_time` - Create time of the subnet.
+   * `id` - ID of the subnet.
    * `ip_stack_type` - Subnet IP stack type. Values: `IPv4`, `IPv6`, `IPv4_IPv6`.
    * `ipv6_cidr_block` - The IPv6 network segment.
    * `ipv6_type` - The IPv6 type. Valid values: `Public`, `Private`.
    * `is_default` - Indicates whether it is the default subnet.
    * `name` - Name of the subnet.
    * `region_id` - The region that the subnet locates at.
-   * `subnet_id` - ID of the subnet.
    * `vpc_id` - ID of the VPC to be associated.
 
 

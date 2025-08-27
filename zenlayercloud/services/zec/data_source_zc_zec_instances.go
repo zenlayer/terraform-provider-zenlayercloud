@@ -259,7 +259,7 @@ func dataSourceZenlayerCloudZecInstancesRead(ctx context.Context, d *schema.Reso
 			continue
 		}
 		mapping := map[string]interface{}{
-			"instance_id":          instance.InstanceId,
+			"id":                   instance.InstanceId,
 			"instance_name":        instance.InstanceName,
 			"availability_zone":    instance.ZoneId,
 			"instance_type":        instance.InstanceType,

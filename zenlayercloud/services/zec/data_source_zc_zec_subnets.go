@@ -43,7 +43,7 @@ func DataSourceZenlayerCloudZecSubnets() *schema.Resource {
 				Description: "An information list of subnets. Each element contains the following attributes:",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"subnet_id": {
+						"id": {
 							Type:        schema.TypeString,
 							Computed:    true,
 							Description: "ID of the subnet.",
@@ -153,7 +153,7 @@ func dataSourceZenlayerCloudZecSubnetsRead(ctx context.Context, d *schema.Resour
 		}
 
 		mapping := map[string]interface{}{
-			"subnet_id":       subnet.SubnetId,
+			"id":       subnet.SubnetId,
 			"vpc_id":          subnet.VpcId,
 			"name":            subnet.Name,
 			"region_id":       subnet.RegionId,

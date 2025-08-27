@@ -64,7 +64,7 @@ func DataSourceZenlayerCloudZecImages() *schema.Resource {
 				Description: "An information list of image. Each element contains the following attributes:",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"image_id": {
+						"id": {
 							Type:        schema.TypeString,
 							Computed:    true,
 							Description: "ID of the image.",
@@ -184,7 +184,7 @@ func dataSourceZenlayerCloudZecImagesRead(ctx context.Context, d *schema.Resourc
 	ids := make([]string, 0, len(images))
 	for _, image := range results {
 		mapping := map[string]interface{}{
-			"image_id":          image.ImageId,
+			"id":                image.ImageId,
 			"os_type":           image.OsType,
 			"image_type":        image.ImageType,
 			"category":          image.Category,
