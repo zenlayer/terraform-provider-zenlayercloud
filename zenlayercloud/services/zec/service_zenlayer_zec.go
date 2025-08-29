@@ -945,6 +945,36 @@ func (s *ZecService) DeleteSecurityGroupById(ctx context.Context, id string) err
 	return err
 }
 
+func (s *ZecService) DeleteVpcRoute(ctx context.Context, routeId string) error {
+	request := zec.NewDeleteRouteRequest()
+	request.RouteId = routeId
+	response, err := s.client.WithZecClient().DeleteRoute(request)
+	defer common.LogApiRequest(ctx, "DeleteRoute", request, response, err)
+	return err
+}
+
+func (s *ZecService) DescribeVpcRouteById(ctx context.Context, routeId string) (*zec.RouteInfo, error) {
+	request := zec.NewDescribeRoutesRequest()
+	request.RouteIds = []string{routeId}
+	response, err := s.client.WithZecClient().DescribeRoutes(request)
+	defer common.LogApiRequest(ctx, "DescribeRoutes", request, response, err)
+	if err != nil {
+		return nil, err
+	} else if len(response.Response.DataSet) == 0 {
+		return nil, nil
+	}
+	return response.Response.DataSet[0], nil
+}
+
+func (s *ZecService) ModifyRouteAttribute(ctx context.Context, routeId string, name string) error {
+	request := zec.NewModifyRouteAttributeRequest()
+	request.RouteId = &routeId
+	request.Name = &name
+	response, err := s.client.WithZecClient().ModifyRouteAttribute(request)
+	defer common.LogApiRequest(ctx, "ModifyRouteAttribute", request, response, err)
+	return err
+}
+
 func convertImageFilter(filter *ImageFilter) *zec.DescribeImagesRequest {
 	request := zec.NewDescribeImagesRequest()
 	request.ImageIds = filter.imageIds

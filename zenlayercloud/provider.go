@@ -110,6 +110,7 @@ Zenlayer Elastic Compute(ZEC)
 	zenlayercloud_zec_vpc
 	zenlayercloud_zec_security_group
 	zenlayercloud_zec_vpc_security_group_attachment
+	zenlayercloud_zec_vpc_route
 	zenlayercloud_zec_subnet
 	zenlayercloud_zec_vnic
 	zenlayercloud_zec_vnic_attachment
@@ -149,8 +150,10 @@ package zenlayercloud
 
 import (
 	"context"
+	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/services/traffic"
 	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/services/zec"
 	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/services/zlb"
+
 	"os"
 	"strings"
 
@@ -243,6 +246,7 @@ func resourcesMap() map[string]*schema.Resource {
 		"zenlayercloud_zec_vpc":                           zec.ResourceZenlayerCloudGlobalVpc(),
 		"zenlayercloud_zec_security_group":           	   zec.ResourceZenlayerCloudZecSecurityGroup(),
 		"zenlayercloud_zec_vpc_security_group_attachment": zec.ResourceZenlayerCloudZecVpcSecurityGroupAttachment(),
+		"zenlayercloud_zec_vpc_route": 					   zec.ResourceZenlayerCloudGlobalVpcRoute(),
 		"zenlayercloud_zec_subnet":                        zec.ResourceZenlayerCloudZecSubnet(),
 		"zenlayercloud_zec_vnic":                          zec.ResourceZenlayerCloudZecVNic(),
 		"zenlayercloud_zec_vnic_attachment":               zec.ResourceZenlayerCloudZecVNicAttachment(),
@@ -314,6 +318,11 @@ func dataSourcesMap() map[string]*schema.Resource {
 		"zenlayercloud_zlb_instances": zlb.DataSourceZenlayerCloudZlbInstances(),
 		"zenlayercloud_zlb_listeners": zlb.DataSourceZenlayerCloudZlbListeners(),
 		"zenlayercloud_zlb_backends":  zlb.DataSourceZenlayerCloudZlbBackends(),
+
+		// zenlayer traffic
+		"zenlayercloud_traffic_bandwidth_cluster_areas": traffic.DataSourceZenlayerCloudTrafficBandwidthClusterAreas(),
+		"zenlayercloud_traffic_bandwidth_clusters": traffic.DataSourceZenlayerCloudTrafficBandwidthClusters(),
+
 	}
 }
 
