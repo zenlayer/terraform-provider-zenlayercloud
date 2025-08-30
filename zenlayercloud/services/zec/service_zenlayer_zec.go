@@ -208,10 +208,10 @@ func (s *ZecService) DescribeDisks(ctx context.Context, filter *ZecDiskFilter) (
 }
 
 func (s *ZecService) DeleteDiskById(ctx context.Context, diskId string) error {
-	request := zec.NewTerminateDiskRequest()
+	request := zec.NewReleaseDiskRequest()
 	request.DiskId = diskId
-	response, err := s.client.WithZecClient().TerminateDisk(request)
-	defer common.LogApiRequest(ctx, "TerminateDisk", request, response, err)
+	response, err := s.client.WithZecClient().ReleaseDisk(request)
+	defer common.LogApiRequest(ctx, "ReleaseDisk", request, response, err)
 
 	if err != nil {
 		if sdkError, ok := err.(*common2.ZenlayerCloudSdkError); ok {
@@ -973,6 +973,247 @@ func (s *ZecService) ModifyRouteAttribute(ctx context.Context, routeId string, n
 	response, err := s.client.WithZecClient().ModifyRouteAttribute(request)
 	defer common.LogApiRequest(ctx, "ModifyRouteAttribute", request, response, err)
 	return err
+}
+
+func (s *ZecService) DescribeSnapshots(ctx context.Context, filter *ZecSnapshotFilter) (snapshots[]*zec.SnapshotInfo,err error) {
+	request := convertSnapshotFilter(filter)
+	var limit = 100
+	request.PageSize = &limit
+	request.PageNum = common2.Integer(1)
+	response, err := s.client.WithZecClient().DescribeSnapshots(request)
+
+	if err != nil {
+		log.Printf("[CRITAL] Api[%s] fail, request body [%s], error[%s]\n",
+			request.GetAction(), common.ToJsonString(request), err.Error())
+		return
+	}
+	if response == nil || len(response.Response.DataSet) < 1 {
+		return
+	}
+
+	snapshots = response.Response.DataSet
+	num := int(math.Ceil(float64(*response.Response.TotalCount)/float64(limit))) - 1
+	if num == 0 {
+		return snapshots, nil
+	}
+	maxConcurrentNum := 50
+	g := common.NewGoRoutine(maxConcurrentNum)
+	wg := sync.WaitGroup{}
+
+	var imageSetList = make([]interface{}, num)
+
+	for i := 0; i < num; i++ {
+		wg.Add(1)
+		value := i
+		goFunc := func() {
+			request := convertSnapshotFilter(filter)
+
+			request.PageNum = common2.Integer(value + 2)
+			request.PageSize = &limit
+
+			response, err := s.client.WithZecClient().DescribeSnapshots(request)
+			if err != nil {
+				log.Printf("[CRITAL] Api[%s] fail, request body [%s], error[%s]\n",
+					request.GetAction(), common.ToJsonString(request), err.Error())
+				return
+			}
+			log.Printf("[DEBUG] Api[%s] success, request body [%s], response body [%s]\n",
+				request.GetAction(), common.ToJsonString(request), common.ToJsonString(response))
+
+			imageSetList[value] = response.Response.DataSet
+
+			wg.Done()
+			log.Printf("[DEBUG] thread %d finished", value)
+		}
+		g.Run(goFunc)
+	}
+	wg.Wait()
+
+	log.Printf("[DEBUG] DescribeSnapshots request finished")
+	for _, v := range imageSetList {
+		snapshots = append(snapshots, v.([]*zec.SnapshotInfo)...)
+	}
+	log.Printf("[DEBUG] transfer snapshots finished")
+	return
+}
+
+func (s *ZecService) DescribeSnapshotById(ctx context.Context, id string) (*zec.SnapshotInfo, error) {
+	request := zec.NewDescribeSnapshotsRequest()
+	request.SnapshotIds = []string{id}
+
+	response, err := s.client.WithZecClient().DescribeSnapshots(request)
+	defer common.LogApiRequest(ctx, "DescribeSnapshots", request, response, err)
+
+	if err != nil {
+		return nil, err
+	} else if len(response.Response.DataSet) == 0 {
+		return nil, nil
+	}
+	return response.Response.DataSet[0], nil
+}
+
+func (s *ZecService) DeleteSnapshot(ctx context.Context, snapshotId string) error {
+	request := zec.NewDeleteSnapshotsRequest()
+	request.SnapshotIds = []string{snapshotId}
+	response, err := s.client.WithZecClient().DeleteSnapshots(request)
+	defer common.LogApiRequest(ctx, "DeleteSnapshots", request, response, err)
+
+	if err != nil {
+		if sdkError, ok := err.(*common2.ZenlayerCloudSdkError); ok {
+			if sdkError.Code == "INVALID_DISK_SNAPSHOT_NOT_FOUND" {
+				return nil
+			}
+		}
+		return err
+	}
+	return nil
+}
+
+func (s *ZecService) SnapshotStateRefreshFunc(ctx context.Context, snapshotId string, failStates []string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		object, err := s.DescribeSnapshotById(ctx, snapshotId)
+		if err != nil {
+			return nil, "", err
+		}
+
+		if object == nil {
+			// Set this to nil as if we didn't find anything.
+			return nil, "", nil
+		}
+		for _, failState := range failStates {
+			if *object.Status == failState {
+				return object, *object.Status, common.Error("Failed to reach target status. Last status: %s.", object.Status)
+			}
+		}
+
+		return object, *object.Status, nil
+	}
+}
+
+func (s *ZecService) DescribeAutoSnapshotPolicies(ctx context.Context, filter *ZecAutoSnapshotPolicyFilter) (policies[]*zec.AutoSnapshotPolicy, err error) {
+
+	request := convertSnapshotPolicyFilter(filter)
+	var limit = 100
+	request.PageSize = &limit
+	request.PageNum = common2.Integer(1)
+	response, err := s.client.WithZecClient().DescribeAutoSnapshotPolicies(request)
+
+	if err != nil {
+		log.Printf("[CRITAL] Api[%s] fail, request body [%s], error[%s]\n",
+			request.GetAction(), common.ToJsonString(request), err.Error())
+		return
+	}
+	if response == nil || len(response.Response.DataSet) < 1 {
+		return
+	}
+
+	policies = response.Response.DataSet
+	num := int(math.Ceil(float64(*response.Response.TotalCount)/float64(limit))) - 1
+	if num == 0 {
+		return policies, nil
+	}
+	maxConcurrentNum := 50
+	g := common.NewGoRoutine(maxConcurrentNum)
+	wg := sync.WaitGroup{}
+
+	var imageSetList = make([]interface{}, num)
+
+	for i := 0; i < num; i++ {
+		wg.Add(1)
+		value := i
+		goFunc := func() {
+			request := convertSnapshotPolicyFilter(filter)
+
+			request.PageNum = common2.Integer(value + 2)
+			request.PageSize = &limit
+
+			response, err := s.client.WithZecClient().DescribeAutoSnapshotPolicies(request)
+			if err != nil {
+				log.Printf("[CRITAL] Api[%s] fail, request body [%s], error[%s]\n",
+					request.GetAction(), common.ToJsonString(request), err.Error())
+				return
+			}
+			log.Printf("[DEBUG] Api[%s] success, request body [%s], response body [%s]\n",
+				request.GetAction(), common.ToJsonString(request), common.ToJsonString(response))
+
+			imageSetList[value] = response.Response.DataSet
+
+			wg.Done()
+			log.Printf("[DEBUG] thread %d finished", value)
+		}
+		g.Run(goFunc)
+	}
+	wg.Wait()
+
+	log.Printf("[DEBUG] DescribeAutoSnapshotPolicies request finished")
+	for _, v := range imageSetList {
+		policies = append(policies, v.([]*zec.AutoSnapshotPolicy)...)
+	}
+	log.Printf("[DEBUG] transfer snapshot policies finished")
+	return
+}
+
+func (s *ZecService) DeleteSnapshotPolicy(ctx context.Context, autoSnapshotPolicyId string) error {
+	request := zec.NewDeleteAutoSnapshotPoliciesRequest()
+	request.AutoSnapshotPolicyIds = []string{autoSnapshotPolicyId}
+	response, err := s.client.WithZecClient().DeleteAutoSnapshotPolicies(request)
+	defer common.LogApiRequest(ctx, "DeleteAutoSnapshotPolicies", request, response, err)
+	return err
+}
+
+func (s *ZecService) DescribeSnapshotPolicyById(ctx context.Context, autoSnapshotPolicyId string) (*zec.AutoSnapshotPolicy, error) {
+
+	request := zec.NewDescribeAutoSnapshotPoliciesRequest()
+	request.AutoSnapshotPolicyIds = []string{autoSnapshotPolicyId}
+
+	response, err := s.client.WithZecClient().DescribeAutoSnapshotPolicies(request)
+	defer common.LogApiRequest(ctx, "DescribeSnapshotPolicies", request, response, err)
+
+	if err != nil {
+		return nil, err
+	} else if len(response.Response.DataSet) == 0 {
+		return nil, nil
+	}
+	return response.Response.DataSet[0], nil
+}
+
+func convertSnapshotPolicyFilter(filter *ZecAutoSnapshotPolicyFilter) *zec.DescribeAutoSnapshotPoliciesRequest {
+
+	request := zec.NewDescribeAutoSnapshotPoliciesRequest()
+	if len(filter.AutoSnapshotPolicyIds) > 0  {
+		request.AutoSnapshotPolicyIds = filter.AutoSnapshotPolicyIds
+	}
+	if filter.ZoneId != ""  {
+		request.ZoneIds = []string{filter.ZoneId}
+	}
+	if filter.ResourceGroupId != ""  {
+		request.ResourceGroupId = &filter.ResourceGroupId
+	}
+	return request
+}
+
+func convertSnapshotFilter(filter *ZecSnapshotFilter) *zec.DescribeSnapshotsRequest {
+	request := zec.NewDescribeSnapshotsRequest()
+	if len(filter.SnapshotIds) > 0 {
+		request.SnapshotIds = filter.SnapshotIds
+	}
+	if filter.SnapshotName != "" {
+		request.SnapshotName = &filter.SnapshotName
+	}
+	if filter.ZoneId != "" {
+		request.ZoneId = &filter.ZoneId
+	}
+	if filter.ResourceGroupId != "" {
+		request.ResourceGroupId = &filter.ResourceGroupId
+	}
+	if filter.SnapshotType != "" {
+		request.SnapshotType = &filter.SnapshotType
+	}
+	if filter.DiskIds != nil && len(filter.DiskIds) > 0 {
+		request.DiskIds = filter.DiskIds
+	}
+
+	return request
 }
 
 func convertImageFilter(filter *ImageFilter) *zec.DescribeImagesRequest {

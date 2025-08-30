@@ -45,6 +45,10 @@ const (
 	ZecVnicStatusDeleting     = "DELETING"
 	ZecVnicStatusCreateFailed = "CREATE_FAILED"
 	ZecVnicStatusUsed         = "USED"
+
+	SnapshotFailed  = "FAILED"
+	SnapshotCreating  = "CREATING"
+	SnapshotAvailable  = "AVAILABLE"
 )
 
 var (
@@ -62,5 +66,13 @@ var (
 	ImageTypes = []string{
 		"PUBLIC_IMAGE",
 		"CUSTOM_IMAGE",
+	}
+
+	SecurityGroupRuleDirection = []string{
+		"ingress", "egress",
+	}
+
+	SecurityGroupRulePolicy = []string{
+		"accept", "drop",
 	}
 )

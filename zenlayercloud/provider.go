@@ -100,6 +100,8 @@ Zenlayer Elastic Compute(ZEC)
 	zenlayercloud_zec_subnets
 	zenlayercloud_zec_images
 	zenlayercloud_zec_disks
+	zenlayercloud_zec_disk_snapshots
+	zenlayercloud_zec_disk_snapshot_policies
 	zenlayercloud_zec_eips
 	zenlayercloud_zec_instances
 	zenlayercloud_zec_vnics
@@ -120,6 +122,9 @@ Zenlayer Elastic Compute(ZEC)
 	zenlayercloud_zec_instance
 	zenlayercloud_zec_disk
 	zenlayercloud_zec_disk_attachment
+	zenlayercloud_zec_disk_snapshot
+	zenlayercloud_zec_disk_snapshot_policy
+	zenlayercloud_zec_disk_snapshot_policy_attachment
 
 Zenlayer Load Balancing(ZLB)
 
@@ -133,6 +138,14 @@ Zenlayer Load Balancing(ZLB)
 	zenlayercloud_zlb_instance
 	zenlayercloud_zlb_listener
 	zenlayercloud_zlb_backend
+
+Traffic
+
+  Data Source
+	zenlayercloud_traffic_bandwidth_cluster_areas
+	zenlayercloud_traffic_bandwidth_clusters
+
+  Resource
 */
 package zenlayercloud
 
@@ -256,6 +269,9 @@ func resourcesMap() map[string]*schema.Resource {
 		"zenlayercloud_zec_eip_association":               zec.ResourceZenlayerCloudEipAssociation(),
 		"zenlayercloud_zec_disk":                          zec.ResourceZenlayerCloudZecDisk(),
 		"zenlayercloud_zec_disk_attachment":               zec.ResourceZenlayerCloudZecDiskAttachment(),
+		"zenlayercloud_zec_disk_snapshot":                 zec.ResourceZenlayerCloudZecSnapshot(),
+		"zenlayercloud_zec_disk_snapshot_policy":          zec.ResourceZenlayerCloudZecSnapshotPolicy(),
+		"zenlayercloud_zec_disk_snapshot_policy_attachment": zec.ResourceZenlayerCloudZecSnapshotPolicyAttachment(),
 		"zenlayercloud_zec_border_gateway":                zec.ResourceZenlayerCloudBorderGateway(),
 		"zenlayercloud_zec_border_gateway_association":    zec.ResourceZenlayerCloudBorderGatewayAssociation(),
 		"zenlayercloud_zec_nat_gateway":                   zec.ResourceZenlayerCloudZecVpcNatGateway(),
@@ -309,6 +325,8 @@ func dataSourcesMap() map[string]*schema.Resource {
 		"zenlayercloud_zec_border_gateways": zec.DataSourceZenlayerCloudBorderGateways(),
 		"zenlayercloud_zec_eips":            zec.DataSourceZenlayerCloudEips(),
 		"zenlayercloud_zec_disks":           zec.DataSourceZenlayerCloudZecDisks(),
+		"zenlayercloud_zec_disk_snapshots":  zec.DataSourceZenlayerCloudZecSnapshots(),
+		"zenlayercloud_zec_disk_snapshot_policies":      zec.DataSourceZenlayerCloudZecAutoSnapshotPolicies(),
 		"zenlayercloud_zec_nat_gateways":    zec.DataSourceZenlayerCloudZecNatGateway(),
 		"zenlayercloud_zec_instances":       zec.DataSourceZenlayerCloudZecInstances(),
 		"zenlayercloud_zec_vnics":           zec.DataSourceZenlayerCloudZecVnics(),

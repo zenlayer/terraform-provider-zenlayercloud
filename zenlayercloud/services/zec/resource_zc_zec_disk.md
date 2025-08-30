@@ -8,7 +8,7 @@ variable "availability_zone" {
 }
 
 resource "zenlayercloud_zec_disk" "test" {
-  availability_zone = "SH1A"
+  availability_zone = var.availability_zone
   disk_name         = "Disk-20G"
   disk_size         = 60
   disk_category     = "Standard NVMe SSD"

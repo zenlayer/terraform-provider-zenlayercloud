@@ -48,8 +48,8 @@ func resourceZenlayerCloudBorderGatewayAssociationCreate(ctx context.Context, d 
 	natId := d.Get("nat_id").(string)
 
 	request := zec.NewAssignBorderGatewayRequest()
-	request.ZbgId = zbgId
-	request.NatId = natId
+	request.ZbgId = &zbgId
+	request.NatId = &natId
 
 	err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
 		_, err := zecService.client.WithZecClient().AssignBorderGateway(request)

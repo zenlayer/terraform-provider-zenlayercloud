@@ -128,6 +128,11 @@ func DataSourceZenlayerCloudZecDisks() *schema.Resource {
 							Computed:    true,
 							Description: "Creation time of the disk.",
 						},
+						"auto_snapshot_policy_id": {
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "The ID of auto snapshot policy associated with this disk.",
+						},
 					},
 				},
 			},
@@ -216,6 +221,7 @@ func dataSourceZenlayerCloudZecDisksRead(ctx context.Context, d *schema.Resource
 			"status":              disk.DiskStatus,
 			"resource_group_id":   disk.ResourceGroupId,
 			"resource_group_name": disk.ResourceGroupName,
+			"auto_snapshot_policy_id" : disk.AutoSnapshotPolicyId,
 		}
 		diskList = append(diskList, mapping)
 		ids = append(ids, disk.DiskId)

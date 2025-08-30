@@ -75,7 +75,7 @@ func ResourceZenlayerCloudZecVpcNatGateway() *schema.Resource {
 				Elem:        &schema.Schema{Type: schema.TypeString},
 				Optional:    true,
 				ForceNew:    true,
-				Description: "IDs of the subnets to be associated. if this value not set",
+				Description: "IDs of the subnets to be associated. if this value not set, ",
 			},
 			"is_all_subnets": {
 				Type:        schema.TypeBool,
@@ -258,7 +258,10 @@ func resourceZenlayerCloudZecVpcNatGatewayRead(ctx context.Context, d *schema.Re
 	_ = d.Set("name", natGateway.Name)
 	_ = d.Set("vpc_id", natGateway.VpcId)
 
-	// TODO all_subnets
+	_ = d.Set("is_all_subnets", natGateway.IsAllSubnets)
+	if natGateway.SubnetIds != nil {
+		_ = d.Set("subnet_ids", natGateway.SubnetIds)
+	}
 	_ = d.Set("subnet_ids", nil)
 	_ = d.Set("resource_group_id", natGateway.ResourceGroupId)
 	_ = d.Set("create_time", natGateway.CreateTime)
