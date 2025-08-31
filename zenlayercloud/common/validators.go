@@ -1,6 +1,7 @@
 package common
 
 import (
+	"context"
 	"fmt"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"net"
@@ -42,5 +43,20 @@ func validateSizeAtLeast(size int) schema.SchemaValidateFunc {
 			errors = append(errors, fmt.Errorf("expected length of %s to be greather or equal than %d, got %s", k, size, length))
 		}
 		return warnings, errors
+	}
+}
+func NonEmptySetFieldValidFunc(keys ...string) schema.CustomizeDiffFunc {
+	return func(ctx context.Context, diff *schema.ResourceDiff, i interface{}) error {
+		for _, key := range keys {
+			// Check if the field is a TypeSet
+			schemaField := diff.GetRawConfig().AsValueMap()[key]
+			if schemaField.Type().IsSetType() {
+				// Check if the set is empty
+				if schemaField.IsNull() || schemaField.LengthInt() == 0 {
+					return fmt.Errorf("attribute `%s` must be a non-empty set", key)
+				}
+			}
+		}
+		return nil
 	}
 }

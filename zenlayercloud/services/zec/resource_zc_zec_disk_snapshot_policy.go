@@ -2,9 +2,9 @@ package zec
 
 import (
 	"context"
-	"fmt"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -25,6 +25,9 @@ func ResourceZenlayerCloudZecSnapshotPolicy() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
+		CustomizeDiff: customdiff.All(
+			common2.NonEmptySetFieldValidFunc("repeat_week_days", "hours"),
+		),
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:         schema.TypeString,
@@ -55,19 +58,9 @@ func ResourceZenlayerCloudZecSnapshotPolicy() *schema.Resource {
 			"hours": {
 				Type:     schema.TypeSet,
 				Required: true,
-				Elem:     &schema.Schema{Type: schema.TypeInt},
-				ValidateFunc: func(i interface{}, s string) ([]string, []error) {
-					hours := i.(*schema.Set).List()
-					for _, v := range hours {
-						if h, ok := v.(int); ok {
-							if h < 0 || h > 23 {
-								return nil, []error{fmt.Errorf("hour value %d is not in range 0-23", h)}
-							}
-						} else {
-							return nil, []error{fmt.Errorf("hour value %v is not an integer", v)}
-						}
-					}
-					return nil, nil
+				Elem: &schema.Schema{
+					Type:         schema.TypeInt,
+					ValidateFunc: validation.IntBetween(0, 23),
 				},
 				Description: "The hours of day when the auto snapshot policy is triggered. The time zone of hour is `UTC+0`. Valid values: from `0` to `23`.",
 			},
@@ -180,7 +173,6 @@ func resourceZenlayerCloudZecSnapshotPolicyUpdate(ctx context.Context, d *schema
 		}
 	}
 
-
 	return resourceZenlayerCloudZecSnapshotPolicyRead(ctx, d, meta)
 }
 
@@ -239,7 +231,6 @@ func resourceZenlayerCloudZecSnapshotPolicyCreate(ctx context.Context, d *schema
 	return resourceZenlayerCloudZecSnapshotPolicyRead(ctx, d, meta)
 }
 
-
 func resourceZenlayerCloudZecSnapshotPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
@@ -265,7 +256,7 @@ func resourceZenlayerCloudZecSnapshotPolicyRead(ctx context.Context, d *schema.R
 		return diag.FromErr(err)
 	}
 
-	if snapshot == nil{
+	if snapshot == nil {
 		d.SetId("")
 		tflog.Info(ctx, "snapshot policy not exist", map[string]interface{}{
 			"snapshotPolicyId": snapshotPolicyId,
@@ -278,7 +269,7 @@ func resourceZenlayerCloudZecSnapshotPolicyRead(ctx context.Context, d *schema.R
 	_ = d.Set("availability_zone", snapshot.ZoneId)
 	_ = d.Set("retention_days", snapshot.RetentionDays)
 	_ = d.Set("create_time", snapshot.CreateTime)
-	_ = d.Set("repeat_week_days",  snapshot.RepeatWeekDays )
+	_ = d.Set("repeat_week_days", snapshot.RepeatWeekDays)
 	_ = d.Set("hours", snapshot.Hours)
 	_ = d.Set("resource_group_id", snapshot.ResourceGroup.ResourceGroupId)
 	_ = d.Set("resource_group_name", snapshot.ResourceGroup.ResourceGroupName)

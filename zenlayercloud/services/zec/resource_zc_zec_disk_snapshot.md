@@ -22,8 +22,8 @@ Create a snapshot
 
 ```hcl
 resource "zenlayercloud_zec_disk_snapshot" "snapshot" {
-  disk_id       = zenlayercloud_zec_disk.test.id
-  snapshot_name = "example-snapshot"
+  disk_id = zenlayercloud_zec_disk.test.id
+  name    = "example-snapshot"
 }
 ```
 

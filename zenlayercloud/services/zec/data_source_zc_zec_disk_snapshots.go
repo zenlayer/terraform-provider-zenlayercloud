@@ -24,14 +24,13 @@ func DataSourceZenlayerCloudZecSnapshots() *schema.Resource {
 				Description: "The availability zone of the snapshot to be queried.",
 			},
 			"disk_ids": {
-				Type:        schema.TypeList,
+				Type:        schema.TypeSet,
 				Elem:        &schema.Schema{Type: schema.TypeString},
 				Optional:    true,
 				Description: "IDs of the disk to be queried.",
 			},
 			"snapshot_type": {
-				Type:        schema.TypeList,
-				Elem:        &schema.Schema{Type: schema.TypeString},
+				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "The type of the snapshot to be queried. Valid values: `Auto`, `Manual`.",
 			},
@@ -88,11 +87,6 @@ func DataSourceZenlayerCloudZecSnapshots() *schema.Resource {
 							Type:        schema.TypeString,
 							Computed:    true,
 							Description: "The ID of disk that the snapshot is created from.",
-						},
-						"disk_type": {
-							Type:        schema.TypeString,
-							Computed:    true,
-							Description: "The Type of disk that the snapshot is created from. Valid values: `SYSTEM`, `DATA`.",
 						},
 						"create_time": {
 							Type:        schema.TypeString,
@@ -204,7 +198,7 @@ func dataSourceZenlayerCloudZecSnapshotsRead(ctx context.Context, d *schema.Reso
 		}
 		mapping := map[string]interface{}{
 			"id":                  snapshot.SnapshotId,
-			"zone_id":             snapshot.ZoneId,
+			"availability_zone":   snapshot.ZoneId,
 			"name":                snapshot.SnapshotName,
 			"snapshot_type":       snapshot.SnapshotType,
 			"disk_id":             snapshot.DiskId,

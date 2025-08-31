@@ -49,6 +49,7 @@ const (
 	SnapshotFailed  = "FAILED"
 	SnapshotCreating  = "CREATING"
 	SnapshotAvailable  = "AVAILABLE"
+	SnapshotDeleting = "DELETING"
 )
 
 var (

@@ -39,6 +39,12 @@ func ResourceZenlayerCloudZecVNic() *schema.Resource {
 				ForceNew:    true,
 				Description: "The ID of a VPC subnet.",
 			},
+			"security_group_id": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Computed:    true,
+				Description: "The ID of a security group.",
+			},
 			"primary_ipv4": {
 				Type:        schema.TypeString,
 				Computed:    true,
@@ -208,6 +214,10 @@ func resourceZenlayerCloudZecVNicCreate(ctx context.Context, d *schema.ResourceD
 		request.ResourceGroupId = v.(string)
 	}
 
+	// TODO security group
+	//if v, ok := d.GetOk("security_group_id"); ok {
+	//	request.SecurityGroupId = v.(string)
+	//}
 	vnicId := ""
 
 	err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
@@ -292,7 +302,8 @@ func resourceZenlayerCloudZecVNicRead(ctx context.Context, d *schema.ResourceDat
 	_ = d.Set("resource_group_id", nic.ResourceGroup.ResourceGroupId)
 	_ = d.Set("resource_group_name", nic.ResourceGroup.ResourceGroupName)
 	_ = d.Set("create_time", nic.CreateTime)
-
+	//// TODO security group
+	//_ = d.Set("security_group_id", nic.SecurityGroupId)
 	return diags
 
 }

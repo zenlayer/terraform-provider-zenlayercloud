@@ -18,7 +18,8 @@ func DataSourceZenlayerCloudZecAutoSnapshotPolicies() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"ids": {
-				Type:        schema.TypeString,
+				Type:        schema.TypeSet,
+				Elem:        &schema.Schema{Type: schema.TypeString},
 				Optional:    true,
 				Description: "IDs of the auto snapshot policy to be queried.",
 			},

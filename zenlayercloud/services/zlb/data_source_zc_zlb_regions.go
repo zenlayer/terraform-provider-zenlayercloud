@@ -3,9 +3,12 @@ package zlb
 import (
 	"context"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	common2 "github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/common"
 	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/connectivity"
+	zlb "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/zlb20250401"
+	"time"
 )
 
 func DataSourceZenlayerCloudZlbRegions() *schema.Resource {
@@ -74,7 +77,17 @@ func dataSourceZenlayerCloudZlbRegionsRead(ctx context.Context, d *schema.Resour
 		cityCode = v.(string)
 	}
 
-	regions, err := zlbService.DescribeLoadBalancerRegions()
+	var regions []*zlb.Region
+
+	err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutRead)-time.Minute, func() *resource.RetryError {
+		var e error
+		regions, e = zlbService.DescribeLoadBalancerRegions()
+		if e != nil {
+			return common2.RetryError(ctx, e, common2.InternalServerError)
+		}
+		return nil
+	})
+
 	if err != nil {
 		return diag.FromErr(err)
 	}

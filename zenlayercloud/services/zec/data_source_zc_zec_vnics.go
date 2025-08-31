@@ -142,6 +142,11 @@ func DataSourceZenlayerCloudZecVnics() *schema.Resource {
 							Computed:    true,
 							Description: "Create time of the vNIC.",
 						},
+						"security_group_id": {
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "ID of the security group.",
+						},
 					},
 				},
 			},
@@ -222,6 +227,8 @@ func dataSourceZenlayerCloudZecVnicsRead(ctx context.Context, d *schema.Resource
 			"resource_group_id":    nic.ResourceGroup.ResourceGroupId,
 			"resource_group_name":  nic.ResourceGroup.ResourceGroupName,
 			"create_time":          nic.CreateTime,
+			// TODO security group
+			//"security_group_id":    nic.SecurityGroupId,
 		}
 		nicList = append(nicList, mapping)
 		ids = append(ids, nic.NicId)

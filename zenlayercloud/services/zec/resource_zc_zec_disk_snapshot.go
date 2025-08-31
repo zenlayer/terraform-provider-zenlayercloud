@@ -85,7 +85,6 @@ func ResourceZenlayerCloudZecSnapshot() *schema.Resource {
 func ResourceZenlayerCloudZecSnapshotDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	snapshotId := d.Id()
 
-
 	zecService := ZecService{
 		client: meta.(*connectivity.ZenlayerCloudClient),
 	}
@@ -100,6 +99,33 @@ func ResourceZenlayerCloudZecSnapshotDelete(ctx context.Context, d *schema.Resou
 	if err != nil {
 		return diag.FromErr(err)
 	}
+
+	err = resource.RetryContext(ctx, d.Timeout(schema.TimeoutDelete)-time.Minute, func() *resource.RetryError {
+		instance, errRet := zecService.DescribeSnapshotById(ctx, snapshotId)
+		if errRet != nil {
+			ee, ok := errRet.(*common.ZenlayerCloudSdkError)
+			if ok {
+				if ee.Code == common2.ResourceNotFound {
+					return nil
+				}
+			}
+			return common2.RetryError(ctx, errRet, common2.InternalServerError)
+		}
+		if instance == nil {
+			return nil
+		}
+
+		if *instance.Status == SnapshotDeleting {
+			return resource.RetryableError(fmt.Errorf("waiting for load snapshot %s deleting, current status: %s", snapshotId, *instance.Status))
+		}
+
+		return resource.NonRetryableError(fmt.Errorf("snapshot status is not deleted, current status %s", *instance.Status))
+	})
+
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
 	return nil
 }
 
@@ -113,7 +139,7 @@ func ResourceZenlayerCloudZecSnapshotUpdate(ctx context.Context, d *schema.Resou
 	if d.HasChange("name") {
 		err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate)-time.Minute, func() *resource.RetryError {
 			request := zec2.NewModifySnapshotsAttributeRequest()
-			request.SnapshotName = common.String( d.Get("name").(string))
+			request.SnapshotName = common.String(d.Get("name").(string))
 			request.SnapshotIds = []string{snapId}
 			_, err := zecService.client.WithZecClient().ModifySnapshotsAttribute(request)
 			if err != nil {
@@ -138,7 +164,7 @@ func ResourceZenlayerCloudZecSnapshotCreate(ctx context.Context, d *schema.Resou
 
 	request := zec2.NewCreateSnapshotRequest()
 	request.DiskId = common.String(d.Get("disk_id").(string))
-	request.SnapshotName = common.String( d.Get("name").(string))
+	request.SnapshotName = common.String(d.Get("name").(string))
 
 	snapshotId := ""
 
@@ -159,11 +185,11 @@ func ResourceZenlayerCloudZecSnapshotCreate(ctx context.Context, d *schema.Resou
 			"response": common2.ToJsonString(response),
 		})
 
-		if len(response.Response.SnapshotIds) < 1 {
-			err = fmt.Errorf("disk id is nil")
+		if response.Response.SnapshotId == nil {
+			err = fmt.Errorf("snapshot id is nil")
 			return resource.NonRetryableError(err)
 		}
-		snapshotId = response.Response.SnapshotIds[0]
+		snapshotId = *response.Response.SnapshotId
 
 		return nil
 	})
@@ -198,10 +224,6 @@ func ResourceZenlayerCloudZecSnapshotRead(ctx context.Context, d *schema.Resourc
 		if errRet != nil {
 			return common2.RetryError(ctx, errRet)
 		}
-
-		if snapshot != nil  {
-			return resource.RetryableError(fmt.Errorf("waiting for snapshot %s operation", snapshot.DiskId))
-		}
 		return nil
 	})
 
@@ -229,7 +251,6 @@ func ResourceZenlayerCloudZecSnapshotRead(ctx context.Context, d *schema.Resourc
 	_ = d.Set("resource_group_name", snapshot.ResourceGroup.ResourceGroupId)
 	_ = d.Set("disk_ability", snapshot.DiskAbility)
 
-
 	return diags
 
 }
@@ -249,4 +270,3 @@ func BuildSnapshotState(zecService *ZecService, diskId string, ctx context.Conte
 		NotFoundChecks: 3,
 	}
 }
-

@@ -95,7 +95,7 @@ func resourceZenlayerCloudZecSnapshotPolicyAttachmentRead(ctx context.Context, d
 		return nil
 	}
 
-	if diskInfo.AutoSnapshotPolicyId == nil || *diskInfo.AutoSnapshotPolicyId != "" {
+	if diskInfo.AutoSnapshotPolicyId == nil || *diskInfo.AutoSnapshotPolicyId == "" {
 		d.SetId("")
 		return nil
 	}
@@ -123,7 +123,7 @@ func resourceZenlayerCloudZecSnapshotPolicyAttachmentDelete(ctx context.Context,
 		return nil
 	})
 
-	if diskInfo == nil  || diskInfo.AutoSnapshotPolicyId == nil || *diskInfo.AutoSnapshotPolicyId != "" {
+	if diskInfo == nil  || diskInfo.AutoSnapshotPolicyId == nil || *diskInfo.AutoSnapshotPolicyId == "" {
 		return nil
 	}
 
