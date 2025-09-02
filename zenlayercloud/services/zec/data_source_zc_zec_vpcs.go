@@ -155,7 +155,7 @@ func dataSourceZenlayerCloudZecGlobalVpcsRead(ctx context.Context, d *schema.Res
 			"cidr_block":          vpc.CidrBlock,
 			"ipv6_cidr_block":     vpc.Ipv6CidrBlock,
 			"is_default":          vpc.IsDefault,
-			"enable_ipv6":         vpc.Ipv6CidrBlock == "",
+			"enable_ipv6":         vpc.Ipv6CidrBlock != "",
 			"resource_group_id":   vpc.ResourceGroup.ResourceGroupId,
 			"resource_group_name": vpc.ResourceGroup.ResourceGroupName,
 			"security_group_id":   vpc.SecurityGroupId,
