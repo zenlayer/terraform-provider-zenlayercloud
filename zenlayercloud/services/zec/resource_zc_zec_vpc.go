@@ -11,6 +11,7 @@ import (
 	common2 "github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/common"
 	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/connectivity"
 	"github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/common"
+	user "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/user20240529"
 	zec "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/zec20240401"
 	"time"
 )
@@ -145,19 +146,22 @@ func resourceZenlayerCloudGlobalVpcUpdate(ctx context.Context, d *schema.Resourc
 		}
 	}
 
-	// resource group
-	//if d.HasChange("resource_group_id") {
-	//	err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate)-time.Minute, func() *resource.RetryError {
-	//		err := zecService.ModifyVpcResourceGroup(ctx, vpcId, d.Get("resource_group_id").(string))
-	//		if err != nil {
-	//			return retryError(ctx, err, InternalServerError, common.NetworkError)
-	//		}
-	//		return nil
-	//	})
-	//	if err != nil {
-	//		return diag.FromErr(err)
-	//	}
-	//}
+	if d.HasChange("resource_group_id") {
+		err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate)-time.Minute, func() *resource.RetryError {
+			request := user.NewAddResourceResourceGroupRequest()
+			request.ResourceGroupId = common.String(d.Get("resource_group_id").(string))
+			request.Resources = []*string{common.String(vpcId)}
+
+			_, err := meta.(*connectivity.ZenlayerCloudClient).WithUsrClient().AddResourceResourceGroup(request)
+			if err != nil {
+				return common2.RetryError(ctx, err, common2.InternalServerError, common.NetworkError)
+			}
+			return nil
+		})
+		if err != nil {
+			return diag.FromErr(err)
+		}
+	}
 
 	d.Partial(false)
 	return resourceZenlayerCloudGlobalVpcRead(ctx, d, meta)

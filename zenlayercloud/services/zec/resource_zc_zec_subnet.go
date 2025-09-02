@@ -65,7 +65,7 @@ func ResourceZenlayerCloudZecSubnet() *schema.Resource {
 			},
 			"region_id": {
 				Type:        schema.TypeString,
-				Optional:    true,
+				Required:    true,
 				ForceNew:    true,
 				Description: "The region that the subnet locates at.",
 			},
@@ -138,6 +138,9 @@ func resourceZenlayerCloudZecSubnetDelete(ctx context.Context, d *schema.Resourc
 	if err != nil {
 		return diag.FromErr(err)
 	}
+
+	// 等待1s
+	time.Sleep(time.Second)
 
 	return nil
 }
