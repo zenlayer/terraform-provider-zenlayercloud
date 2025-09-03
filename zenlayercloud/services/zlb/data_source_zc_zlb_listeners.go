@@ -111,7 +111,7 @@ func DataSourceZenlayerCloudZlbListeners() *schema.Resource {
 							Description: "HTTP status code for health check.",
 						},
 						"health_check_port": {
-							Type:        schema.TypeString,
+							Type:        schema.TypeInt,
 							Computed:    true,
 							Description: "Health check port. Defaults to the backend server port.",
 						},
