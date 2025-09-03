@@ -122,7 +122,7 @@ func bandwidthClusterIdValidFunc() schema.CustomizeDiffFunc {
 	return customdiff.IfValue("internet_charge_type", func(ctx context.Context, value, meta interface{}) bool {
 		return value == "BandwidthCluster"
 	}, func(ctx context.Context, diff *schema.ResourceDiff, i interface{}) error {
-		if _, ok := diff.GetOk("bandwidth_cluster_id"); ok {
+		if _, ok := diff.GetOk("bandwidth_cluster_id"); !ok {
 			return fmt.Errorf("bandwidth_cluster_id must be set as the internet_charge_type of instance is `BandwidthCluster`")
 		}
 		return nil

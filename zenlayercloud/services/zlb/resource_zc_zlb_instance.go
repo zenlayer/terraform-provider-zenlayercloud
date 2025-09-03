@@ -170,7 +170,8 @@ func resourceZenlayerCloudZlbInstanceRead(ctx context.Context, d *schema.Resourc
 		return diag.FromErr(err)
 	}
 	if *zlb.Status == lbInstanceStatusCreateFailed {
-		return diag.Errorf("load balancer `%s`created failed", zlbId)
+		d.SetId("")
+		return diag.Errorf("load balancer `%s` created failed", zlbId)
 	}
 	if zlb == nil {
 		d.SetId("")
