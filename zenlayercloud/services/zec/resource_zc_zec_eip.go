@@ -159,7 +159,7 @@ func resourceZenlayerCloudZecElasticIPCreate(ctx context.Context, d *schema.Reso
 		request.ResourceGroupId = v.(string)
 	}
 
-	if v, ok := d.GetOk("cluster_id"); ok {
+	if v, ok := d.GetOk("bandwidth_cluster_id"); ok {
 		request.ClusterId = v.(string)
 	}
 
