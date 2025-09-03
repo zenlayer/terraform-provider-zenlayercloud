@@ -169,8 +169,10 @@ func resourceZenlayerCloudZlbInstanceRead(ctx context.Context, d *schema.Resourc
 	if err != nil {
 		return diag.FromErr(err)
 	}
-
-	if zlb == nil || *zlb.Status == lbInstanceStatusCreateFailed {
+	if *zlb.Status == lbInstanceStatusCreateFailed {
+		return diag.Errorf("load balancer `%s`created failed", zlbId)
+	}
+	if zlb == nil {
 		d.SetId("")
 		tflog.Info(ctx, "load balancer instance not exist", map[string]interface{}{
 			"zlbId": zlbId,
