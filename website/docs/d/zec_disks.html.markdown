@@ -78,6 +78,7 @@ The following arguments are supported:
 In addition to all arguments above, the following attributes are exported:
 
 * `disks` - An information list of disk. Each element contains the following attributes:
+   * `auto_snapshot_policy_id` - The ID of auto snapshot policy associated with this disk.
    * `availability_zone` - The availability zone of disk.
    * `create_time` - Creation time of the disk.
    * `disk_category` - The category of disk.

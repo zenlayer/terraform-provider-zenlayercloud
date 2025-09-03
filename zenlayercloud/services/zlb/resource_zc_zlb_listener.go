@@ -75,7 +75,7 @@ func ResourceZenlayerCloudZlbListener() *schema.Resource {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Default:     true,
-				Description: "Indicates whether health check is enabled.",
+				Description: "Indicates whether health check is enabled. Default is `true`.",
 			},
 			"health_check_type": {
 				Type:         schema.TypeString,

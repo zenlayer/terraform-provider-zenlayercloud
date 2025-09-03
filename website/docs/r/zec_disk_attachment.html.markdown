@@ -15,7 +15,7 @@ Provides a resource to attached ZEC disk to an instance.
 
 ```hcl
 resource "zenlayercloud_zec_disk_attachment" "test" {
-  disk_id     = "<diskId"
+  disk_id     = "<diskId>"
   instance_id = "<instanceId>"
 }
 ```

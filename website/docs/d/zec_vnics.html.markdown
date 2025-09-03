@@ -97,5 +97,6 @@ In addition to all arguments above, the following attributes are exported:
    * `region_id` - The region that the vNIC locates at.
    * `resource_group_id` - The resource group id that the NAT gateway belongs to.
    * `resource_group_name` - The resource group name that the NAT gateway belongs to.
+   * `security_group_id` - ID of the security group.
 
 

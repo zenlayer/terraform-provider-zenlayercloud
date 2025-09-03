@@ -48,7 +48,7 @@ data "zenlayercloud_zec_disk_snapshot_policies" "foo" {
 The following arguments are supported:
 
 * `availability_zone` - (Optional, String) The availability zone of the auto snapshot policy to be queried.
-* `ids` - (Optional, String) IDs of the auto snapshot policy to be queried.
+* `ids` - (Optional, Set: [`String`]) IDs of the auto snapshot policy to be queried.
 * `name_regex` - (Optional, String) Name of the auto snapshot policy to be queried.
 * `resource_group_id` - (Optional, String) The ID of resource group grouped auto snapshot policy to be queried.
 * `result_output_file` - (Optional, String) Used to save results.

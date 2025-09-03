@@ -87,12 +87,12 @@ data "zenlayercloud_zec_disk_snapshots" "foo" {
 The following arguments are supported:
 
 * `availability_zone` - (Optional, String) The availability zone of the snapshot to be queried.
-* `disk_ids` - (Optional, List: [`String`]) IDs of the disk to be queried.
+* `disk_ids` - (Optional, Set: [`String`]) IDs of the disk to be queried.
 * `ids` - (Optional, Set: [`String`]) IDs of the snapshots to be queried.
 * `name_regex` - (Optional, String) A regex string to apply to the snapshot name.
 * `resource_group_id` - (Optional, String) The ID of resource group grouped snapshot to be queried.
 * `result_output_file` - (Optional, String) Used to save results.
-* `snapshot_type` - (Optional, List: [`String`]) The type of the snapshot to be queried. Valid values: `Auto`, `Manual`.
+* `snapshot_type` - (Optional, String) The type of the snapshot to be queried. Valid values: `Auto`, `Manual`.
 
 ## Attributes Reference
 
@@ -103,7 +103,6 @@ In addition to all arguments above, the following attributes are exported:
    * `create_time` - Creation time of the snapshot.
    * `disk_ability` - Whether the snapshot can be used to create a disk.
    * `disk_id` - The ID of disk that the snapshot is created from.
-   * `disk_type` - The Type of disk that the snapshot is created from. Valid values: `SYSTEM`, `DATA`.
    * `id` - ID of the snapshot.
    * `name` - Name of the snapshot.
    * `resource_group_id` - The ID of resource group grouped snapshot.
