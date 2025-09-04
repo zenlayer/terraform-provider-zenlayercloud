@@ -9,6 +9,7 @@ import (
 	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/common"
 	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/connectivity"
 	zec "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/zec20240401"
+	"regexp"
 	"time"
 )
 
@@ -203,6 +204,19 @@ func dataSourceZenlayerCloudEipsRead(ctx context.Context, d *schema.ResourceData
 		filter.ResourceGroupId = v.(string)
 	}
 
+	var nameRegex *regexp.Regexp
+
+	if v, ok := d.GetOk("name_regex"); ok {
+		imageName := v.(string)
+		if imageName != "" {
+			reg, err := regexp.Compile(imageName)
+			if err != nil {
+				return diag.Errorf("image_name_regex format error,%s", err.Error())
+			}
+			nameRegex = reg
+		}
+	}
+
 	var eips []*zec.EipInfo
 	err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutRead)-time.Minute, func() *resource.RetryError {
 		var e error
@@ -221,6 +235,9 @@ func dataSourceZenlayerCloudEipsRead(ctx context.Context, d *schema.ResourceData
 	eipList := make([]map[string]interface{}, 0)
 
 	for _, eip := range eips {
+		if nameRegex != nil && !nameRegex.MatchString(eip.Name) {
+			continue
+		}
 		mapping := map[string]interface{}{
 			"id":                   eip.EipId,
 			"region_id":            eip.RegionId,
