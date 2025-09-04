@@ -51,7 +51,7 @@ func ResourceZenlayerCloudGlobalVpc() *schema.Resource {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Default:     false,
-				Description: "Whether to enable the private IPv6 network segment.",
+				Description: "Whether to enable the private IPv6 network segment. Once the ipv6 is enabled, disable it will cause the resource to `ForceNew`.",
 			},
 			"ipv6_cidr_block": {
 				Type:        schema.TypeString,

@@ -54,14 +54,14 @@ func ResourceZenlayerCloudZecSubnet() *schema.Resource {
 				Optional:     true,
 				AtLeastOneOf: []string{"cidr_block", "ipv6_type"},
 				ValidateFunc: validation.StringInSlice([]string{"Public", "Private"}, false),
-				Description:  "The IPv6 type. Valid values: `Public`, `Private`.",
+				Description:  "The IPv6 type. Valid values: `Public`, `Private`. Once the value is present, Change it between `Private` and `Public` will cause the resource to `ForceNew`.",
 			},
 			"cidr_block": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				AtLeastOneOf: []string{"cidr_block", "ipv6_type"},
 				ValidateFunc: common2.ValidateCIDRNetworkAddress,
-				Description:  "The ipv4 cidr block. A network address block which should be a subnet of the three internal network segments (10.0.0.0/8, 172.16.0.0/12 and 192.168.0.0/16).",
+				Description:  "The ipv4 cidr block. A network address block which should be a subnet of the three internal network segments (10.0.0.0/8, 172.16.0.0/12 and 192.168.0.0/16). Once the cidr_block is present, disable it will cause the resource to `ForceNew`.",
 			},
 			"region_id": {
 				Type:        schema.TypeString,
