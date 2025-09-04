@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -25,6 +26,9 @@ func ResourceZenlayerCloudGlobalVpc() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
+		CustomizeDiff: customdiff.All(
+			enableIPv6ChangeForNewFunc(),
+		),
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:         schema.TypeString,
@@ -81,6 +85,13 @@ func ResourceZenlayerCloudGlobalVpc() *schema.Resource {
 			},
 		},
 	}
+}
+
+func enableIPv6ChangeForNewFunc() schema.CustomizeDiffFunc {
+	return customdiff.ForceNewIfChange("enable_ipv6", func(ctx context.Context, old, new, meta interface{}) bool {
+		// disable ipv6 is not allowed
+		return old.(bool) == true && new.(bool) == false
+	})
 }
 
 func resourceZenlayerCloudGlobalVpcDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
