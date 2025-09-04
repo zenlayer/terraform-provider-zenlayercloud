@@ -520,6 +520,13 @@ func resourceZenlayerCloudZecInstanceCreate(ctx context.Context, d *schema.Resou
 	if v, ok := d.GetOk("key_id"); ok {
 		request.KeyId = v.(string)
 	}
+	system := &zec.SystemDisk{}
+	system.DiskSize = d.Get("system_disk_size").(int)
+
+	if v, ok := d.GetOk("system_disk_category"); ok {
+		system.DiskCategory = v.(string)
+	}
+	request.SystemDisk = system
 
 	//request.InternetChargeType = d.Get("internet_charge_type").(string)
 	//if request.InternetChargeType == VmInternetChargeTypeTrafficPackage && request.InstanceChargeType == VmChargeTypePrepaid {
