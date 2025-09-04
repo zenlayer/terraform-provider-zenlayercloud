@@ -190,10 +190,7 @@ func dataSourceZenlayerCloudEipsRead(ctx context.Context, d *schema.ResourceData
 	}
 
 	if v, ok := d.GetOk("public_ip_address"); ok {
-		ids := v.(*schema.Set).List()
-		if len(ids) > 0 {
-			filter.IpAddress = common.ToStringList(ids)
-		}
+		filter.IpAddress = []string{v.(string)}
 	}
 
 	if v, ok := d.GetOk("status"); ok {
