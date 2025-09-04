@@ -233,6 +233,12 @@ func dataSourceZenlayerCloudEipsRead(ctx context.Context, d *schema.ResourceData
 	d.SetId(common.DataResourceIdHash(ids))
 	_ = d.Set("result", eipList)
 
+	output, ok := d.GetOk("result_output_file")
+	if ok && output.(string) != "" {
+		if err := common.WriteToFile(output.(string), eipList); err != nil {
+			return diag.FromErr(err)
+		}
+	}
 	return nil
 }
 
