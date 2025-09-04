@@ -140,7 +140,7 @@ func ResourceZenlayerCloudZecInstance() *schema.Resource {
 				Description: "Size of the system disk. unit is GB. If modified, the ZEC instance may force stop.",
 			},
 			"time_zone": {
-				Type:        schema.TypeInt,
+				Type:        schema.TypeString,
 				Optional:    true,
 				Computed:    true,
 				Description: "Time zone of instance. such as `America/Los_Angeles`. Changing `time_zone` will cause the ZEC instance reset.",

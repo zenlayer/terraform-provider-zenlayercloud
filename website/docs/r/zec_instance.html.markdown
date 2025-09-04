@@ -88,7 +88,7 @@ The following arguments are supported:
 * `resource_group_id` - (Optional, String) The resource group id the ZEC instance belongs to, default to Default Resource Group.
 * `running_flag` - (Optional, Bool) Set instance to running or stop. Default value is true, the instance will shutdown when this flag is false.
 * `system_disk_category` - (Optional, String) Category of the system disk.
-* `time_zone` - (Optional, Int) Time zone of instance. such as `America/Los_Angeles`. Changing `time_zone` will cause the ZEC instance reset.
+* `time_zone` - (Optional, String) Time zone of instance. such as `America/Los_Angeles`. Changing `time_zone` will cause the ZEC instance reset.
 
 ## Attributes Reference
 
