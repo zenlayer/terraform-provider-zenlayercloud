@@ -69,9 +69,12 @@ The following arguments are supported:
 In addition to all arguments above, the following attributes are exported:
 
 * `result` - An information list of EIPs. Each element contains the following attributes:
+   * `associated_id` - The ID of associated instance that the EIP attached to.
+   * `associated_type` - The type of associated instance that the EIP attached to. Valid values: `NAT`(for NAT gateway), `NIC`(for virtual NetworkInterface), `LB`(for Load balancer Instance).
    * `bandwidth_cluster_id` - Bandwidth cluster ID.
    * `bandwidth_cluster_name` - The name of Bandwidth cluster.
    * `bandwidth` - Bandwidth. Measured in Mbps.
+   * `bind_type` - Elastic IP bind type. Effective when the elastic IP is assigned to a vNIC.
    * `cidr_id` - CIDR ID, the elastic ip allocated from.
    * `create_time` - Creation time of the elastic IP.
    * `flow_package_size` - The Data transfer package. Measured in TB.
@@ -80,6 +83,7 @@ In addition to all arguments above, the following attributes are exported:
    * `ip_type` - Network types of public IPv4.
    * `name` - Name of the elastic IP.
    * `peer_region_id` - Remote region ID.
+   * `private_ip_address` - The private address that the EIP attached to. Only valid when the associate type is `NIC`.
    * `public_ip_address` - The elastic ipv4 address.
    * `region_id` - The region ID that the elastic IP locates at.
    * `resource_group_id` - Resource group ID.

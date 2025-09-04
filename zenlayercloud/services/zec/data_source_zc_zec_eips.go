@@ -131,6 +131,26 @@ func DataSourceZenlayerCloudEips() *schema.Resource {
 							Computed:    true,
 							Description: "Remote region ID.",
 						},
+						"private_ip_address": {
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "The private address that the EIP attached to. Only valid when the associate type is `NIC`.",
+						},
+						"associated_id": {
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "The ID of associated instance that the EIP attached to.",
+						},
+						"associated_type": {
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "The type of associated instance that the EIP attached to. Valid values: `NAT`(for NAT gateway), `NIC`(for virtual NetworkInterface), `LB`(for Load balancer Instance).",
+						},
+						"bind_type": {
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "Elastic IP bind type. Effective when the elastic IP is assigned to a vNIC.",
+						},
 						"create_time": {
 							Type:        schema.TypeString,
 							Computed:    true,
@@ -215,6 +235,10 @@ func dataSourceZenlayerCloudEipsRead(ctx context.Context, d *schema.ResourceData
 			"peer_region_id":       eip.PeerRegionId,
 			"create_time":          eip.CreateTime,
 			"status":               eip.Status,
+			"private_ip_address":   eip.PrivateIpAddress,
+			"associated_id":        eip.AssociatedId,
+			"associated_type":      eip.AssociatedType,
+			"bind_type":            eip.BindType,
 		}
 
 		if eip.BandwidthCluster != nil {
