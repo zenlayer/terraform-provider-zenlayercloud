@@ -82,7 +82,7 @@ The following arguments are supported:
 * `disable_qga_agent` - (Optional, Bool) Indicate whether to disable QEMU Guest Agent (QGA). QGA is enabled by default. Changing `disable_qga_agent` will cause the ZEC instance reset.
 * `enable_ip_forwarding` - (Optional, Bool) Indicate whether to enable IP forwarding. IP forwarding is disabled by default.
 * `force_delete` - (Optional, Bool) Indicate whether to force delete the ZEC instance. Default is `true`. If set true, the ZEC instance will be permanently deleted instead of being moved into the recycle bin.
-* `instance_name` - (Optional, String) The name of the ZEC instance. The max length of instance_name is 64, and default value is `Terraform-ZEC-Instance`.
+* `instance_name` - (Optional, String) The name of the ZEC instance. The minimum length of instance name is `2`. The max length of instance_name is 63, and default value is `Terraform-ZEC-Instance`.
 * `key_id` - (Optional, String) The key pair id to use for the ZEC instance. Changing `key_id` will cause the ZEC instance reset.
 * `password` - (Optional, String) Password for the ZEC instance. The max length of password is 16.
 * `resource_group_id` - (Optional, String) The resource group id the ZEC instance belongs to, default to Default Resource Group.

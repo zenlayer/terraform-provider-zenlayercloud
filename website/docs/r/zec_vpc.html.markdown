@@ -37,7 +37,7 @@ $ terraform import zenlayercloud_zec_vpc.test vpc-id
 The following arguments are supported:
 
 * `cidr_block` - (Required, String) A network address block which should be a subnet of the three internal network segments (10.0.0.0/8, 172.16.0.0/12 and 192.168.0.0/16).
-* `enable_ipv6` - (Optional, Bool) Whether to enable the private IPv6 network segment.
+* `enable_ipv6` - (Optional, Bool) Whether to enable the private IPv6 network segment. Once the ipv6 is enabled, disable it will cause the resource to `ForceNew`.
 * `mtu` - (Optional, Int, ForceNew) The maximum transmission unit. This value cannot be changed.
 * `name` - (Optional, String) The name of the global VPC.
 * `resource_group_id` - (Optional, String) The resource group id the global VPC belongs to, default to ID of Default Resource Group.

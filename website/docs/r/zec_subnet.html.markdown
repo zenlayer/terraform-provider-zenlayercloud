@@ -76,8 +76,8 @@ The following arguments are supported:
 
 * `region_id` - (Required, String, ForceNew) The region that the subnet locates at.
 * `vpc_id` - (Required, String, ForceNew) ID of the VPC to be associated.
-* `cidr_block` - (Optional, String) The ipv4 cidr block. A network address block which should be a subnet of the three internal network segments (10.0.0.0/8, 172.16.0.0/12 and 192.168.0.0/16).
-* `ipv6_type` - (Optional, String) The IPv6 type. Valid values: `Public`, `Private`.
+* `cidr_block` - (Optional, String) The ipv4 cidr block. A network address block which should be a subnet of the three internal network segments (10.0.0.0/8, 172.16.0.0/12 and 192.168.0.0/16). Once the cidr_block is present, disable it will cause the resource to `ForceNew`.
+* `ipv6_type` - (Optional, String) The IPv6 type. Valid values: `Public`, `Private`. Once the value is present, Change it between `Private` and `Public` will cause the resource to `ForceNew`.
 * `name` - (Optional, String) The name of the subnet, the default value is 'Terraform-Subnet'.
 
 ## Attributes Reference

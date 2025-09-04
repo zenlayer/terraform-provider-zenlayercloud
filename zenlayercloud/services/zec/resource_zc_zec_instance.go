@@ -68,8 +68,8 @@ func ResourceZenlayerCloudZecInstance() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Default:      "Terraform-Instance",
-				ValidateFunc: validation.StringLenBetween(2, 64),
-				Description:  "The name of the ZEC instance. The max length of instance_name is 64, and default value is `Terraform-ZEC-Instance`.",
+				ValidateFunc: validation.StringLenBetween(2, 63),
+				Description:  "The name of the ZEC instance. The minimum length of instance name is `2`. The max length of instance_name is 63, and default value is `Terraform-ZEC-Instance`.",
 			},
 			"password": {
 				Type:         schema.TypeString,

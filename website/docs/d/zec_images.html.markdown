@@ -18,7 +18,7 @@ variable "availability_zone" {
   default = "asia-east-1a"
 }
 
-data "zenlayercloud_images" "foo" {
+data "zenlayercloud_zec_images" "foo" {
   availability_zone = var.availability_zone
 }
 ```
