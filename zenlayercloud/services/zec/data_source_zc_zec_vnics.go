@@ -96,6 +96,11 @@ func DataSourceZenlayerCloudZecVnics() *schema.Resource {
 							Computed:    true,
 							Description: "The primary IPv6 address of the vNIC.",
 						},
+						"stack_type": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "The stack type of the subnet. Valid values: `IPv4`, `IPv6`, `IPv4_IPv6`",
+						},
 						"public_ips": {
 							Type: schema.TypeSet,
 							Elem: &schema.Schema{
@@ -227,6 +232,7 @@ func dataSourceZenlayerCloudZecVnicsRead(ctx context.Context, d *schema.Resource
 			"resource_group_id":    nic.ResourceGroup.ResourceGroupId,
 			"resource_group_name":  nic.ResourceGroup.ResourceGroupName,
 			"create_time":          nic.CreateTime,
+			"stack_type":           nic.NicSubnetType,
 			// TODO security group
 			//"security_group_id":    nic.SecurityGroupId,
 		}

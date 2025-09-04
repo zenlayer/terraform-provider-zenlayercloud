@@ -39,6 +39,12 @@ func ResourceZenlayerCloudZecVNic() *schema.Resource {
 				ForceNew:    true,
 				Description: "The ID of a VPC subnet.",
 			},
+			"stack_type": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Computed:    true,
+				Description: "The stack type of the subnet. Valid values: `IPv4`, `IPv6`, `IPv4_IPv6`",
+			},
 			"security_group_id": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -212,6 +218,10 @@ func resourceZenlayerCloudZecVNicCreate(ctx context.Context, d *schema.ResourceD
 
 	if v, ok := d.GetOk("resource_group_id"); ok {
 		request.ResourceGroupId = v.(string)
+	}
+
+	if v, ok := d.GetOk("stack_type"); ok {
+		request.StackType = common.String(v.(string))
 	}
 
 	// TODO security group
