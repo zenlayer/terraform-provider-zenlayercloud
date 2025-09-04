@@ -108,7 +108,7 @@ func ResourceZenlayerCloudZecInstance() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
-				Description: "The ID of a VPC subnet.",
+				Description: "The ID of a VPC subnet. Note: The **IPv6 only** stack subnet is not support for instance creation.",
 			},
 			"resource_group_id": {
 				Type:        schema.TypeString,

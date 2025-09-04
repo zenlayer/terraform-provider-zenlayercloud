@@ -64,6 +64,7 @@ The following arguments are supported:
 * `name` - (Optional, String) The name of the vNIC. maximum length is 63.
 * `resource_group_id` - (Optional, String) The resource group id the vNIC belongs to, default to ID of Default Resource Group.
 * `security_group_id` - (Optional, String) The ID of a security group.
+* `stack_type` - (Optional, String) The stack type of the subnet. Valid values: `IPv4`, `IPv6`, `IPv4_IPv6`.
 
 ## Attributes Reference
 

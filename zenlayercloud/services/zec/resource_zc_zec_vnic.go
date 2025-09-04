@@ -25,6 +25,7 @@ func ResourceZenlayerCloudZecVNic() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
+
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:         schema.TypeString,
@@ -43,7 +44,7 @@ func ResourceZenlayerCloudZecVNic() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Computed:    true,
-				Description: "The stack type of the subnet. Valid values: `IPv4`, `IPv6`, `IPv4_IPv6`",
+				Description: "The stack type of the subnet. Valid values: `IPv4`, `IPv6`, `IPv4_IPv6`.",
 			},
 			"security_group_id": {
 				Type:        schema.TypeString,
