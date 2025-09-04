@@ -975,7 +975,7 @@ func (s *ZecService) ModifyRouteAttribute(ctx context.Context, routeId string, n
 	return err
 }
 
-func (s *ZecService) DescribeSnapshots(ctx context.Context, filter *ZecSnapshotFilter) (snapshots[]*zec.SnapshotInfo,err error) {
+func (s *ZecService) DescribeSnapshots(ctx context.Context, filter *ZecSnapshotFilter) (snapshots []*zec.SnapshotInfo, err error) {
 	request := convertSnapshotFilter(filter)
 	var limit = 100
 	request.PageSize = &limit
@@ -1090,7 +1090,7 @@ func (s *ZecService) SnapshotStateRefreshFunc(ctx context.Context, snapshotId st
 	}
 }
 
-func (s *ZecService) DescribeAutoSnapshotPolicies(ctx context.Context, filter *ZecAutoSnapshotPolicyFilter) (policies[]*zec.AutoSnapshotPolicy, err error) {
+func (s *ZecService) DescribeAutoSnapshotPolicies(ctx context.Context, filter *ZecAutoSnapshotPolicyFilter) (policies []*zec.AutoSnapshotPolicy, err error) {
 
 	request := convertSnapshotPolicyFilter(filter)
 	var limit = 100
@@ -1177,16 +1177,32 @@ func (s *ZecService) DescribeSnapshotPolicyById(ctx context.Context, autoSnapsho
 	return response.Response.DataSet[0], nil
 }
 
+func (s *ZecService) switchInstanceIpForwarding(ctx context.Context, id string, ipForwarding bool) error {
+	if ipForwarding {
+		request := zec.NewStartIpForwardRequest()
+		request.InstanceId = id
+		response, err := s.client.WithZecClient().StartIpForward(request)
+		defer common.LogApiRequest(ctx, "StartIpForward", request, response, err)
+		return err
+	} else {
+		request := zec.NewStopIpForwardRequest()
+		request.InstanceId = id
+		response, err := s.client.WithZecClient().StopIpForward(request)
+		defer common.LogApiRequest(ctx, "StartIpForward", request, response, err)
+		return err
+	}
+}
+
 func convertSnapshotPolicyFilter(filter *ZecAutoSnapshotPolicyFilter) *zec.DescribeAutoSnapshotPoliciesRequest {
 
 	request := zec.NewDescribeAutoSnapshotPoliciesRequest()
-	if len(filter.AutoSnapshotPolicyIds) > 0  {
+	if len(filter.AutoSnapshotPolicyIds) > 0 {
 		request.AutoSnapshotPolicyIds = filter.AutoSnapshotPolicyIds
 	}
-	if filter.ZoneId != ""  {
+	if filter.ZoneId != "" {
 		request.ZoneIds = []string{filter.ZoneId}
 	}
-	if filter.ResourceGroupId != ""  {
+	if filter.ResourceGroupId != "" {
 		request.ResourceGroupId = &filter.ResourceGroupId
 	}
 	return request

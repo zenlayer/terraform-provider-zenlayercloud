@@ -363,6 +363,23 @@ func resourceZenlayerCloudZecInstanceUpdate(ctx context.Context, d *schema.Resou
 	//	}
 	//}
 
+	if d.HasChange("enable_ip_forwarding") {
+		_, newValue := d.GetChange("enable_ip_forwarding")
+
+		err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate)-time.Minute, func() *resource.RetryError {
+			err := zecService.switchInstanceIpForwarding(ctx, instanceId, newValue.(bool))
+			if err != nil {
+				return common2.RetryError(ctx, err, common2.InternalServerError, common.NetworkError)
+			}
+			return nil
+		})
+
+		if err != nil {
+			return diag.FromErr(err)
+		}
+
+	}
+
 	if d.HasChanges("image_id", "key_id", "time_zone", "disable_qga_agent") {
 		err := zecService.shutdownInstance(ctx, instanceId)
 		if err != nil {
@@ -413,15 +430,18 @@ func resourceZenlayerCloudZecInstanceUpdate(ctx context.Context, d *schema.Resou
 	}
 
 	if d.HasChange("password") {
-		err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate)-time.Minute, func() *resource.RetryError {
-			err := zecService.resetInstancePassword(ctx, instanceId, d.Get("password").(string))
+		_, newValue := d.GetChange("password")
+		if newValue != "" {
+			err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate)-time.Minute, func() *resource.RetryError {
+				err := zecService.resetInstancePassword(ctx, instanceId, d.Get("password").(string))
+				if err != nil {
+					return common2.RetryError(ctx, err, common2.InternalServerError, common.NetworkError)
+				}
+				return nil
+			})
 			if err != nil {
-				return common2.RetryError(ctx, err, common2.InternalServerError, common.NetworkError)
+				return diag.FromErr(err)
 			}
-			return nil
-		})
-		if err != nil {
-			return diag.FromErr(err)
 		}
 	}
 
