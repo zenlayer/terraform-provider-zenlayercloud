@@ -12,7 +12,6 @@ import (
 	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/connectivity"
 	"github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/common"
 	user "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/user20240529"
-	vm "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/vm20230313"
 	zec "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/zec20240401"
 	"time"
 )
@@ -331,38 +330,6 @@ func resourceZenlayerCloudZecInstanceUpdate(ctx context.Context, d *schema.Resou
 		}
 	}
 
-	//if d.HasChange("internet_max_bandwidth_out") {
-	//	if v, ok := d.GetOk("internet_max_bandwidth_out"); ok {
-	//
-	//		err := zecService.updateInstanceInternetMaxBandwidthOut(ctx, instanceId, v.(int))
-	//
-	//		if err != nil {
-	//			return diag.FromErr(err)
-	//		}
-	//		err = waitVmNetworkStatusOK(ctx, zecService, d, instanceId, &vmInternetBandwidthOutCondition{
-	//			InternetBandwidthOut: v.(int),
-	//		})
-	//		if err != nil {
-	//			return diag.FromErr(err)
-	//		}
-	//	}
-	//}
-
-	//if d.HasChange("traffic_package_size") {
-	//	if v, ok := d.GetOk("traffic_package_size"); ok {
-	//		err := zecService.updateInstanceTrafficPackageSize(ctx, instanceId, v.(float64))
-	//		if err != nil {
-	//			return diag.FromErr(err)
-	//		}
-	//		err = waitVmNetworkStatusOK(ctx, zecService, d, instanceId, &vmTrafficPackageCondition{
-	//			TargetPackageSize: v.(float64),
-	//		})
-	//		if err != nil {
-	//			return diag.FromErr(err)
-	//		}
-	//	}
-	//}
-
 	if d.HasChange("enable_ip_forwarding") {
 		_, newValue := d.GetChange("enable_ip_forwarding")
 
@@ -377,10 +344,12 @@ func resourceZenlayerCloudZecInstanceUpdate(ctx context.Context, d *schema.Resou
 		if err != nil {
 			return diag.FromErr(err)
 		}
-
 	}
 
+	reset := false
+
 	if d.HasChanges("image_id", "key_id", "time_zone", "disable_qga_agent") {
+		reset = true
 		err := zecService.shutdownInstance(ctx, instanceId)
 		if err != nil {
 			return nil
@@ -417,6 +386,10 @@ func resourceZenlayerCloudZecInstanceUpdate(ctx context.Context, d *schema.Resou
 			request.Timezone = v.(string)
 		}
 
+		if v, ok := d.GetOk("password"); ok {
+			request.Password = v.(string)
+		}
+
 		if v, ok := d.GetOk("disable_qga_agent"); ok {
 			request.EnableAgent = !v.(bool)
 		} else {
@@ -427,9 +400,55 @@ func resourceZenlayerCloudZecInstanceUpdate(ctx context.Context, d *schema.Resou
 		if err != nil {
 			return diag.FromErr(err)
 		}
+
+		stateConf := &resource.StateChangeConf{
+			Pending: []string{
+				ZecInstanceStatusReseting,
+			},
+			Target: []string{
+				ZecInstanceStatusRunning,
+			},
+			Refresh:        zecService.InstanceStateRefreshFunc(ctx, instanceId, []string{ZecInstanceStatusResetFailed}),
+			Timeout:        d.Timeout(schema.TimeoutCreate) - time.Minute,
+			Delay:          10 * time.Second,
+			MinTimeout:     5 * time.Second,
+			NotFoundChecks: 3,
+		}
+		if _, err := stateConf.WaitForStateContext(ctx); err != nil {
+			return diag.FromErr(fmt.Errorf("error waiting for zec instance (%s) to be reset: %v", d.Id(), err))
+		}
 	}
 
-	if d.HasChange("password") {
+
+	if !reset && d.HasChange("password") {
+		err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate)-time.Minute, func() *resource.RetryError {
+			err := zecService.StartInstance(ctx, instanceId)
+			if err != nil {
+				return common2.RetryError(ctx, err, common2.InternalServerError, common.NetworkError)
+			}
+			return nil
+		})
+		if err != nil {
+			return diag.FromErr(err)
+		}
+
+		err = resource.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate)-time.Minute, func() *resource.RetryError {
+			instance, errRet := zecService.DescribeInstanceById(ctx, instanceId)
+			if errRet != nil {
+				return common2.RetryError(ctx, errRet, common2.InternalServerError)
+			}
+
+			if instance.Status == ZecInstanceStatusRunning {
+				return nil
+			}
+
+			if instanceIsOperating(instance.Status) {
+				return resource.RetryableError(fmt.Errorf("waiting for instance %s stopping, current status: %s", instance.InstanceId, instance.Status))
+			}
+
+			return resource.NonRetryableError(fmt.Errorf("vm instance status is not stopped, current status %s", instance.Status))
+		})
+
 		_, newValue := d.GetChange("password")
 		if newValue != "" {
 			err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate)-time.Minute, func() *resource.RetryError {
@@ -497,29 +516,7 @@ func resourceZenlayerCloudZecInstanceUpdate(ctx context.Context, d *schema.Resou
 	return resourceZenlayerCloudZecInstanceRead(ctx, d, meta)
 }
 
-type vmTrafficPackageCondition struct {
-	TargetPackageSize float64
-}
 
-func (t *vmTrafficPackageCondition) matchFail(status *vm.DescribeInstanceInternetStatusResponseParams) bool {
-	return status.ModifiedTrafficPackageStatus == "Enable" && t.TargetPackageSize != *status.TrafficPackageSize
-}
-
-func (t *vmTrafficPackageCondition) matchOk(status *vm.DescribeInstanceInternetStatusResponseParams) bool {
-	return status.ModifiedTrafficPackageStatus == "Enable" && t.TargetPackageSize == *status.TrafficPackageSize
-}
-
-type vmInternetBandwidthOutCondition struct {
-	InternetBandwidthOut int
-}
-
-func (t *vmInternetBandwidthOutCondition) matchFail(status *vm.DescribeInstanceInternetStatusResponseParams) bool {
-	return status.ModifiedBandwidthStatus == "Enable" && t.InternetBandwidthOut != *status.InternetMaxBandwidthOut
-}
-
-func (t *vmInternetBandwidthOutCondition) matchOk(status *vm.DescribeInstanceInternetStatusResponseParams) bool {
-	return status.ModifiedBandwidthStatus == "Enable" && t.InternetBandwidthOut == *status.InternetMaxBandwidthOut
-}
 
 func resourceZenlayerCloudZecInstanceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 

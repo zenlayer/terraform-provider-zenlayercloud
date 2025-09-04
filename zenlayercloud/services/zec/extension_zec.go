@@ -28,7 +28,8 @@ const (
 	ZecInstanceStatusPending      = "PENDING"
 	ZecInstanceStatusDeloying     = "DEPLOYING"
 	ZecInstanceStatusCreateFailed = "CREATE_FAILED"
-	ZecInstanceStatusRebuilding   = "REBUILDING"
+	ZecInstanceStatusReseting   = "REINITING"
+	ZecInstanceStatusResetFailed   = "REINSTALL_FAILED"
 	ZecInstanceStatusStopped      = "STOPPED"
 	ZecInstanceStatusRunning      = "RUNNING"
 	ZecInstanceStatusBooting      = "BOOTING"
@@ -56,7 +57,7 @@ var (
 	InstanceOperatingStatus = []string{
 		ZecInstanceStatusPending,
 		ZecInstanceStatusDeloying,
-		ZecInstanceStatusRebuilding,
+		ZecInstanceStatusReseting,
 		ZecInstanceStatusBooting,
 		ZecInstanceStatusStopping,
 		ZecInstanceStatusReleasing,
