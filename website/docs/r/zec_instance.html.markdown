@@ -78,7 +78,7 @@ The following arguments are supported:
 * `image_id` - (Required, String) The image to use for the ZEC instance. Changing `image_id` will cause the ZEC instance reset.
 * `instance_type` - (Required, String, ForceNew) The type of the ZEC instance. such as `z2a.cpu.4`.
 * `subnet_id` - (Required, String, ForceNew) The ID of a VPC subnet. Note: The **IPv6 only** stack subnet is not support for instance creation.
-* `system_disk_size` - (Required, Int, ForceNew) Size of the system disk. unit is GB. If modified, the ZEC instance may force stop.
+* `system_disk_size` - (Required, Int, ForceNew) Size of the system disk. unit is GiB. If modified, the ZEC instance may force stop.
 * `disable_qga_agent` - (Optional, Bool) Indicate whether to disable QEMU Guest Agent (QGA). QGA is enabled by default. Changing `disable_qga_agent` will cause the ZEC instance reset.
 * `enable_ip_forwarding` - (Optional, Bool) Indicate whether to enable IP forwarding. IP forwarding is disabled by default.
 * `force_delete` - (Optional, Bool) Indicate whether to force delete the ZEC instance. Default is `true`. If set true, the ZEC instance will be permanently deleted instead of being moved into the recycle bin.

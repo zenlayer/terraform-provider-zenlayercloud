@@ -42,7 +42,7 @@ func ResourceZenlayerCloudZecDisk() *schema.Resource {
 				Type:         schema.TypeInt,
 				Required:     true,
 				ValidateFunc: validation.IntAtLeast(20),
-				Description:  "The size of disk. Unit: GB. The minimum value is 20 GB. When resize the disk, the new size must be greater than the former value.",
+				Description:  "The size of disk. Unit: GiB. The minimum value is 20 GiB. When resize the disk, the new size must be greater than the former value.",
 			},
 			"disk_category": {
 				Type:        schema.TypeString,

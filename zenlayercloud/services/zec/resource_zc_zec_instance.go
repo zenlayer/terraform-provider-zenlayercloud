@@ -136,7 +136,7 @@ func ResourceZenlayerCloudZecInstance() *schema.Resource {
 				Type:        schema.TypeInt,
 				Required:    true,
 				ForceNew:    true,
-				Description: "Size of the system disk. unit is GB. If modified, the ZEC instance may force stop.",
+				Description: "Size of the system disk. unit is GiB. If modified, the ZEC instance may force stop.",
 			},
 			"time_zone": {
 				Type:        schema.TypeString,

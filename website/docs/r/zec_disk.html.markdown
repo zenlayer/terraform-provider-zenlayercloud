@@ -39,7 +39,7 @@ $ terraform import zenlayercloud_zec_disk.test disk-id
 The following arguments are supported:
 
 * `availability_zone` - (Required, String, ForceNew) The ID of zone that the disk locates at.
-* `disk_size` - (Required, Int) The size of disk. Unit: GB. The minimum value is 20 GB. When resize the disk, the new size must be greater than the former value.
+* `disk_size` - (Required, Int) The size of disk. Unit: GiB. The minimum value is 20 GiB. When resize the disk, the new size must be greater than the former value.
 * `disk_category` - (Optional, String, ForceNew) The category of disk.
 * `disk_name` - (Optional, String) The name of the disk.
 * `force_delete` - (Optional, Bool) Indicate whether to force delete the data disk. Default is `false`. If set true, the disk will be permanently deleted instead of being moved into the recycle bin.
