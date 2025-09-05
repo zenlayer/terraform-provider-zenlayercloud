@@ -92,7 +92,7 @@ func ResourceZenlayerCloudZecVNic() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.IntAtLeast(1),
-				Description:  "Bandwidth cluster ID for public IPv6. Required when `internet_charge_type` is `BandwidthCluster`.",
+				Description:  "Bandwidth cluster ID for public IPv6. Required when `ipv6_internet_charge_type` is `BandwidthCluster`.",
 			},
 			"ipv6_traffic_package_size": {
 				Type:         schema.TypeFloat,
