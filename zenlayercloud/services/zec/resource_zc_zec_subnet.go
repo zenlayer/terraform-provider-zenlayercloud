@@ -276,10 +276,12 @@ func resourceZenlayerCloudZecSubnetRead(ctx context.Context, d *schema.ResourceD
 
 	if subnet == nil {
 		d.SetId("")
-		tflog.Info(ctx, "subnet not exist", map[string]interface{}{
-			"subnetId": subnetId,
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Warning,
+			Summary:  "The subnet is not exist",
+			Detail:   fmt.Sprintf("The subnet %s is not exist", subnetId),
 		})
-		return nil
+		return diags
 	}
 
 	// subnet info

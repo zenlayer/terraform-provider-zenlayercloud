@@ -304,12 +304,24 @@ func resourceZenlayerCloudZecVNicRead(ctx context.Context, d *schema.ResourceDat
 		return diag.FromErr(err)
 	}
 
-	if nic == nil || nic.Status == ZecVnicStatusCreateFailed {
+	if nic == nil {
 		d.SetId("")
-		tflog.Info(ctx, "nic not exist or created failed", map[string]interface{}{
-			"vnic": vnicId,
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Warning,
+			Summary:  "The vNIC is not exist",
+			Detail:   fmt.Sprintf("The vNIC %s is not exist", vnicId),
 		})
 		return nil
+	}
+
+	if nic.Status == ZecVnicStatusCreateFailed {
+		d.SetId("")
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Warning,
+			Summary:  "The status of vNIC is `failed`",
+			Detail:   fmt.Sprintf("The status of vNIC `%s` is `failed`", vnicId),
+		})
+		return diags
 	}
 
 	// nic info

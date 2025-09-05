@@ -178,10 +178,15 @@ func resourceZenlayerCloudZecSecurityGroupRead(ctx context.Context, d *schema.Re
 
 	if securityGroup == nil {
 		d.SetId("")
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Warning,
+			Summary:  "The security group is not exist",
+			Detail:   fmt.Sprintf("The security group %s is not exist", securityGroupId),
+		})
 		tflog.Info(ctx, "security group not exist", map[string]interface{}{
 			"securityGroupId": securityGroupId,
 		})
-		return nil
+		return diags
 	}
 
 	// security group info

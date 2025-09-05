@@ -254,6 +254,15 @@ func resourceZenlayerCloudGlobalVpcRead(ctx context.Context, d *schema.ResourceD
 	if err != nil {
 		return diag.FromErr(err)
 	}
+	if vpc == nil {
+		d.SetId("")
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Warning,
+			Summary:  "The vpc is not exist",
+			Detail:   fmt.Sprintf("The vpc %s is not exist", vpcId),
+		})
+		return diags
+	}
 
 	// vpc info
 	_ = d.Set("name", vpc.Name)

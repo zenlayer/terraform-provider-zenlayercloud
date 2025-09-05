@@ -16,6 +16,7 @@ const (
 	ZecDiskStatusResizing  = "CHANGING"
 	ZecDiskStatusInUse     = "IN_USE"
 	ZecDiskStatusAvailable = "AVAILABLE"
+	ZecDiskStatusFaileld = "FAILED"
 
 	ZecEipStatusCreating     = "CREATING"
 	ZecEipStatusCreateFailed = "CREATE_FAILED"

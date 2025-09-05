@@ -11,6 +11,7 @@ import (
 	common2 "github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/common"
 	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/connectivity"
 	"github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/common"
+	user "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/user20240529"
 	zec2 "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/zec20240401"
 	"time"
 )
@@ -179,19 +180,23 @@ func resourceZenlayerCloudVmDiskUpdate(ctx context.Context, d *schema.ResourceDa
 		}
 	}
 
-	//if d.HasChange("resource_group_id") {
-	//	err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate)-time.Minute, func() *resource.RetryError {
-	//		err := vmService.ModifyDiskResourceGroupId(ctx, diskId, d.Get("resource_group_id").(string))
-	//		if err != nil {
-	//			return common2.RetryError(ctx, err, common2.InternalServerError, common.NetworkError)
-	//		}
-	//		return nil
-	//	})
-	//
-	//	if err != nil {
-	//		return diag.FromErr(err)
-	//	}
-	//}
+	if d.HasChange("resource_group_id") {
+		err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate)-time.Minute, func() *resource.RetryError {
+			request := user.NewAddResourceResourceGroupRequest()
+			request.ResourceGroupId = common.String(d.Get("resource_group_id").(string))
+			request.Resources = []*string{common.String(diskId)}
+
+			_, err := meta.(*connectivity.ZenlayerCloudClient).WithUsrClient().AddResourceResourceGroup(request)
+			if err != nil {
+				return common2.RetryError(ctx, err, common2.InternalServerError, common.NetworkError)
+			}
+			return nil
+		})
+		if err != nil {
+			return diag.FromErr(err)
+		}
+	}
+
 	d.Partial(true)
 	if d.HasChange("disk_size") {
 
@@ -301,9 +306,26 @@ func resourceZenlayerCloudVmDiskRead(ctx context.Context, d *schema.ResourceData
 		tflog.Info(ctx, "disk not exist or is been recycled", map[string]interface{}{
 			"diskId": diskId,
 		})
-		return nil
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Warning,
+			Summary:  "The disk is not exist",
+			Detail:   fmt.Sprintf("The disk %s is not exist", diskId),
+		})
+		return diags
 	}
 
+	if disk.DiskStatus == ZecDiskStatusRecycle || disk.DiskStatus == ZecDiskStatusFaileld {
+		d.SetId("")
+		tflog.Info(ctx, "disk not exist or is been recycled", map[string]interface{}{
+			"diskId": diskId,
+		})
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Warning,
+			Summary:  "The status of disk is invalid",
+			Detail:   fmt.Sprintf("The status of disk %s is %s", diskId, disk.DiskStatus),
+		})
+		return diags
+	}
 	// disk info
 	_ = d.Set("availability_zone", disk.ZoneId)
 	_ = d.Set("disk_name", disk.DiskName)
