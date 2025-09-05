@@ -1,6 +1,6 @@
 Provides a resource to attach vNIC to a ZEC instance.
 
-~> **NOTE:** The QGA of the instance must be installed before using this resource.
+~> **NOTE:** The QGA of the instance must be installed and the instance must be running before using this resource.
 
 Example Usage
 

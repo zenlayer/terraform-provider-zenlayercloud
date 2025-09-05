@@ -84,11 +84,11 @@ The following arguments are supported:
 * `force_delete` - (Optional, Bool) Indicate whether to force delete the ZEC instance. Default is `true`. If set true, the ZEC instance will be permanently deleted instead of being moved into the recycle bin.
 * `instance_name` - (Optional, String) The name of the ZEC instance. The minimum length of instance name is `2`. The max length of instance_name is 63, and default value is `Terraform-ZEC-Instance`.
 * `key_id` - (Optional, String) The key pair id to use for the ZEC instance. Changing `key_id` will cause the ZEC instance reset.
-* `password` - (Optional, String) Password for the ZEC instance. The max length of password is 16.
+* `password` - (Optional, String) Password for the ZEC instance.The password must be 8-16 characters, including letters, numbers, and special characters `~!@$^*-_=+|;:,.?`.
 * `resource_group_id` - (Optional, String) The resource group id the ZEC instance belongs to, default to Default Resource Group.
 * `running_flag` - (Optional, Bool) Set instance to running or stop. Default value is true, the instance will shutdown when this flag is false.
-* `system_disk_category` - (Optional, String) Category of the system disk.
-* `time_zone` - (Optional, String) Time zone of instance. such as `America/Los_Angeles`. Changing `time_zone` will cause the ZEC instance reset.
+* `system_disk_category` - (Optional, String, ForceNew) Category of the system disk. Valid values: `Standard NVMe SSD`, `Basic NVMe SSD`, Default is `Standard NVMe SSD`.
+* `time_zone` - (Optional, String) Time zone of instance. such as `America/Los_Angeles`. Default is `Asia/Shanghai`. Changing `time_zone` will cause the ZEC instance reset.
 
 ## Attributes Reference
 

@@ -76,7 +76,7 @@ func ResourceZenlayerCloudZecInstance() *schema.Resource {
 				Sensitive:    true,
 				AtLeastOneOf: []string{"password", "key_id"},
 				ValidateFunc: validation.All(validation.StringLenBetween(8, 16)),
-				Description:  "Password for the ZEC instance. The max length of password is 16.",
+				Description:  "Password for the ZEC instance.The password must be 8-16 characters, including letters, numbers, and special characters `~!@$^*-_=+|;:,.?`.",
 			},
 			"key_id": {
 				Type:          schema.TypeString,
@@ -130,7 +130,9 @@ func ResourceZenlayerCloudZecInstance() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Computed:    true,
-				Description: "Category of the system disk.",
+				ForceNew:    true,
+				ValidateFunc: validation.StringInSlice([]string{"Standard NVMe SSD", "Basic NVMe SSD"}, false),
+				Description: "Category of the system disk. Valid values: `Standard NVMe SSD`, `Basic NVMe SSD`, Default is `Standard NVMe SSD`.",
 			},
 			"system_disk_size": {
 				Type:        schema.TypeInt,
@@ -142,7 +144,7 @@ func ResourceZenlayerCloudZecInstance() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Computed:    true,
-				Description: "Time zone of instance. such as `America/Los_Angeles`. Changing `time_zone` will cause the ZEC instance reset.",
+				Description: "Time zone of instance. such as `America/Los_Angeles`. Default is `Asia/Shanghai`. Changing `time_zone` will cause the ZEC instance reset.",
 			},
 			"disable_qga_agent": {
 				Type:        schema.TypeBool,
@@ -419,7 +421,6 @@ func resourceZenlayerCloudZecInstanceUpdate(ctx context.Context, d *schema.Resou
 		}
 	}
 
-
 	if !reset && d.HasChange("password") {
 		err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate)-time.Minute, func() *resource.RetryError {
 			err := zecService.StartInstance(ctx, instanceId)
@@ -515,8 +516,6 @@ func resourceZenlayerCloudZecInstanceUpdate(ctx context.Context, d *schema.Resou
 
 	return resourceZenlayerCloudZecInstanceRead(ctx, d, meta)
 }
-
-
 
 func resourceZenlayerCloudZecInstanceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 
