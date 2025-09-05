@@ -70,7 +70,7 @@ func DataSourceZenlayerCloudZecInstances() *schema.Resource {
 				Description: "An information list of instances. Each element contains the following attributes:",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"instance_id": {
+						"id": {
 							Type:        schema.TypeString,
 							Computed:    true,
 							Description: "ID of the ZEC instances.",

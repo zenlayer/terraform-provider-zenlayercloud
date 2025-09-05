@@ -86,9 +86,9 @@ In addition to all arguments above, the following attributes are exported:
       * `data_disk_category` - Category of the data disk.
       * `data_disk_id` - Image ID of the data disk.
       * `data_disk_size` - Size of the data disk.
+   * `id` - ID of the ZEC instances.
    * `image_id` - The ID of image to use for the ZEC instance.
    * `image_name` - The image name to use for the ZEC instance.
-   * `instance_id` - ID of the ZEC instances.
    * `instance_name` - The name of the ZEC instance.
    * `instance_status` - Current status of the ZEC instance.
    * `instance_type` - The type of the ZEC instance.
