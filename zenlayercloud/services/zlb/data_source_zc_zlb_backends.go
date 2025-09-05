@@ -8,11 +8,13 @@ package zlb
 import (
 	"context"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	common2 "github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/common"
 	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/connectivity"
 	"github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/common"
 	zlb "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/zlb20250401"
+	"time"
 )
 
 func DataSourceZenlayerCloudZlbBackends() *schema.Resource {
@@ -104,12 +106,30 @@ func dataSourceZenlayerCloudZlbBackendsRead(ctx context.Context, d *schema.Resou
 		request.ListenerId = common.String(v.(string))
 	}
 
-	response, err := zlbService.client.WithZlbClient().DescribeBackends(request)
+	var backends []*zlb.ListenerBackend
+
+	err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutRead)-time.Minute, func() *resource.RetryError {
+		response, err := zlbService.client.WithZlbClient().DescribeBackends(request)
+		if err != nil {
+			ee, ok := err.(*common.ZenlayerCloudSdkError)
+			if !ok {
+				return common2.RetryError(ctx, err)
+			} else {
+				if ee.Code == common2.ResourceNotFound {
+					// backends 空数组
+					backends = []*zlb.ListenerBackend{}
+				}
+			}
+
+		}
+		backends = response.Response.Backends
+		return nil
+	})
+
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	backends := response.Response.Backends
 	backendList := make([]map[string]interface{}, 0, len(backends))
 	ids := make([]string, 0, len(backends))
 
