@@ -28,7 +28,7 @@ const (
 	ZecInstanceStatusPending      = "PENDING"
 	ZecInstanceStatusDeloying     = "DEPLOYING"
 	ZecInstanceStatusCreateFailed = "CREATE_FAILED"
-	ZecInstanceStatusReseting   = "REINITING"
+	ZecInstanceStatusReseting   = "REBUILDING"
 	ZecInstanceStatusResetFailed   = "REINSTALL_FAILED"
 	ZecInstanceStatusStopped      = "STOPPED"
 	ZecInstanceStatusRunning      = "RUNNING"

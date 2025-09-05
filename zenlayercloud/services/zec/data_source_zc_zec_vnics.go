@@ -99,7 +99,7 @@ func DataSourceZenlayerCloudZecVnics() *schema.Resource {
 						"stack_type": {
 							Type:        schema.TypeString,
 							Optional:    true,
-							Description: "The stack type of the subnet. Valid values: `IPv4`, `IPv6`, `IPv4_IPv6`",
+							Description: "The stack type of the subnet. Valid values: `IPv4`, `IPv6`, `IPv4_IPv6`.",
 						},
 						"public_ips": {
 							Type: schema.TypeSet,
