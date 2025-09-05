@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -25,7 +26,9 @@ func ResourceZenlayerCloudZecVNic() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
-
+		CustomizeDiff: customdiff.All(
+			//stackTypeForceNewFunc(),
+		),
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:         schema.TypeString,
@@ -44,6 +47,7 @@ func ResourceZenlayerCloudZecVNic() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Computed:    true,
+				ForceNew:    true,
 				Description: "The stack type of the subnet. Valid values: `IPv4`, `IPv6`, `IPv4_IPv6`.",
 			},
 			"security_group_id": {
@@ -108,6 +112,14 @@ func ResourceZenlayerCloudZecVNic() *schema.Resource {
 			},
 		},
 	}
+}
+
+func stackTypeForceNewFunc() schema.CustomizeDiffFunc {
+	// Valid only from IPv4 -> IPv4_IPv6
+	return customdiff.ForceNewIf("stack_type", func(_ context.Context, d *schema.ResourceDiff, _ interface{}) bool {
+		oldValue, newValue := d.GetChange("stack_type")
+		return oldValue.(string) == "IPv4_IPv6" || (oldValue.(string) == "IPv6" && newValue.(string) == "IPv4_IPv6")
+	})
 }
 
 func resourceZenlayerCloudZecVNicDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
