@@ -1284,8 +1284,8 @@ func convertInstanceRequestFilter(filter *ZecInstancesFilter) *zec.DescribeInsta
 	request.InstanceIds = filter.InstancesIds
 	request.Name = filter.InstanceName
 	request.Status = filter.InstanceStatus
-	request.Ipv6Address = filter.Ipv4
-	request.Ipv4Address = filter.Ipv6
+	request.Ipv6Address = filter.Ipv6
+	request.Ipv4Address = filter.Ipv4
 	request.ResourceGroupId = filter.ResourceGroupId
 	request.ZoneId = filter.ZoneId
 	request.ImageId = filter.ImageId
