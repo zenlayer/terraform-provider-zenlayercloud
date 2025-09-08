@@ -1276,6 +1276,7 @@ func convertVnicRequestFilter(filter *ZecNicFilter) *zec.DescribeNicsRequest {
 	request.NicIds = filter.ids
 	request.RegionId = filter.RegionId
 	request.ResourceGroupId = filter.ResourceGroupId
+	request.InstanceId = filter.InstanceId
 	return request
 }
 
