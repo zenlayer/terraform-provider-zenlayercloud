@@ -68,7 +68,7 @@ The following arguments are supported:
 * `health_check_delay_loop` - (Optional, Int) Interval between health checks. Measured in second. Valid values: `3` to `30`. `health_check_delay_loop` takes effect only if `health_check_enabled` is set to true. Default is `3`.
 * `health_check_delay_try` - (Optional, Int) Health check delay try time.Valid values: `1` to `15`. `health_check_delay_try` takes effect only if `health_check_enabled` is set to true. Default is `2`.
 * `health_check_enabled` - (Optional, Bool) Indicates whether health check is enabled. Default is `true`.
-* `health_check_http_get_url` - (Optional, String) HTTP request URL for health check.
+* `health_check_http_get_url` - (Optional, String) HTTP request URL for health check. The value should start with '/', Default is `/`.
 * `health_check_http_status_code` - (Optional, Int) HTTP status code for health check. Required when `check_type` is `HTTP_GET`. Valid values: `100` to `599`.
 * `health_check_port` - (Optional, Int) Health check port. Defaults to the backend server port. Valid values: `1` to `65535`. `health_check_port` takes effect only if `health_check_enabled` is set to true.
 * `health_check_retry` - (Optional, Int) Number of retry attempts for health check. Valid values: `1` to `5`. `health_check_retry` takes effect only if `health_check_enabled` is set to true. Default is `2`.

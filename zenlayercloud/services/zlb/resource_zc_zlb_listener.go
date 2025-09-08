@@ -12,6 +12,7 @@ import (
 	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/connectivity"
 	"github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/common"
 	zlb "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/zlb20250401"
+	"regexp"
 	"time"
 )
 
@@ -31,6 +32,7 @@ func ResourceZenlayerCloudZlbListener() *schema.Resource {
 		},
 		CustomizeDiff: customdiff.All(
 			healthCheckValidFunc(),
+			healthCheckHTTPValidFunc(),
 		),
 
 		Schema: map[string]*schema.Schema{
@@ -85,10 +87,11 @@ func ResourceZenlayerCloudZlbListener() *schema.Resource {
 				ValidateFunc: validation.StringInSlice([]string{"PING_CHECK", "TCP", "HTTP_GET"}, false),
 			},
 			"health_check_http_get_url": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Computed:    true,
-				Description: "HTTP request URL for health check.",
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^/.*`), "The value should start with '/'"),
+				Description:  "HTTP request URL for health check. The value should start with '/', Default is `/`.",
 			},
 			"health_check_delay_try": {
 				Type:         schema.TypeInt,
@@ -105,11 +108,11 @@ func ResourceZenlayerCloudZlbListener() *schema.Resource {
 				Description:  "Connection timeout for health check. Valid values: `1` to `15`. `health_check_conn_timeout` takes effect only if `health_check_enabled` is set to true. Default is `2`.",
 			},
 			"health_check_http_status_code": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Computed:    true,
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Computed:     true,
 				ValidateFunc: validation.IntBetween(100, 599),
-				Description: "HTTP status code for health check. Required when `check_type` is `HTTP_GET`. Valid values: `100` to `599`.",
+				Description:  "HTTP status code for health check. Required when `check_type` is `HTTP_GET`. Valid values: `100` to `599`.",
 			},
 			"health_check_port": {
 				Type:         schema.TypeInt,
@@ -141,6 +144,19 @@ func ResourceZenlayerCloudZlbListener() *schema.Resource {
 	}
 }
 
+func healthCheckHTTPValidFunc() schema.CustomizeDiffFunc {
+	return customdiff.IfValue("health_check_type", func(ctx context.Context, value, meta interface{}) bool {
+		return value == "HTTP_GET"
+	}, func(ctx context.Context, diff *schema.ResourceDiff, i interface{}) error {
+
+		if _, ok := diff.GetOk("health_check_http_status_code"); !ok {
+			return errors.New("`health_check_http_status_code` is missing when `health_check_type` is set to `HTTP_GET`")
+		}
+
+		return nil
+	})
+}
+
 func healthCheckValidFunc() schema.CustomizeDiffFunc {
 
 	return customdiff.IfValue("health_check_enabled", func(ctx context.Context, value, meta interface{}) bool {
@@ -150,6 +166,7 @@ func healthCheckValidFunc() schema.CustomizeDiffFunc {
 		if _, ok := diff.GetOk("health_check_type"); !ok {
 			return errors.New("`health_check_type` is missing when `health_check_enabled` is set to `true`")
 		}
+
 		return nil
 	})
 

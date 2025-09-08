@@ -109,7 +109,7 @@ The `backends` object supports the following:
 * `private_ip_address` - (Required, String) Private IP address of the network interface attached to the instance.
 * `instance_id` - (Optional, String) ID of the backend server. The added instance must belong to the VPC associated with lb.
 * `port` - (Optional, Int) Target port for request forwarding and health checks. If left empty, it will follow the listener's port configuration. Valid values: `1` to `65535`.
-* `weight` - (Optional, Int) Forwarding weight of the backend server. Valid value ranges: (1~65535). Default to 100.
+* `weight` - (Optional, Int) Forwarding weight of the backend server. Valid value ranges: (0~65535). Default to 100. Weight of 0 means the server will not accept new requests.
 
 ## Attributes Reference
 
