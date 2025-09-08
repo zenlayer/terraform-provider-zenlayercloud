@@ -98,5 +98,6 @@ In addition to all arguments above, the following attributes are exported:
    * `resource_group_id` - The resource group id that the NAT gateway belongs to.
    * `resource_group_name` - The resource group name that the NAT gateway belongs to.
    * `security_group_id` - ID of the security group.
+   * `stack_type` - The stack type of the subnet. Valid values: `IPv4`, `IPv6`, `IPv4_IPv6`.
 
 
