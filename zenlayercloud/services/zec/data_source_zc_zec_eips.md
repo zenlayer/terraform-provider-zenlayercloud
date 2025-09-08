@@ -40,3 +40,11 @@ data "zenlayercloud_zec_eips" "foo" {
   name_regex = "nginx-ip*"
 }
 ```
+
+Query eips by CIDR ID
+
+```hcl
+data "zenlayercloud_zec_eips" "foo" {
+  cidr_ids = ["<cidrId>"]
+}
+```

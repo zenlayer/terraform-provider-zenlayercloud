@@ -1257,6 +1257,9 @@ func convertEipRequestFilter(filter *EipFilter) *zec.DescribeEipsRequest {
 	request.IpAddresses = filter.IpAddress
 	request.Status = filter.Status
 	request.ResourceGroupId = filter.ResourceGroupId
+	request.PrivateIpAddress = &filter.PrivateIpAddress
+	request.CidrIds = filter.CidrIds
+	request.AssociatedId = &filter.AssociatedId
 	return request
 }
 

@@ -30,6 +30,11 @@ func DataSourceZenlayerCloudEips() *schema.Resource {
 				Optional:    true,
 				Description: "The region ID that the elastic IP locates at.",
 			},
+			"is_default": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Indicates whether it is the default EIP.",
+			},
 			"name_regex": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -38,7 +43,25 @@ func DataSourceZenlayerCloudEips() *schema.Resource {
 			"public_ip_address": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "The elastic ipv4 address.",
+				Description: "The elastic ipv4 address to be queried.",
+			},
+			"private_ip_address": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "The private ipv4 address that the EIP attached to be queried.",
+			},
+			"associated_id": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "The ID of associated resource to be queried.",
+			},
+			"cidr_ids": {
+				Type:        schema.TypeSet,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+				Optional:    true,
+				Description: "The ID of cidr that the EIP allocated from to be queried.",
 			},
 			"status": {
 				Type:         schema.TypeString,
@@ -193,8 +216,28 @@ func dataSourceZenlayerCloudEipsRead(ctx context.Context, d *schema.ResourceData
 		filter.IpAddress = []string{v.(string)}
 	}
 
+	if v, ok := d.GetOk("private_ip_address"); ok {
+		filter.PrivateIpAddress = v.(string)
+	}
+
+	if v, ok := d.GetOk("associated_id"); ok {
+		filter.AssociatedId = v.(string)
+	}
+
+	if v, ok := d.GetOk("cidr_ids"); ok {
+		ids := v.(*schema.Set).List()
+		if len(ids) > 0 {
+			filter.CidrIds = common.ToStringList(ids)
+		}
+
+	}
+
 	if v, ok := d.GetOk("status"); ok {
 		filter.Status = v.(string)
+	}
+
+	if v, ok := d.GetOk("resource_group_id"); ok {
+		filter.ResourceGroupId = v.(string)
 	}
 
 	if v, ok := d.GetOk("resource_group_id"); ok {
@@ -281,9 +324,12 @@ func dataSourceZenlayerCloudEipsRead(ctx context.Context, d *schema.ResourceData
 }
 
 type EipFilter struct {
-	Ids             []string
-	RegionId        string
-	IpAddress       []string
-	Status          string
-	ResourceGroupId string
+	Ids              []string
+	RegionId         string
+	IpAddress        []string
+	Status           string
+	ResourceGroupId  string
+	PrivateIpAddress string
+	CidrIds          []string
+	AssociatedId     string
 }
