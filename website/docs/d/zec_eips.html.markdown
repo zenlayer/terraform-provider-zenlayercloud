@@ -52,13 +52,25 @@ data "zenlayercloud_zec_eips" "foo" {
 }
 ```
 
+Query eips by CIDR ID
+
+```hcl
+data "zenlayercloud_zec_eips" "foo" {
+  cidr_ids = ["<cidrId>"]
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
 
+* `associated_id` - (Optional, String) The ID of associated resource to be queried.
+* `cidr_ids` - (Optional, Set: [`String`]) The ID of cidr that the EIP allocated from to be queried.
 * `ids` - (Optional, Set: [`String`]) IDs of the EIPs to be queried.
+* `is_default` - (Optional, String) Indicates whether it is the default EIP.
 * `name_regex` - (Optional, String) A regex string to apply to the elastic IP list returned.
-* `public_ip_address` - (Optional, String) The elastic ipv4 address.
+* `private_ip_address` - (Optional, String) The private ipv4 address that the EIP attached to be queried.
+* `public_ip_address` - (Optional, String) The elastic ipv4 address to be queried.
 * `region_id` - (Optional, String) The region ID that the elastic IP locates at.
 * `resource_group_id` - (Optional, String) Resource group ID.
 * `result_output_file` - (Optional, String) Used to save results.

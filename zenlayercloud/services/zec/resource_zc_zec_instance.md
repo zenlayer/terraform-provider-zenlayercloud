@@ -2,6 +2,8 @@ Provides a instance resource.
 
 ~> **NOTE:** Currently it's not able to create default public IPv4 through instance resource. Please use `zenlayercloud_zec_eip` resource to create EIP and then call resource `zenlayer_zec_eip_association` to bind it to resource
 
+~> **NOTE:** Currently this resource doesn't support create instance through `Windows` and `Generic` image.
+
 Example Usage
 
 ```hcl
