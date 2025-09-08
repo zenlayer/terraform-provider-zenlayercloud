@@ -118,11 +118,12 @@ func dataSourceZenlayerCloudZlbBackendsRead(ctx context.Context, d *schema.Resou
 				if ee.Code == common2.ResourceNotFound {
 					// backends 空数组
 					backends = []*zlb.ListenerBackend{}
+					return nil
 				}
 			}
-
+		} else {
+			backends = response.Response.Backends
 		}
-		backends = response.Response.Backends
 		return nil
 	})
 
