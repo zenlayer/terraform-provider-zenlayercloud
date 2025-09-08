@@ -102,7 +102,7 @@ func ResourceZenlayerCloudZecVNic() *schema.Resource {
 				Type:         schema.TypeFloat,
 				Optional:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.IntAtLeast(0),
+				ValidateFunc: validation.FloatAtLeast(0.0),
 				Description:  "Traffic Package size for public IPv6. Measured in TB. Only valid when `ipv6_internet_charge_type` is `ByTrafficPackage`.",
 			},
 			"create_time": {

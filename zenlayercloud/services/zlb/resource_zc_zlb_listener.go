@@ -33,6 +33,7 @@ func ResourceZenlayerCloudZlbListener() *schema.Resource {
 		CustomizeDiff: customdiff.All(
 			healthCheckValidFunc(),
 			healthCheckHTTPValidFunc(),
+			healthCheckDisableValidFunc(),
 		),
 
 		Schema: map[string]*schema.Schema{
@@ -77,7 +78,7 @@ func ResourceZenlayerCloudZlbListener() *schema.Resource {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Default:     true,
-				Description: "Indicates whether health check is enabled. Default is `true`.",
+				Description: "Indicates whether health check is enabled. Default is `true`. When health check is disabled, other health check parameter can't be set.",
 			},
 			"health_check_type": {
 				Type:         schema.TypeString,
@@ -87,9 +88,9 @@ func ResourceZenlayerCloudZlbListener() *schema.Resource {
 				ValidateFunc: validation.StringInSlice([]string{"PING_CHECK", "TCP", "HTTP_GET"}, false),
 			},
 			"health_check_http_get_url": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
 				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^/.*`), "The value should start with '/'"),
 				Description:  "HTTP request URL for health check. The value should start with '/', Default is `/`.",
 			},
@@ -155,6 +156,41 @@ func healthCheckHTTPValidFunc() schema.CustomizeDiffFunc {
 
 		return nil
 	})
+}
+
+func healthCheckDisableValidFunc() schema.CustomizeDiffFunc {
+
+	return customdiff.IfValue("health_check_enabled", func(ctx context.Context, value, meta interface{}) bool {
+		return value == false
+	}, func(ctx context.Context, diff *schema.ResourceDiff, i interface{}) error {
+
+		if _, ok := diff.GetOk("health_check_http_get_url"); ok {
+			return errors.New("`health_check_http_get_url` can't be set when `health_check_enabled` is set to `false`")
+		}
+
+		if _, ok := diff.GetOk("health_check_conn_timeout"); ok {
+			return errors.New("`health_check_conn_timeout` can't be set when `health_check_enabled` is set to `false`")
+		}
+
+		if _, ok := diff.GetOk("health_check_http_status_code"); ok {
+			return errors.New("`health_check_http_status_code` can't be set when `health_check_enabled` is set to `false`")
+		}
+
+		if _, ok := diff.GetOk("health_check_port"); ok {
+			return errors.New("`health_check_port` can't be set when `health_check_enabled` is set to `false`")
+		}
+
+		if _, ok := diff.GetOk("health_check_retry"); ok {
+			return errors.New("`health_check_retry` can't be set when `health_check_enabled` is set to `false`")
+		}
+
+		if _, ok := diff.GetOk("health_check_delay_loop"); ok {
+			return errors.New("`health_check_delay_loop` can't be set when `health_check_enabled` is set to `false`")
+		}
+
+		return nil
+	})
+
 }
 
 func healthCheckValidFunc() schema.CustomizeDiffFunc {
@@ -317,7 +353,10 @@ func resourceZenlayerCloudZlbListenerUpdate(ctx context.Context, d *schema.Resou
 
 		if v, ok := d.GetOk("health_check_enabled"); ok {
 			healthCheck.Enabled = common.Bool(v.(bool))
+		} else {
+			healthCheck.Enabled = common.Bool(false)
 		}
+
 		if v, ok := d.GetOk("health_check_type"); ok {
 			healthCheck.CheckType = common.String(v.(string))
 		}
@@ -336,6 +375,7 @@ func resourceZenlayerCloudZlbListenerUpdate(ctx context.Context, d *schema.Resou
 		if v, ok := d.GetOk("health_check_port"); ok {
 			healthCheck.CheckPort = common.Integer(v.(int))
 		}
+
 		if v, ok := d.GetOk("health_check_retry"); ok {
 			healthCheck.CheckRetry = common.Integer(v.(int))
 		}
