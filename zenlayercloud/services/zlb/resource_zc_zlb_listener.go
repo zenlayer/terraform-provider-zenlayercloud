@@ -108,7 +108,8 @@ func ResourceZenlayerCloudZlbListener() *schema.Resource {
 				Type:        schema.TypeInt,
 				Optional:    true,
 				Computed:    true,
-				Description: "HTTP status code for health check. Required when `check_type` is `HTTP_GET`.",
+				ValidateFunc: validation.IntBetween(100, 599),
+				Description: "HTTP status code for health check. Required when `check_type` is `HTTP_GET`. Valid values: `100` to `599`.",
 			},
 			"health_check_port": {
 				Type:         schema.TypeInt,
