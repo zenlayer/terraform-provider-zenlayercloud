@@ -164,30 +164,34 @@ func healthCheckDisableValidFunc() schema.CustomizeDiffFunc {
 		return value == false
 	}, func(ctx context.Context, diff *schema.ResourceDiff, i interface{}) error {
 
-		if _, ok := diff.GetOk("health_check_http_get_url"); ok {
+		if !diff.GetRawConfig().GetAttr("health_check_http_get_url").IsNull() {
 			return errors.New("`health_check_http_get_url` can't be set when `health_check_enabled` is set to `false`")
 		}
 
-		if _, ok := diff.GetOk("health_check_conn_timeout"); ok {
+		if !diff.GetRawConfig().GetAttr("health_check_conn_timeout").IsNull() {
 			return errors.New("`health_check_conn_timeout` can't be set when `health_check_enabled` is set to `false`")
 		}
 
-		if _, ok := diff.GetOk("health_check_http_status_code"); ok {
+
+		if !diff.GetRawConfig().GetAttr("health_check_http_status_code").IsNull() {
 			return errors.New("`health_check_http_status_code` can't be set when `health_check_enabled` is set to `false`")
 		}
 
-		if _, ok := diff.GetOk("health_check_port"); ok {
+		if !diff.GetRawConfig().GetAttr("health_check_port").IsNull() {
 			return errors.New("`health_check_port` can't be set when `health_check_enabled` is set to `false`")
 		}
 
-		if _, ok := diff.GetOk("health_check_retry"); ok {
+		if !diff.GetRawConfig().GetAttr("health_check_retry").IsNull() {
 			return errors.New("`health_check_retry` can't be set when `health_check_enabled` is set to `false`")
 		}
 
-		if _, ok := diff.GetOk("health_check_delay_loop"); ok {
+		if !diff.GetRawConfig().GetAttr("health_check_delay_loop").IsNull() {
 			return errors.New("`health_check_delay_loop` can't be set when `health_check_enabled` is set to `false`")
 		}
 
+		if !diff.GetRawConfig().GetAttr("health_check_type").IsNull() {
+			return errors.New("`health_check_type` can't be set when `health_check_enabled` is set to `false`")
+		}
 		return nil
 	})
 
