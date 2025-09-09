@@ -61,7 +61,7 @@ func ResourceZenlayerCloudZlbBackend() *schema.Resource {
 						"port": {
 							Type:         schema.TypeInt,
 							Optional:     true,
-							Computed:     true,
+							//Computed:     true,
 							Description:  "Target port for request forwarding and health checks. If left empty, it will follow the listener's port configuration. Valid values: `1` to `65535`.",
 							ValidateFunc: validation.IntBetween(1, 65535),
 						},
