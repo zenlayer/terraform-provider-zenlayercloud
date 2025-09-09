@@ -2,6 +2,7 @@ package zlb
 
 import (
 	"context"
+	"fmt"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -67,7 +68,7 @@ func ResourceZenlayerCloudZlbBackend() *schema.Resource {
 						"weight": {
 							Type:         schema.TypeInt,
 							Optional:     true,
-							Computed:     true,
+							Default:      100,
 							Description:  "Forwarding weight of the backend server. Valid value ranges: (0~65535). Default to 100. Weight of 0 means the server will not accept new requests.",
 							ValidateFunc: validation.IntBetween(0, 65535),
 						},
@@ -99,12 +100,19 @@ func resourceZenlayerCloudZlbBackendCreate(ctx context.Context, d *schema.Resour
 			InstanceId:       common.String(item["instance_id"].(string)),
 			PrivateIpAddress: common.String(item["private_ip_address"].(string)),
 		}
-		if v, ok := d.GetOk("port"); ok {
-			backendItem.Port = common.Integer(v.(int))
+
+		if weight, exists := item["weight"]; exists {
+			v := weight.(int)
+			backendItem.Weight = common.Integer(v)
 		}
-		if v, ok := d.GetOk("weight"); ok {
-			backendItem.Weight = common.Integer(v.(int))
+
+		if port, exists := item["port"]; exists {
+			v := port.(int)
+			if v != 0 {
+				backendItem.Port = common.Integer(v)
+			}
 		}
+
 		backendList = append(backendList, backendItem)
 	}
 
@@ -199,7 +207,15 @@ func resourceZenlayerCloudZlbBackendUpdate(ctx context.Context, d *schema.Resour
 
 		// Find backends to remove
 		removeBackends := oldBackendSet.Difference(newBackendSet).List()
-		if len(removeBackends) > 0 {
+		addBackends := newBackendSet.Difference(oldBackendSet).List()
+		oldIds := getIdSetFromServers(removeBackends)
+		newIds := getIdSetFromServers(addBackends)
+		updateSet := oldIds.Intersection(newIds)
+		addSet := newIds.Difference(oldIds)
+		removeSet := oldIds.Difference(newIds)
+
+		if removeSet.Len() > 0 {
+
 			unregisterRequest := zlb.NewDeregisterBackendRequest()
 			unregisterRequest.LoadBalancerId = &zlbId
 			unregisterRequest.ListenerId = &listenerId
@@ -207,6 +223,9 @@ func resourceZenlayerCloudZlbBackendUpdate(ctx context.Context, d *schema.Resour
 			backendList := make([]*zlb.BackendServer, 0, len(removeBackends))
 			for _, backend := range removeBackends {
 				item := backend.(map[string]interface{})
+				if !removeSet.Contains(item["instance_id"]) {
+					continue
+				}
 				backendItem := &zlb.BackendServer{
 					InstanceId:       common.String(item["instance_id"].(string)),
 					PrivateIpAddress: common.String(item["private_ip_address"].(string)),
@@ -222,8 +241,7 @@ func resourceZenlayerCloudZlbBackendUpdate(ctx context.Context, d *schema.Resour
 		}
 
 		// Register new backends
-		addBackends := newBackendSet.Difference(oldBackendSet).List()
-		if len(addBackends) > 0 {
+		if addSet.Len()> 0 {
 			registerRequest := zlb.NewRegisterBackendRequest()
 			registerRequest.LoadBalancerId = &zlbId
 			registerRequest.ListenerId = &listenerId
@@ -231,12 +249,26 @@ func resourceZenlayerCloudZlbBackendUpdate(ctx context.Context, d *schema.Resour
 			backendList := make([]*zlb.BackendServer, 0, len(addBackends))
 			for _, backend := range addBackends {
 				item := backend.(map[string]interface{})
+				if !addSet.Contains(item["instance_id"]) {
+					continue
+				}
 				backendItem := &zlb.BackendServer{
 					InstanceId:       common.String(item["instance_id"].(string)),
 					PrivateIpAddress: common.String(item["private_ip_address"].(string)),
-					Port:             common.Integer(item["port"].(int)),
-					Weight:           common.Integer(item["weight"].(int)),
 				}
+
+				if weight, exists := item["weight"]; exists {
+					v := weight.(int)
+					backendItem.Weight = common.Integer(v)
+				}
+
+				if port, exists := item["port"]; exists {
+					v := port.(int)
+					if v != 0 {
+						backendItem.Port = common.Integer(v)
+					}
+				}
+
 				backendList = append(backendList, backendItem)
 			}
 			registerRequest.BackendServers = backendList
@@ -247,33 +279,36 @@ func resourceZenlayerCloudZlbBackendUpdate(ctx context.Context, d *schema.Resour
 			}
 		}
 
-		// Handle modified backends (same instance_id and port, but different weight)
-		commonBackends := oldBackendSet.Intersection(newBackendSet).List()
-		// 根据接口文档，使用ModifyBackend接口直接修改后端服务器权重
-		// 接口参数包括loadBalancerId, listenerId, backendServers
-		modifyRequest := zlb.NewModifyBackendRequest()
-		modifyRequest.LoadBalancerId = &zlbId
-		modifyRequest.ListenerId = &listenerId
+		// update backend
+		if updateSet.Len() > 0 {
+			backendServers := make([]*zlb.BackendServer, 0)
 
-		// 构造需要修改的后端服务器列表
-		backendServers := make([]*zlb.BackendServer, 0)
-		for _, backend := range commonBackends {
-			item := backend.(map[string]interface{})
+			for _, server := range d.Get("backends").(*schema.Set).List() {
+				s := server.(map[string]interface{})
+				if updateSet.Contains(s["instance_id"]) {
+					backendServer := &zlb.BackendServer{
+						InstanceId: common.String(s["instance_id"].(string)),
+						PrivateIpAddress: common.String(s["private_ip_address"].(string)),
+					}
 
-			// 检查权重是否发生变化
-			oldWeight, newWeight := d.GetChange("backends." + item["instance_id"].(string) + ".weight")
-			if oldWeight != newWeight {
-				backendServer := &zlb.BackendServer{
-					InstanceId: common.String(item["instance_id"].(string)),
-					Port:       common.Integer(item["port"].(int)),
-					Weight:     common.Integer(newWeight.(int)),
+					if weight, exists := s["weight"]; exists {
+						v := weight.(int)
+						backendServer.Weight = common.Integer(v)
+					}
+
+					if port, exists := s["port"]; exists {
+						v := port.(int)
+						if v != 0 {
+							backendServer.Port = common.Integer(v)
+						}
+					}
+
+					backendServers = append(backendServers, backendServer)
 				}
-				backendServers = append(backendServers, backendServer)
 			}
-		}
-
-		// 只有当有后端服务器需要修改时才调用接口
-		if len(backendServers) > 0 {
+			modifyRequest := zlb.NewModifyBackendRequest()
+			modifyRequest.LoadBalancerId = &zlbId
+			modifyRequest.ListenerId = &listenerId
 			modifyRequest.BackendServers = backendServers
 
 			_, err := zlbService.client.WithZlbClient().ModifyBackend(modifyRequest)
@@ -284,6 +319,15 @@ func resourceZenlayerCloudZlbBackendUpdate(ctx context.Context, d *schema.Resour
 	}
 
 	return resourceZenlayerCloudZlbBackendRead(ctx, d, meta)
+}
+
+func getIdSetFromServers(items []interface{}) *schema.Set {
+	rmId := make([]interface{}, 0)
+	for _, item := range items {
+		server := item.(map[string]interface{})
+		rmId = append(rmId, fmt.Sprintf("%s", server["instance_id"]))
+	}
+	return schema.NewSet(schema.HashString, rmId)
 }
 
 func resourceZenlayerCloudZlbBackendDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -315,8 +359,8 @@ func resourceZenlayerCloudZlbBackendDelete(ctx context.Context, d *schema.Resour
 	for _, backend := range backends {
 		item := backend.(map[string]interface{})
 		backendItem := &zlb.BackendServer{
-			InstanceId: common.String(item["instance_id"].(string)),
-			Port:       common.Integer(item["port"].(int)),
+			InstanceId:       common.String(item["instance_id"].(string)),
+			PrivateIpAddress: common.String(item["private_ip_address"].(string)),
 		}
 		backendList = append(backendList, backendItem)
 	}
