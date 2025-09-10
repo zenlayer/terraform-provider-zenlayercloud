@@ -19,6 +19,7 @@ import (
 	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/connectivity"
 	common2 "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/common"
 	zec "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/zec20240401"
+	zec2 "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/zec20250901"
 	"log"
 	"math"
 	"sync"
@@ -392,14 +393,14 @@ func (s *ZecService) DescribeInstancesByFilter(filter *ZecInstancesFilter) (inst
 	return
 }
 
-func (s *ZecService) DescribeNics(ctx context.Context, filter *ZecNicFilter) (vnics []*zec.NicInfo, err error) {
+func (s *ZecService) DescribeNics(ctx context.Context, filter *ZecNicFilter) (vnics []*zec2.NicInfo, err error) {
 
 	request := convertVnicRequestFilter(filter)
 
 	var limit = 100
-	request.PageSize = limit
-	request.PageNum = 1
-	response, err := s.client.WithZecClient().DescribeNetworkInterfaces(request)
+	request.PageSize = common2.Integer(limit)
+	request.PageNum = common2.Integer(1)
+	response, err := s.client.WithZec2Client().DescribeNetworkInterfaces(request)
 
 	if err != nil {
 		log.Printf("[CRITAL] Api[%s] fail, request body [%s], error[%s]\n",
@@ -411,7 +412,7 @@ func (s *ZecService) DescribeNics(ctx context.Context, filter *ZecNicFilter) (vn
 	}
 
 	vnics = response.Response.DataSet
-	num := int(math.Ceil(float64(response.Response.TotalCount)/float64(limit))) - 1
+	num := int(math.Ceil(float64(*response.Response.TotalCount)/float64(limit))) - 1
 	if num == 0 {
 		return vnics, nil
 	}
@@ -427,10 +428,10 @@ func (s *ZecService) DescribeNics(ctx context.Context, filter *ZecNicFilter) (vn
 		goFunc := func() {
 			request := convertVnicRequestFilter(filter)
 
-			request.PageNum = value + 2
-			request.PageSize = limit
+			request.PageNum = common2.Integer(value + 2)
+			request.PageSize = common2.Integer(limit)
 
-			response, err := s.client.WithZecClient().DescribeNetworkInterfaces(request)
+			response, err := s.client.WithZec2Client().DescribeNetworkInterfaces(request)
 			if err != nil {
 				log.Printf("[CRITAL] Api[%s] fail, request body [%s], error[%s]\n",
 					request.GetAction(), common.ToJsonString(request), err.Error())
@@ -450,18 +451,18 @@ func (s *ZecService) DescribeNics(ctx context.Context, filter *ZecNicFilter) (vn
 
 	log.Printf("[DEBUG] DescribeNetworkInterfaces request finished")
 	for _, v := range vnicList {
-		vnics = append(vnics, v.([]*zec.NicInfo)...)
+		vnics = append(vnics, v.([]*zec2.NicInfo)...)
 	}
 	log.Printf("[DEBUG] transfer vnics finished")
 	return
 }
 
-func (s *ZecService) DescribeNicById(ctx context.Context, nicId string) (*zec.NicInfo, error) {
+func (s *ZecService) DescribeNicById(ctx context.Context, nicId string) (*zec2.NicInfo, error) {
 
-	request := zec.NewDescribeNetworkInterfacesRequest()
+	request := zec2.NewDescribeNetworkInterfacesRequest()
 	request.NicIds = []string{nicId}
 
-	response, err := s.client.WithZecClient().DescribeNetworkInterfaces(request)
+	response, err := s.client.WithZec2Client().DescribeNetworkInterfaces(request)
 	defer common.LogApiRequest(ctx, "DescribeNetworkInterfaces", request, response, err)
 
 	if err != nil {
@@ -1271,15 +1272,29 @@ func convertZbgRequestFilter(filter *BoarderGatewayFilter) *zec.DescribeBorderGa
 	return request
 }
 
-func convertVnicRequestFilter(filter *ZecNicFilter) *zec.DescribeNicsRequest {
-	request := zec.NewDescribeNetworkInterfacesRequest()
-	request.SubnetId = filter.SubnetId
-	request.VpcId = filter.VpcId
-	request.SubnetId = filter.SubnetId
+func convertVnicRequestFilter(filter *ZecNicFilter) *zec2.DescribeNetworkInterfacesRequest {
+	request := zec2.NewDescribeNetworkInterfacesRequest()
+	if filter.SubnetId != "" {
+		request.SubnetId = common2.String(filter.SubnetId)
+	}
+	if filter.VpcId != "" {
+		request.VpcId = common2.String(filter.VpcId)
+	}
+	if filter.VpcId != "" {
+		request.VpcId = common2.String(filter.VpcId)
+	}
 	request.NicIds = filter.ids
-	request.RegionId = filter.RegionId
-	request.ResourceGroupId = filter.ResourceGroupId
-	request.InstanceId = filter.InstanceId
+
+	if filter.RegionId != "" {
+		request.RegionId = common2.String(filter.RegionId)
+	}
+	if filter.ResourceGroupId != "" {
+		request.ResourceGroupId = common2.String(filter.ResourceGroupId)
+	}
+
+	if filter.InstanceId != "" {
+		request.InstanceId = common2.String(filter.InstanceId)
+	}
 	return request
 }
 

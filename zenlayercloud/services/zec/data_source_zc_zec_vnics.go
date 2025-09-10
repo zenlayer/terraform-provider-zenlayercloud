@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/common"
 	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/connectivity"
-	zec "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/zec20240401"
+	zec "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/zec20250901"
 	"regexp"
 )
 
@@ -214,7 +214,7 @@ func dataSourceZenlayerCloudZecVnicsRead(ctx context.Context, d *schema.Resource
 	nicList := make([]map[string]interface{}, 0, len(nics))
 	ids := make([]string, 0, len(nics))
 	for _, nic := range nics {
-		if nameRegex != nil && !nameRegex.MatchString(nic.Name) {
+		if nameRegex != nil && !nameRegex.MatchString(*nic.Name) {
 			continue
 		}
 
@@ -222,7 +222,7 @@ func dataSourceZenlayerCloudZecVnicsRead(ctx context.Context, d *schema.Resource
 			"id":                   nic.NicId,
 			"name":                 nic.Name,
 			"region_id":            nic.RegionId,
-			"primary":              nic.NicType == "Primary",
+			"primary":              *nic.NicType == "Primary",
 			"primary_ipv4_address": nic.PrimaryIpv4,
 			"primary_ipv6_address": nic.PrimaryIpv6,
 			"public_ips":           nic.PublicIpList,
@@ -234,11 +234,10 @@ func dataSourceZenlayerCloudZecVnicsRead(ctx context.Context, d *schema.Resource
 			"resource_group_name":  nic.ResourceGroup.ResourceGroupName,
 			"create_time":          nic.CreateTime,
 			"stack_type":           nic.NicSubnetType,
-			// TODO security group
-			//"security_group_id":    nic.SecurityGroupId,
+			"security_group_id":    nic.SecurityGroupId,
 		}
 		nicList = append(nicList, mapping)
-		ids = append(ids, nic.NicId)
+		ids = append(ids, *nic.NicId)
 	}
 
 	d.SetId(common.DataResourceIdHash(ids))

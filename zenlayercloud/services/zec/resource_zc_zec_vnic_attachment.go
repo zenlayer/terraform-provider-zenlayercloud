@@ -9,7 +9,7 @@ import (
 	common2 "github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/common"
 	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/connectivity"
 	"github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/common"
-	zec2 "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/zec20240401"
+	zec2 "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/zec20250901"
 	"time"
 )
 
@@ -53,10 +53,10 @@ func resourceZenlayerCloudZecVNicAttachmentDelete(ctx context.Context, d *schema
 
 	request := zec2.NewDetachNetworkInterfaceRequest()
 	vnicId := attachment[0]
-	request.NicId = vnicId
+	request.NicId = &vnicId
 
 	if err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutDelete)-time.Minute, func() *resource.RetryError {
-		_, errRet := vmService.client.WithZecClient().DetachNetworkInterface(request)
+		_, errRet := vmService.client.WithZec2Client().DetachNetworkInterface(request)
 		ee, ok := errRet.(*common.ZenlayerCloudSdkError)
 		if ok {
 			if ee.Code == "OPERATION_DENIED_NIC_NOT_EXIST_INSTANCE" {
@@ -84,11 +84,11 @@ func resourceZenlayerCloudZecVNicAttachmentCreate(ctx context.Context, d *schema
 	instanceId := d.Get("instance_id").(string)
 
 	request := zec2.NewAttachNetworkInterfaceRequest()
-	request.InstanceId = instanceId
-	request.NicId = vnicId
+	request.InstanceId = &instanceId
+	request.NicId = &vnicId
 
 	if err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutDelete)-time.Minute, func() *resource.RetryError {
-		_, errRet := zecService.client.WithZecClient().AttachNetworkInterface(request)
+		_, errRet := zecService.client.WithZec2Client().AttachNetworkInterface(request)
 		if errRet != nil {
 			return common2.RetryError(ctx, errRet)
 		}
@@ -130,7 +130,7 @@ func resourceZenlayerCloudZecVNicAttachmentRead(ctx context.Context, d *schema.R
 		return diag.FromErr(err)
 	}
 
-	if vnic == nil || vnic.InstanceId == "" {
+	if vnic == nil || vnic.InstanceId == nil {
 		d.SetId("")
 		return nil
 	}

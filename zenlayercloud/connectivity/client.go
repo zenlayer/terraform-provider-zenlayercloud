@@ -20,6 +20,7 @@ import (
 	user "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/user20240529"
 	vm "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/vm20230313"
 	zec "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/zec20240401"
+	zec2 "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/zec20250901"
 	zga "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/zga20230706"
 	zlb "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/zlb20250401"
 )
@@ -37,6 +38,7 @@ type ZenlayerCloudClient struct {
 	SdnConn           *sdn.Client
 	ZgaConn           *zga.Client
 	ZecConn           *zec.Client
+	ZecConn2           *zec2.Client
 	ZlbConn           *zlb.Client
 	tfkConn           *traffic.Client
 	usrConn           *user.Client
@@ -90,6 +92,16 @@ func (client *ZenlayerCloudClient) WithZecClient() *zec.Client {
 	client.ZecConn, _ = zec.NewClient(config, client.SecretKeyId, client.SecretKeyPassword)
 	client.ZecConn.WithRequestClient(ReqClient)
 	return client.ZecConn
+}
+
+func (client *ZenlayerCloudClient) WithZec2Client() *zec2.Client {
+	if client.ZecConn2 != nil {
+		return client.ZecConn2
+	}
+	config := client.NewConfig()
+	client.ZecConn2, _ = zec2.NewClient(config, client.SecretKeyId, client.SecretKeyPassword)
+	client.ZecConn2.WithRequestClient(ReqClient)
+	return client.ZecConn2
 }
 
 func (client *ZenlayerCloudClient) WithZlbClient() *zlb.Client {

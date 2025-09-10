@@ -13,7 +13,7 @@ import (
 	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/connectivity"
 	"github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/common"
 	user "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/user20240529"
-	zec2 "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/zec20240401"
+	zec2 "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/zec20250901"
 	"time"
 )
 
@@ -154,7 +154,7 @@ func resourceZenlayerCloudZecVNicDelete(ctx context.Context, d *schema.ResourceD
 			return nil
 		}
 
-		if vnic.Status == ZecVnicStatusDeleting {
+		if *vnic.Status == ZecVnicStatusDeleting {
 			//in recycling
 			return resource.RetryableError(fmt.Errorf("vnic (%s) is recycling", vnicId))
 		}
@@ -211,39 +211,38 @@ func resourceZenlayerCloudZecVNicCreate(ctx context.Context, d *schema.ResourceD
 	defer common2.LogElapsed(ctx, "resource.zenlayercloud_zec_vnic.create")()
 
 	request := zec2.NewCreateNetworkInterfaceRequest()
-	request.SubnetId = d.Get("subnet_id").(string)
-	request.Name = d.Get("name").(string)
+	request.SubnetId = common.String(d.Get("subnet_id").(string))
+	request.Name = common.String(d.Get("name").(string))
 
 	// v6
 	if v, ok := d.GetOk("ipv6_internet_charge_type"); ok {
-		request.InternetChargeType = v.(string)
+		request.InternetChargeType = common.String(v.(string))
 	}
 	if v, ok := d.GetOk("ipv6_bandwidth"); ok {
-		request.Bandwidth = v.(int)
+		request.Bandwidth = common.Integer(v.(int))
 	}
 	if v, ok := d.GetOk("ipv6_bandwidth_cluster_id"); ok {
-		request.ClusterId = v.(string)
+		request.ClusterId = common.String(v.(string))
 	}
 	if v, ok := d.GetOk("ipv6_traffic_package_size"); ok {
-		request.PackageSize = v.(float64)
+		request.PackageSize = common.Float64(v.(float64))
 	}
 
 	if v, ok := d.GetOk("resource_group_id"); ok {
-		request.ResourceGroupId = v.(string)
+		request.ResourceGroupId =common.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("stack_type"); ok {
-		request.StackType = common.String(v.(string))
+		request.NicStackType = common.String(v.(string))
 	}
 
-	// TODO security group
-	//if v, ok := d.GetOk("security_group_id"); ok {
-	//	request.SecurityGroupId = v.(string)
-	//}
+	if v, ok := d.GetOk("security_group_id"); ok {
+		request.SecurityGroupId = common.String(v.(string))
+	}
 	vnicId := ""
 
 	err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
-		response, err := meta.(*connectivity.ZenlayerCloudClient).WithZecClient().CreateNetworkInterface(request)
+		response, err := meta.(*connectivity.ZenlayerCloudClient).WithZec2Client().CreateNetworkInterface(request)
 		if err != nil {
 			tflog.Info(ctx, "Fail to create vNIC.", map[string]interface{}{
 				"action":  request.GetAction(),
@@ -259,11 +258,11 @@ func resourceZenlayerCloudZecVNicCreate(ctx context.Context, d *schema.ResourceD
 			"response": common2.ToJsonString(response),
 		})
 
-		if len(response.Response.NicId) < 1 {
-			err = fmt.Errorf("disk id is nil")
+		if response.Response.NicId == nil {
+			err = fmt.Errorf("vnic id is nil")
 			return resource.NonRetryableError(err)
 		}
-		vnicId = response.Response.NicId
+		vnicId = *response.Response.NicId
 
 		return nil
 	})
@@ -280,7 +279,7 @@ func resourceZenlayerCloudZecVNicRead(ctx context.Context, d *schema.ResourceDat
 
 	vnicId := d.Id()
 
-	vmService := ZecService{
+	zecService := ZecService{
 		client: meta.(*connectivity.ZenlayerCloudClient),
 	}
 
@@ -288,12 +287,12 @@ func resourceZenlayerCloudZecVNicRead(ctx context.Context, d *schema.ResourceDat
 	var errRet error
 
 	err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutRead)-time.Minute, func() *resource.RetryError {
-		nic, errRet = vmService.DescribeNicById(ctx, vnicId)
+		nic, errRet = zecService.DescribeNicById(ctx, vnicId)
 		if errRet != nil {
 			return common2.RetryError(ctx, errRet)
 		}
 
-		if nic != nil && nicIsOperating(nic.Status) {
+		if nic != nil && nicIsOperating(*nic.Status) {
 			return resource.RetryableError(fmt.Errorf("waiting for nic %s operation", nic.NicId))
 		}
 		return nil
@@ -313,7 +312,7 @@ func resourceZenlayerCloudZecVNicRead(ctx context.Context, d *schema.ResourceDat
 		return nil
 	}
 
-	if nic.Status == ZecVnicStatusCreateFailed {
+	if *nic.Status == ZecVnicStatusCreateFailed {
 		d.SetId("")
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Warning,
