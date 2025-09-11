@@ -59,9 +59,38 @@ func ResourceZenlayerCloudZecSnapshot() *schema.Resource {
 				Description: "Status of snapshot. Valid values: `CREATING`, `AVAILABLE`, `FAILED`, `ROLLING_BACK`, `DELETING`.",
 			},
 			"retention_time": {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "Retention time of snapshot.",
+				Type:     schema.TypeString,
+				Optional: true,
+				//Computed:    true,
+				ValidateFunc: func(i interface{}, s string) (warnings []string, errors []error) {
+					v, ok := i.(string)
+					if !ok {
+						errors = append(errors, fmt.Errorf("expected type of %s to be string", s))
+						return
+					}
+
+					if v == "" {
+						return
+					}
+
+					// Parse the time string
+					t, err := time.Parse("2006-01-02T15:04:05Z", v)
+					if err != nil {
+						errors = append(errors, fmt.Errorf("invalid time format for %s, expected yyyy-MM-ddTHH:mm:ssZ, got: %s", s, v))
+						return
+					}
+
+					// Check if the time is at least 24 hours in the future
+					now := time.Now().UTC()
+					minTime := now.Add(24 * time.Hour)
+					if t.Before(minTime) {
+						errors = append(errors, fmt.Errorf("time for %s must be at least 24 hours in the future, got: %s, minimum required: %s", s, t.Format("2006-01-02T15:04:05Z"), minTime.Format("2006-01-02T15:04:05Z")))
+						return
+					}
+
+					return
+				},
+				Description: "Retention time of snapshot. Valid format: yyyy-MM-ddTHH:mm:ssZ, and must be at least 24 hours in the future. Example: 2025-10-01T10:10:10Z.",
 			},
 			"resource_group_id": {
 				Type:        schema.TypeString,
@@ -136,12 +165,20 @@ func ResourceZenlayerCloudZecSnapshotUpdate(ctx context.Context, d *schema.Resou
 	}
 	snapId := d.Id()
 
-	if d.HasChange("name") {
+	if d.HasChanges("name", "retention_time") {
 		err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate)-time.Minute, func() *resource.RetryError {
 			request := zec2.NewModifySnapshotsAttributeRequest()
 			request.SnapshotName = common.String(d.Get("name").(string))
+			retentionTime := d.Get("retention_time").(string)
+			if retentionTime == "" {
+				request.IsPermanent = common.Bool(true)
+			} else {
+				request.RetentionTime = common.String(retentionTime)
+			}
 			request.SnapshotIds = []string{snapId}
-			_, err := zecService.client.WithZecClient().ModifySnapshotsAttribute(request)
+			response, err := zecService.client.WithZecClient().ModifySnapshotsAttribute(request)
+			defer common2.LogApiRequest(ctx, "ModifySnapshotsAttribute", request, response, err)
+
 			if err != nil {
 				return common2.RetryError(ctx, err, common2.InternalServerError, common.NetworkError)
 			}
@@ -165,6 +202,7 @@ func ResourceZenlayerCloudZecSnapshotCreate(ctx context.Context, d *schema.Resou
 	request := zec2.NewCreateSnapshotRequest()
 	request.DiskId = common.String(d.Get("disk_id").(string))
 	request.SnapshotName = common.String(d.Get("name").(string))
+	request.RetentionTime = common.String(d.Get("retention_time").(string))
 
 	snapshotId := ""
 
