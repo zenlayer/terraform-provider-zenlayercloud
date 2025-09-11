@@ -51,9 +51,8 @@ func ResourceZenlayerCloudZecSnapshotPolicy() *schema.Resource {
 			"retention_days": {
 				Type:         schema.TypeInt,
 				Optional:     true,
-				Computed:     true,
 				ValidateFunc: validation.Any(validation.IntBetween(1, 65535), validation.IntInSlice([]int{-1})),
-				Description:  "The retention days of the auto snapshot policy. Valid values: `1` to `65535` or `-1` for no expired.",
+				Description:  "The retention days of the auto snapshot policy. Valid values: `1` to `65535` or `-1` for no expired. Default is `-1`.",
 			},
 			"hours": {
 				Type:     schema.TypeSet,
@@ -184,7 +183,10 @@ func resourceZenlayerCloudZecSnapshotPolicyCreate(ctx context.Context, d *schema
 	request := zec2.NewCreateAutoSnapshotPolicyRequest()
 	request.AutoSnapshotPolicyName = common.String(d.Get("name").(string))
 	request.ZoneId = common.String(d.Get("availability_zone").(string))
-	request.RetentionDays = common.Integer(d.Get("retention_days").(int))
+
+	if v, ok := d.GetOk("retention_days"); ok {
+		request.RetentionDays = common.Integer(v.(int))
+	}
 
 	if v, ok := d.GetOk("resource_group_id"); ok {
 		request.ResourceGroupId = common.String(v.(string))

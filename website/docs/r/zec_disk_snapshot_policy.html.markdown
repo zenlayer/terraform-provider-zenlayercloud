@@ -39,7 +39,7 @@ The following arguments are supported:
 * `repeat_week_days` - (Required, Set: [`Int`]) The days of week when the auto snapshot policy is triggered. Valid values: `1` to `7`. 1: Monday, 2: Tuesday ~ 7: Sunday.
 * `name` - (Optional, String) The name of the snapshot policy. The name should start and end with a number or a letter, containing 2 to 63 characters. Only letters, numbers, - and periods (.) are supported.
 * `resource_group_id` - (Optional, String) The ID of resource group grouped snapshot policy.
-* `retention_days` - (Optional, Int) The retention days of the auto snapshot policy. Valid values: `1` to `65535` or `-1` for no expired.
+* `retention_days` - (Optional, Int) The retention days of the auto snapshot policy. Valid values: `1` to `65535` or `-1` for no expired. Default is `-1`.
 
 ## Attributes Reference
 

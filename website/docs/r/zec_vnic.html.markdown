@@ -57,7 +57,7 @@ $ terraform import zenlayercloud_zec_vnic.vnic vnic-id
 The following arguments are supported:
 
 * `subnet_id` - (Required, String, ForceNew) The ID of a VPC subnet.
-* `ipv6_bandwidth_cluster_id` - (Optional, String) Bandwidth cluster ID for public IPv6. Required when `ipv6_internet_charge_type` is `BandwidthCluster`.
+* `ipv6_bandwidth_cluster_id` - (Optional, String, ForceNew) Bandwidth cluster ID for public IPv6. Required when `ipv6_internet_charge_type` is `BandwidthCluster`.
 * `ipv6_bandwidth` - (Optional, Int, ForceNew) Bandwidth of public IPv6. Measured in Mbps.
 * `ipv6_internet_charge_type` - (Optional, String, ForceNew) Network billing methods for public IPv6. Valid values: `ByBandwidth`, `ByTrafficPackage`, `BandwidthCluster`.
 * `ipv6_traffic_package_size` - (Optional, Float64, ForceNew) Traffic Package size for public IPv6. Measured in TB. Only valid when `ipv6_internet_charge_type` is `ByTrafficPackage`.
