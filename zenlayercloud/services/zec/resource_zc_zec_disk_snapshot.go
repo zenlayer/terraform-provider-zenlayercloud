@@ -243,12 +243,12 @@ func ResourceZenlayerCloudZecSnapshotRead(ctx context.Context, d *schema.Resourc
 	_ = d.Set("disk_id", snapshot.DiskId)
 	_ = d.Set("name", snapshot.SnapshotName)
 	_ = d.Set("availability_zone", snapshot.ZoneId)
-	_ = d.Set("snapshot_type", []string{*snapshot.SnapshotType})
+	_ = d.Set("snapshot_type", *snapshot.SnapshotType)
 	_ = d.Set("create_time", snapshot.CreateTime)
 	_ = d.Set("status", snapshot.Status)
 	_ = d.Set("retention_time", snapshot.RetentionTime)
 	_ = d.Set("resource_group_id", snapshot.ResourceGroup.ResourceGroupId)
-	_ = d.Set("resource_group_name", snapshot.ResourceGroup.ResourceGroupId)
+	_ = d.Set("resource_group_name", snapshot.ResourceGroup.ResourceGroupName)
 	_ = d.Set("disk_ability", snapshot.DiskAbility)
 
 	return diags
