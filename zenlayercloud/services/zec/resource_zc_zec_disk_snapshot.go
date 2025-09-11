@@ -202,7 +202,9 @@ func ResourceZenlayerCloudZecSnapshotCreate(ctx context.Context, d *schema.Resou
 	request := zec2.NewCreateSnapshotRequest()
 	request.DiskId = common.String(d.Get("disk_id").(string))
 	request.SnapshotName = common.String(d.Get("name").(string))
-	request.RetentionTime = common.String(d.Get("retention_time").(string))
+	if v, ok := d.GetOk("retention_time"); ok {
+		request.RetentionTime = common.String(v.(string))
+	}
 
 	snapshotId := ""
 
