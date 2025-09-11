@@ -52,7 +52,7 @@ $ terraform import zenlayercloud_zec_disk_snapshot_policy_attachment.test disk-i
 The following arguments are supported:
 
 * `auto_snapshot_policy_id` - (Required, String, ForceNew) The ID of the auto snapshot policy.
-* `disk_id` - (Required, String, ForceNew) The ID of the disk.
+* `disk_id` - (Required, String, ForceNew) The ID of the disk. Note: system disk is not support yet.
 
 ## Attributes Reference
 

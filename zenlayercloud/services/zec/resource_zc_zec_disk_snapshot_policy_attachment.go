@@ -25,7 +25,7 @@ func ResourceZenlayerCloudZecSnapshotPolicyAttachment() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
-				Description: "The ID of the disk.",
+				Description: "The ID of the disk. Note: system disk is not support yet.",
 			},
 			"auto_snapshot_policy_id": {
 				Type:        schema.TypeString,
@@ -123,10 +123,9 @@ func resourceZenlayerCloudZecSnapshotPolicyAttachmentDelete(ctx context.Context,
 		return nil
 	})
 
-	if diskInfo == nil  || diskInfo.AutoSnapshotPolicyId == nil || *diskInfo.AutoSnapshotPolicyId == "" {
+	if diskInfo == nil || diskInfo.AutoSnapshotPolicyId == nil || *diskInfo.AutoSnapshotPolicyId == "" {
 		return nil
 	}
-
 
 	request := zec2.NewCancelAutoSnapshotPolicyRequest()
 	request.AutoSnapshotPolicyId = diskInfo.AutoSnapshotPolicyId
