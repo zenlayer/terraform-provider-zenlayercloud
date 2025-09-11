@@ -93,9 +93,10 @@ func ResourceZenlayerCloudZecVNic() *schema.Resource {
 				Description:  "Bandwidth of public IPv6. Measured in Mbps.",
 			},
 			"ipv6_bandwidth_cluster_id": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Description:  "Bandwidth cluster ID for public IPv6. Required when `ipv6_internet_charge_type` is `BandwidthCluster`.",
+				Type:        schema.TypeString,
+				Optional:    true,
+				ForceNew:    true,
+				Description: "Bandwidth cluster ID for public IPv6. Required when `ipv6_internet_charge_type` is `BandwidthCluster`.",
 			},
 			"ipv6_traffic_package_size": {
 				Type:         schema.TypeFloat,
