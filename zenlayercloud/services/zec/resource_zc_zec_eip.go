@@ -131,7 +131,7 @@ func bandwidthClusterIdValidFunc() schema.CustomizeDiffFunc {
 }
 
 func resourceZenlayerCloudZecElasticIPCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	defer common.LogElapsed(ctx, "resource.zenlayercloud_eip.create")()
+	defer common.LogElapsed(ctx, "resource.zenlayercloud_zec_eip.create")()
 
 	zecService := ZecService{
 		client: meta.(*connectivity.ZenlayerCloudClient),
@@ -189,7 +189,7 @@ func resourceZenlayerCloudZecElasticIPCreate(ctx context.Context, d *schema.Reso
 }
 
 func resourceZenlayerCloudZecElasticIPRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	defer common.LogElapsed(ctx, "resource.zenlayercloud_eip.read")()
+	defer common.LogElapsed(ctx, "resource.zenlayercloud_zec_eip.read")()
 
 	zecService := ZecService{
 		client: meta.(*connectivity.ZenlayerCloudClient),
@@ -250,7 +250,7 @@ func ipIsOperating(status string) bool {
 }
 
 func resourceZenlayerCloudZecElasticIPUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	defer common.LogElapsed(ctx, "resource.zenlayercloud_eip.update")()
+	defer common.LogElapsed(ctx, "resource.zenlayercloud_zec_eip.update")()
 	//
 	zecService := ZecService{
 		client: meta.(*connectivity.ZenlayerCloudClient),

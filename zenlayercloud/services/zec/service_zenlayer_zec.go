@@ -673,11 +673,11 @@ func (s *ZecService) DeleteInstance(ctx context.Context, instanceId string) erro
 	return err
 }
 
-func (s *ZecService) DescribeInstanceById(ctx context.Context, instanceId string) (instance *zec.InstanceInfo, err error) {
-	request := zec.NewDescribeInstancesRequest()
+func (s *ZecService) DescribeInstanceById(ctx context.Context, instanceId string) (instance *zec2.InstanceInfo, err error) {
+	request := zec2.NewDescribeInstancesRequest()
 	request.InstanceIds = []string{instanceId}
 
-	response, err := s.client.WithZecClient().DescribeInstances(request)
+	response, err := s.client.WithZec2Client().DescribeInstances(request)
 
 	defer common.LogApiRequest(ctx, "DescribeInstances", request, response, err)
 	if err != nil {
@@ -691,16 +691,16 @@ func (s *ZecService) DescribeInstanceById(ctx context.Context, instanceId string
 	return
 }
 
-func (s *ZecService) DescribeSecurityGroupById(ctx context.Context, securityGroupId string) (securityGroup *zec.SecurityGroupInfo, err error) {
+func (s *ZecService) DescribeSecurityGroupById(ctx context.Context, securityGroupId string) (securityGroup *zec2.SecurityGroupInfo, err error) {
 
-	request := zec.NewDescribeSecurityGroupsRequest()
+	request := zec2.NewDescribeSecurityGroupsRequest()
 	request.SecurityGroupIds = []string{securityGroupId}
 
-	var response *zec.DescribeSecurityGroupsResponse
+	var response *zec2.DescribeSecurityGroupsResponse
 
 	defer common.LogApiRequest(ctx, "DescribeSecurityGroups", request, response, err)
 
-	response, err = s.client.WithZecClient().DescribeSecurityGroups(request)
+	response, err = s.client.WithZec2Client().DescribeSecurityGroups(request)
 
 	if err != nil {
 		return
@@ -806,11 +806,12 @@ func (s *ZecService) DeleteVnicById(ctx context.Context, nicId string) error {
 	return err
 }
 
-func (s *ZecService) ModifyVNicAttribute(ctx context.Context, vnicId string, name string) error {
-	request := zec.NewModifyNetworkInterfacesAttributeRequest()
-	request.NicIds = []string{vnicId}
-	request.Name = name
-	response, err := s.client.WithZecClient().ModifyNetworkInterfacesAttribute(request)
+func (s *ZecService) ModifyVNicAttribute(ctx context.Context, vnicId string, name string, securityGroupId string) error {
+	request := zec2.NewModifyNetworkInterfaceAttributeRequest()
+	request.NicId = &vnicId
+	request.Name = &name
+	request.SecurityGroupId = &securityGroupId
+	response, err := s.client.WithZec2Client().ModifyNetworkInterfaceAttribute(request)
 	common.LogApiRequest(ctx, "ModifyNetworkInterfacesAttribute", request, response, err)
 	return err
 }
@@ -827,12 +828,12 @@ func (s *ZecService) InstanceStateRefreshFunc(ctx context.Context, instanceId st
 			return nil, "", nil
 		}
 		for _, failState := range failStates {
-			if object.Status == failState {
-				return object, object.Status, common.Error("Failed to reach target status. Last status: %s.", object.Status)
+			if *object.Status == failState {
+				return object, *object.Status, common.Error("Failed to reach target status. Last status: %s.", object.Status)
 			}
 		}
 
-		return object, object.Status, nil
+		return object, *object.Status, nil
 	}
 }
 
@@ -844,8 +845,8 @@ func (s *ZecService) shutdownInstance(ctx context.Context, instanceId string) er
 	return err
 }
 
-func (s *ZecService) resetInstance(ctx context.Context, request *zec.ResetInstanceRequest) error {
-	response, err := s.client.WithZecClient().ResetInstance(request)
+func (s *ZecService) resetInstance(ctx context.Context, request *zec2.ResetInstanceRequest) error {
+	response, err := s.client.WithZec2Client().ResetInstance(request)
 	common.LogApiRequest(ctx, "ResetInstance", request, response, err)
 	return err
 }
@@ -1192,6 +1193,29 @@ func (s *ZecService) switchInstanceIpForwarding(ctx context.Context, id string, 
 		defer common.LogApiRequest(ctx, "StartIpForward", request, response, err)
 		return err
 	}
+}
+
+func (s *ZecService) DescribeSecurityGroupRules(ctx context.Context, securityGroupId string) ([]*zec2.SecurityGroupRuleInfo, []*zec2.SecurityGroupRuleInfo, error) {
+	request := zec2.NewDescribeSecurityGroupRuleRequest()
+	request.SecurityGroupId = &securityGroupId
+	response, err := s.client.WithZec2Client().DescribeSecurityGroupRule(request)
+	defer common.LogApiRequest(ctx, "DescribeSecurityGroupRule", request, response, err)
+	return response.Response.IngressRuleList, response.Response.EgressRuleList, err
+}
+
+func (s *ZecService) DescribeCidrById(ctx context.Context, cidrId string) (*zec2.CidrInfo, error) {
+	request := zec2.NewDescribeCidrsRequest()
+	request.CidrIds = []string{cidrId}
+
+	response, err := s.client.WithZec2Client().DescribeCidrs(request)
+	defer common.LogApiRequest(ctx, "DescribeCidrs", request, response, err)
+
+	if err != nil {
+		return nil, err
+	} else if len(response.Response.DataSet) == 0 {
+		return nil, nil
+	}
+	return response.Response.DataSet[0], nil
 }
 
 func convertSnapshotPolicyFilter(filter *ZecAutoSnapshotPolicyFilter) *zec.DescribeAutoSnapshotPoliciesRequest {
