@@ -23,6 +23,7 @@ package zenlayercloud
 
 import (
 	"context"
+	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/common"
 	"regexp"
 	"sort"
 
@@ -79,7 +80,7 @@ func dataSourceZenlayerCloudZgaAccelerateRegions() *schema.Resource {
 }
 
 func dataSourceZenlayerCloudZgaAccelerateRegionsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	defer logElapsed(ctx, "data_source.zenlayercloud_zga_accelerate_regions.read")()
+	defer common.LogElapsed(ctx, "data_source.zenlayercloud_zga_accelerate_regions.read")()
 
 	var (
 		nameRegex *regexp.Regexp
@@ -93,11 +94,11 @@ func dataSourceZenlayerCloudZgaAccelerateRegionsRead(ctx context.Context, d *sch
 	}
 
 	var regions []*zga.Region
-	err := resource.RetryContext(ctx, readRetryTimeout, func() *resource.RetryError {
+	err := resource.RetryContext(ctx, common.ReadRetryTimeout, func() *resource.RetryError {
 		regions, errRet = NewZgaService(meta.(*connectivity.ZenlayerCloudClient)).
 			DescribeAccelerateRegions(ctx, d.Get("origin_region_id").(string))
 		if errRet != nil {
-			return retryError(ctx, errRet, InternalServerError, ReadTimedOut)
+			return common.RetryError(ctx, errRet, common.InternalServerError, common.ReadTimedOut)
 		}
 		return nil
 	})
@@ -124,7 +125,7 @@ func dataSourceZenlayerCloudZgaAccelerateRegionsRead(ctx context.Context, d *sch
 
 	sort.StringSlice(ids).Sort()
 
-	d.SetId(dataResourceIdHash(ids))
+	d.SetId(common.DataResourceIdHash(ids))
 	err = d.Set("regions", regionList)
 	if err != nil {
 		return diag.FromErr(err)
@@ -132,7 +133,7 @@ func dataSourceZenlayerCloudZgaAccelerateRegionsRead(ctx context.Context, d *sch
 
 	output, ok := d.GetOk("result_output_file")
 	if ok && output.(string) != "" {
-		if err := writeToFile(output.(string), regionList); err != nil {
+		if err := common.WriteToFile(output.(string), regionList); err != nil {
 			return diag.FromErr(err)
 		}
 	}

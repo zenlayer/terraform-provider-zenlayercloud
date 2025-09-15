@@ -16,6 +16,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	common2 "github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/common"
 	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/connectivity"
 	"github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/common"
 	sdn "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/sdn20230830"
@@ -33,7 +34,7 @@ func (s *SdnService) DeletePortById(ctx context.Context, portId string) (err err
 	request := sdn.NewTerminatePortRequest()
 	request.PortId = portId
 	response, err := s.client.WithSdnClient().TerminatePort(request)
-	defer logApiRequest(ctx, "TerminatePort", request, response, err)
+	defer common2.LogApiRequest(ctx, "TerminatePort", request, response, err)
 
 	if err != nil {
 		if sdkError, ok := err.(*common.ZenlayerCloudSdkError); ok {
@@ -50,7 +51,7 @@ func (s *SdnService) DestroyPort(ctx context.Context, portId string) (err error)
 	request := sdn.NewDestroyPortRequest()
 	request.PortId = portId
 	response, err := s.client.WithSdnClient().DestroyPort(request)
-	defer logApiRequest(ctx, "DestroyPort", request, response, err)
+	defer common2.LogApiRequest(ctx, "DestroyPort", request, response, err)
 	return
 }
 
@@ -60,7 +61,7 @@ func (s *SdnService) DescribePortById(ctx context.Context, portId string) (insta
 
 	response, err := s.client.WithSdnClient().DescribePorts(request)
 
-	defer logApiRequest(ctx, "DescribePorts", request, response, err)
+	defer common2.LogApiRequest(ctx, "DescribePorts", request, response, err)
 	if err != nil {
 		return
 	}
@@ -85,7 +86,7 @@ func (s *SdnService) PortStateRefreshFunc(ctx context.Context, portId string, fa
 		}
 		for _, failState := range failStates {
 			if object.PortStatus == failState {
-				return object, object.PortStatus, Error("Failed to reach target status. Last status: %s.", object.PortStatus)
+				return object, object.PortStatus, common2.Error("Failed to reach target status. Last status: %s.", object.PortStatus)
 			}
 		}
 
@@ -100,7 +101,7 @@ func (s *SdnService) ModifyPort(ctx context.Context, portId, portName, remarks, 
 	request.PortRemarks = remarks
 	request.BusinessEntityName = businessEntityName
 	response, err := s.client.WithSdnClient().ModifyPortAttribute(request)
-	defer logApiRequest(ctx, "ModifyPortAttribute", request, response, err)
+	defer common2.LogApiRequest(ctx, "ModifyPortAttribute", request, response, err)
 	return err
 }
 
@@ -113,7 +114,7 @@ func (s *SdnService) DescribePortsByFilter(portFilter *PortFilter) (instances []
 
 	if err != nil {
 		log.Printf("[CRITAL] Api[%s] fail, request body [%s], error[%s]\n",
-			request.GetAction(), toJsonString(request), err.Error())
+			request.GetAction(), common2.ToJsonString(request), err.Error())
 		return
 	}
 	if response == nil || len(response.Response.DataSet) < 1 {
@@ -127,7 +128,7 @@ func (s *SdnService) DescribePortsByFilter(portFilter *PortFilter) (instances []
 		return instances, nil
 	}
 	maxConcurrentNum := 50
-	g := NewGoRoutine(maxConcurrentNum)
+	g := common2.NewGoRoutine(maxConcurrentNum)
 	wg := sync.WaitGroup{}
 
 	var portSetList = make([]interface{}, num)
@@ -144,11 +145,11 @@ func (s *SdnService) DescribePortsByFilter(portFilter *PortFilter) (instances []
 			response, err := s.client.WithSdnClient().DescribePorts(request)
 			if err != nil {
 				log.Printf("[CRITAL] Api[%s] fail, request body [%s], error[%s]\n",
-					request.GetAction(), toJsonString(request), err.Error())
+					request.GetAction(), common2.ToJsonString(request), err.Error())
 				return
 			}
 			log.Printf("[DEBUG] Api[%s] success, request body [%s], response body [%s]\n",
-				request.GetAction(), toJsonString(request), toJsonString(response))
+				request.GetAction(), common2.ToJsonString(request), common2.ToJsonString(response))
 
 			portSetList[value] = response.Response.DataSet
 
@@ -170,7 +171,7 @@ func (s *SdnService) DescribePortsByFilter(portFilter *PortFilter) (instances []
 func (s *SdnService) DescribeDatacenters(ctx context.Context) ([]*sdn.DatacenterInfo, error) {
 	request := sdn.NewDescribeDatacentersRequest()
 	response, err := s.client.WithSdnClient().DescribeDatacenters(request)
-	defer logApiRequest(ctx, "DescribeDatacenters", request, response, err)
+	defer common2.LogApiRequest(ctx, "DescribeDatacenters", request, response, err)
 
 	if err != nil {
 		return nil, err
@@ -187,7 +188,7 @@ func (s *SdnService) DescribePrivateConnectsByFilter(filter *PrivateConnectFilte
 
 	if err != nil {
 		log.Printf("[CRITAL] Api[%s] fail, request body [%s], error[%s]\n",
-			request.GetAction(), toJsonString(request), err.Error())
+			request.GetAction(), common2.ToJsonString(request), err.Error())
 		return
 	}
 	if response == nil || len(response.Response.DataSet) < 1 {
@@ -201,7 +202,7 @@ func (s *SdnService) DescribePrivateConnectsByFilter(filter *PrivateConnectFilte
 		return privateConnects, nil
 	}
 	maxConcurrentNum := 50
-	g := NewGoRoutine(maxConcurrentNum)
+	g := common2.NewGoRoutine(maxConcurrentNum)
 	wg := sync.WaitGroup{}
 
 	var portSetList = make([]interface{}, num)
@@ -218,11 +219,11 @@ func (s *SdnService) DescribePrivateConnectsByFilter(filter *PrivateConnectFilte
 			response, err := s.client.WithSdnClient().DescribePrivateConnects(request)
 			if err != nil {
 				log.Printf("[CRITAL] Api[%s] fail, request body [%s], error[%s]\n",
-					request.GetAction(), toJsonString(request), err.Error())
+					request.GetAction(), common2.ToJsonString(request), err.Error())
 				return
 			}
 			log.Printf("[DEBUG] Api[%s] success, request body [%s], response body [%s]\n",
-				request.GetAction(), toJsonString(request), toJsonString(response))
+				request.GetAction(), common2.ToJsonString(request), common2.ToJsonString(response))
 
 			portSetList[value] = response.Response.DataSet
 
@@ -250,7 +251,7 @@ func (s *SdnService) DescribeCloudRoutersByFilter(filter *CloudRouterFilter) (cl
 
 	if err != nil {
 		log.Printf("[CRITAL] Api[%s] fail, request body [%s], error[%s]\n",
-			request.GetAction(), toJsonString(request), err.Error())
+			request.GetAction(), common2.ToJsonString(request), err.Error())
 		return
 	}
 	if response == nil || len(response.Response.DataSet) < 1 {
@@ -264,7 +265,7 @@ func (s *SdnService) DescribeCloudRoutersByFilter(filter *CloudRouterFilter) (cl
 		return cloudRouters, nil
 	}
 	maxConcurrentNum := 50
-	g := NewGoRoutine(maxConcurrentNum)
+	g := common2.NewGoRoutine(maxConcurrentNum)
 	wg := sync.WaitGroup{}
 
 	var cloudRouterList = make([]interface{}, num)
@@ -281,11 +282,11 @@ func (s *SdnService) DescribeCloudRoutersByFilter(filter *CloudRouterFilter) (cl
 			response, err := s.client.WithSdnClient().DescribeCloudRouters(request)
 			if err != nil {
 				log.Printf("[CRITAL] Api[%s] fail, request body [%s], error[%s]\n",
-					request.GetAction(), toJsonString(request), err.Error())
+					request.GetAction(), common2.ToJsonString(request), err.Error())
 				return
 			}
 			log.Printf("[DEBUG] Api[%s] success, request body [%s], response body [%s]\n",
-				request.GetAction(), toJsonString(request), toJsonString(response))
+				request.GetAction(), common2.ToJsonString(request), common2.ToJsonString(response))
 
 			cloudRouterList[value] = response.Response.DataSet
 
@@ -309,7 +310,7 @@ func (s *SdnService) ModifyPrivateConnectName(ctx context.Context, connectId str
 	request.PrivateConnectIds = []string{connectId}
 	request.PrivateConnectName = name
 	response, err := s.client.WithSdnClient().ModifyPrivateConnectsAttribute(request)
-	logApiRequest(ctx, "ModifyPrivateConnectsAttribute", request, response, err)
+	common2.LogApiRequest(ctx, "ModifyPrivateConnectsAttribute", request, response, err)
 	return err
 }
 
@@ -318,7 +319,7 @@ func (s *SdnService) ModifyPrivateConnectBandwidth(ctx context.Context, connectI
 	request.PrivateConnectId = connectId
 	request.BandwidthMbps = bandwidth
 	response, err := s.client.WithSdnClient().ModifyPrivateConnectBandwidth(request)
-	logApiRequest(ctx, "ModifyPrivateConnectBandwidth", request, response, err)
+	common2.LogApiRequest(ctx, "ModifyPrivateConnectBandwidth", request, response, err)
 	return err
 }
 
@@ -328,7 +329,7 @@ func (s *SdnService) DescribePrivateConnectById(ctx context.Context, connectId s
 
 	response, err := s.client.WithSdnClient().DescribePrivateConnects(request)
 
-	defer logApiRequest(ctx, "DescribePrivateConnects", request, response, err)
+	defer common2.LogApiRequest(ctx, "DescribePrivateConnects", request, response, err)
 	if err != nil {
 		return
 	}
@@ -353,7 +354,7 @@ func (s *SdnService) PrivateConnectStateRefreshFunc(ctx context.Context, connect
 		}
 		for _, failState := range failStates {
 			if object.PrivateConnectStatus == failState {
-				return object, object.PrivateConnectStatus, Error("Failed to reach target status. Last status: %s.", object.PrivateConnectStatus)
+				return object, object.PrivateConnectStatus, common2.Error("Failed to reach target status. Last status: %s.", object.PrivateConnectStatus)
 			}
 		}
 
@@ -366,7 +367,7 @@ func (s *SdnService) DeletePrivateConnectById(ctx context.Context, connectId str
 	request := sdn.NewDeletePrivateConnectRequest()
 	request.PrivateConnectId = connectId
 	response, err := s.client.WithSdnClient().DeletePrivateConnect(request)
-	defer logApiRequest(ctx, "DeletePrivateConnect", request, response, err)
+	defer common2.LogApiRequest(ctx, "DeletePrivateConnect", request, response, err)
 
 	if err != nil {
 		if sdkError, ok := err.(*common.ZenlayerCloudSdkError); ok {
@@ -383,7 +384,7 @@ func (s *SdnService) DestroyPrivateConnect(ctx context.Context, connectId string
 	request := sdn.NewDestroyPrivateConnectRequest()
 	request.PrivateConnectId = connectId
 	response, err := s.client.WithSdnClient().DestroyPrivateConnect(request)
-	defer logApiRequest(ctx, "DestroyPrivateConnect", request, response, err)
+	defer common2.LogApiRequest(ctx, "DestroyPrivateConnect", request, response, err)
 	return
 }
 

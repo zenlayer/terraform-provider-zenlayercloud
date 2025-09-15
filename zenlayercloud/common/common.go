@@ -1,4 +1,4 @@
-package zenlayercloud
+package common
 
 import (
 	"bytes"
@@ -34,16 +34,16 @@ var writeRetry = getEnvDefault(PROVIDER_WRITE_RETRY_TIMEOUT, 5)
 var writeRetryTimeout = time.Duration(writeRetry) * time.Minute
 
 var readRetry = getEnvDefault(PROVIDER_READ_RETRY_TIMEOUT, 3)
-var readRetryTimeout = time.Duration(readRetry) * time.Minute
+var ReadRetryTimeout = time.Duration(readRetry) * time.Minute
 
-var bmcCreateTimeout = time.Duration(getEnvDefault(PROVIDER_BMC_CREATE_TIMEOUT, 90)) * time.Minute
-var bmcUpdateTimeout = time.Duration(getEnvDefault(PROVIDER_BMC_UPDATE_TIMEOUT, 90)) * time.Minute
+var BmcCreateTimeout = time.Duration(getEnvDefault(PROVIDER_BMC_CREATE_TIMEOUT, 90)) * time.Minute
+var BmcUpdateTimeout = time.Duration(getEnvDefault(PROVIDER_BMC_UPDATE_TIMEOUT, 90)) * time.Minute
 
-var vmCreateTimeout = time.Duration(getEnvDefault(PROVIDER_VM_CREATE_TIMEOUT, 90)) * time.Minute
-var vmUpdateTimeout = time.Duration(getEnvDefault(PROVIDER_VM_UPDATE_TIMEOUT, 90)) * time.Minute
+var VmCreateTimeout = time.Duration(getEnvDefault(PROVIDER_VM_CREATE_TIMEOUT, 90)) * time.Minute
+var VmUpdateTimeout = time.Duration(getEnvDefault(PROVIDER_VM_UPDATE_TIMEOUT, 90)) * time.Minute
 
-var zgaCreateTimeout = time.Duration(getEnvDefault(PROVIDER_ZGA_CREATE_TIMEOUT, 90)) * time.Minute
-var zgaUpdateTimeout = time.Duration(getEnvDefault(PROVIDER_ZGA_UPDATE_TIMEOUT, 90)) * time.Minute
+var ZgaCreateTimeout = time.Duration(getEnvDefault(PROVIDER_ZGA_CREATE_TIMEOUT, 90)) * time.Minute
+var ZgaUpdateTimeout = time.Duration(getEnvDefault(PROVIDER_ZGA_UPDATE_TIMEOUT, 90)) * time.Minute
 
 func getEnvDefault(key string, defVal int) int {
 	val, ex := os.LookupEnv(key)
@@ -57,7 +57,7 @@ func getEnvDefault(key string, defVal int) int {
 	return int
 }
 
-func toJsonString(data interface{}) string {
+func ToJsonString(data interface{}) string {
 	if data == nil {
 		return ""
 	}
@@ -65,7 +65,7 @@ func toJsonString(data interface{}) string {
 	return string(b)
 }
 
-func logElapsed(ctx context.Context, mark ...string) func() {
+func LogElapsed(ctx context.Context, mark ...string) func() {
 	startAt := time.Now()
 	return func() {
 		tflog.Debug(ctx, "[ELAPSED] function elapsed", map[string]interface{}{
@@ -87,7 +87,7 @@ func String(s string) int {
 	return 0
 }
 
-func dataResourceIdHash(ids []string) string {
+func DataResourceIdHash(ids []string) string {
 	var buf bytes.Buffer
 
 	for _, id := range ids {
@@ -97,7 +97,7 @@ func dataResourceIdHash(ids []string) string {
 	return fmt.Sprintf("%d", String(buf.String()))
 }
 
-func writeToFile(filePath string, data interface{}) error {
+func WriteToFile(filePath string, data interface{}) error {
 	if strings.HasPrefix(filePath, "~") {
 		usr, err := user.Current()
 		if err != nil {
@@ -189,21 +189,21 @@ func (g *GoRoutineLimit) Run(f func()) {
 	}()
 }
 
-func logApiRequest(ctx context.Context, action string, request interface{}, response interface{}, err error) {
+func LogApiRequest(ctx context.Context, action string, request interface{}, response interface{}, err error) {
 	if err != nil {
 		tflog.Warn(ctx, fmt.Sprintf("Call api [%s]", action), map[string]interface{}{
-			"request": toJsonString(request),
+			"request": ToJsonString(request),
 			"err":     err.Error(),
 		})
 	} else {
 		tflog.Debug(ctx, fmt.Sprintf("Call api [%s]", action), map[string]interface{}{
-			"request":  toJsonString(request),
-			"response": toJsonString(response),
+			"request":  ToJsonString(request),
+			"response": ToJsonString(response),
 		})
 	}
 }
 
-func toStringList(value []interface{}) []string {
+func ToStringList(value []interface{}) []string {
 	list := make([]string, 0)
 	for _, v := range value {
 		vStr := v.(string)
@@ -211,7 +211,7 @@ func toStringList(value []interface{}) []string {
 	}
 	return list
 }
-func toIntList(value []interface{}) []int {
+func ToIntList(value []interface{}) []int {
 	res := make([]int, 0, len(value))
 	for _, v := range value {
 		if e, ok := v.(int); ok {

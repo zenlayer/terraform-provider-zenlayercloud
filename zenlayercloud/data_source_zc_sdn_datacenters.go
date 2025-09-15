@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/common"
 	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/connectivity"
 	sdn "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/sdn20230830"
 	"regexp"
@@ -87,7 +88,7 @@ func dataSourceZenlayerCloudSdnDatacenters() *schema.Resource {
 }
 
 func dataSourceZenlayerCloudSdnDatacentersRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	defer logElapsed(ctx, "data_source.zenlayercloud_datacenters.read")()
+	defer common.LogElapsed(ctx, "data_source.zenlayercloud_datacenters.read")()
 
 	sdnService := SdnService{
 		client: meta.(*connectivity.ZenlayerCloudClient),
@@ -104,10 +105,10 @@ func dataSourceZenlayerCloudSdnDatacentersRead(ctx context.Context, d *schema.Re
 	}
 
 	var datacenters []*sdn.DatacenterInfo
-	err := resource.RetryContext(ctx, readRetryTimeout, func() *resource.RetryError {
+	err := resource.RetryContext(ctx, common.ReadRetryTimeout, func() *resource.RetryError {
 		datacenters, errRet = sdnService.DescribeDatacenters(ctx)
 		if errRet != nil {
-			return retryError(ctx, errRet, InternalServerError, ReadTimedOut)
+			return common.RetryError(ctx, errRet, common.InternalServerError, common.ReadTimedOut)
 		}
 		return nil
 	})
@@ -130,7 +131,7 @@ func dataSourceZenlayerCloudSdnDatacentersRead(ctx context.Context, d *schema.Re
 		ids = append(ids, datacenter.DcId)
 	}
 
-	d.SetId(dataResourceIdHash(ids))
+	d.SetId(common.DataResourceIdHash(ids))
 	err = d.Set("datacenters", datacenterList)
 	if err != nil {
 		return diag.FromErr(err)
@@ -138,7 +139,7 @@ func dataSourceZenlayerCloudSdnDatacentersRead(ctx context.Context, d *schema.Re
 
 	output, ok := d.GetOk("result_output_file")
 	if ok && output.(string) != "" {
-		if err := writeToFile(output.(string), datacenterList); err != nil {
+		if err := common.WriteToFile(output.(string), datacenterList); err != nil {
 			return diag.FromErr(err)
 		}
 	}

@@ -31,6 +31,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	common2 "github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/common"
 	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/connectivity"
 	"github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/common"
 	sdn "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/sdn20230830"
@@ -131,7 +132,7 @@ func resourceZenlayerCloudDcPorts() *schema.Resource {
 }
 
 func resourceZenlayerCloudDcPortsDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	defer logElapsed(ctx, "resource.zenlayercloud_sdn_port.delete")()
+	defer common2.LogElapsed(ctx, "resource.zenlayercloud_sdn_port.delete")()
 
 	// force_delete: terminate and then delete
 	forceDelete := d.Get("force_delete").(bool)
@@ -144,7 +145,7 @@ func resourceZenlayerCloudDcPortsDelete(ctx context.Context, d *schema.ResourceD
 	err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutDelete)-time.Minute, func() *resource.RetryError {
 		errRet := sdnService.DeletePortById(ctx, portId)
 		if errRet != nil {
-			return retryError(ctx, errRet)
+			return common2.RetryError(ctx, errRet)
 		}
 		return nil
 	})
@@ -157,7 +158,7 @@ func resourceZenlayerCloudDcPortsDelete(ctx context.Context, d *schema.ResourceD
 	err = resource.RetryContext(ctx, d.Timeout(schema.TimeoutDelete)-time.Minute, func() *resource.RetryError {
 		port, errRet := sdnService.DescribePortById(ctx, portId)
 		if errRet != nil {
-			return retryError(ctx, errRet, InternalServerError)
+			return common2.RetryError(ctx, errRet, common2.InternalServerError)
 		}
 		if port == nil {
 			notExist = true
@@ -194,13 +195,13 @@ func resourceZenlayerCloudDcPortsDelete(ctx context.Context, d *schema.ResourceD
 
 			ee, ok := errRet.(*common.ZenlayerCloudSdkError)
 			if !ok {
-				return retryError(ctx, errRet)
+				return common2.RetryError(ctx, errRet)
 			}
-			if ee.Code == "INVALID_PORT_NOT_FOUND" || ee.Code == ResourceNotFound {
+			if ee.Code == "INVALID_PORT_NOT_FOUND" || ee.Code == common2.ResourceNotFound {
 				// port doesn't exist
 				return nil
 			}
-			return retryError(ctx, errRet, InternalServerError)
+			return common2.RetryError(ctx, errRet, common2.InternalServerError)
 		}
 		return nil
 	})
@@ -220,7 +221,7 @@ func resourceZenlayerCloudDcPortsUpdate(ctx context.Context, d *schema.ResourceD
 			businessEntityName := d.Get("business_entity_name").(string)
 			err := sdnService.ModifyPort(ctx, portId, portName, remarks, businessEntityName)
 			if err != nil {
-				return retryError(ctx, err, InternalServerError, common.NetworkError)
+				return common2.RetryError(ctx, err, common2.InternalServerError, common.NetworkError)
 			}
 			return nil
 		})
@@ -234,7 +235,7 @@ func resourceZenlayerCloudDcPortsUpdate(ctx context.Context, d *schema.ResourceD
 }
 
 func resourceZenlayerCloudDcPortsCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	defer logElapsed(ctx, "resource.zenlayercloud_sdn_port.create")()
+	defer common2.LogElapsed(ctx, "resource.zenlayercloud_sdn_port.create")()
 
 	sdnService := SdnService{
 		client: meta.(*connectivity.ZenlayerCloudClient),
@@ -256,16 +257,16 @@ func resourceZenlayerCloudDcPortsCreate(ctx context.Context, d *schema.ResourceD
 		if err != nil {
 			tflog.Info(ctx, "Fail to create port.", map[string]interface{}{
 				"action":  request.GetAction(),
-				"request": toJsonString(request),
+				"request": common2.ToJsonString(request),
 				"err":     err.Error(),
 			})
-			return retryError(ctx, err)
+			return common2.RetryError(ctx, err)
 		}
 
 		tflog.Info(ctx, "Create port success", map[string]interface{}{
 			"action":   request.GetAction(),
-			"request":  toJsonString(request),
-			"response": toJsonString(response),
+			"request":  common2.ToJsonString(request),
+			"response": common2.ToJsonString(response),
 		})
 
 		if response.Response.PortId == "" {
@@ -303,7 +304,7 @@ func resourceZenlayerCloudDcPortsCreate(ctx context.Context, d *schema.ResourceD
 }
 
 func resourceZenlayerCloudDcPortsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	defer logElapsed(ctx, "resource.zenlayercloud_sdn_port.read")()
+	defer common2.LogElapsed(ctx, "resource.zenlayercloud_sdn_port.read")()
 
 	var diags diag.Diagnostics
 
@@ -319,7 +320,7 @@ func resourceZenlayerCloudDcPortsRead(ctx context.Context, d *schema.ResourceDat
 	err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutRead)-time.Minute, func() *resource.RetryError {
 		portInfo, errRet = sdnService.DescribePortById(ctx, portId)
 		if errRet != nil {
-			return retryError(ctx, errRet)
+			return common2.RetryError(ctx, errRet)
 		}
 		if portInfo != nil && IsOperating(portInfo.PortStatus) {
 			return resource.RetryableError(fmt.Errorf("waiting for port %s operation, current status: %s", portInfo.PortId, portInfo.PortStatus))

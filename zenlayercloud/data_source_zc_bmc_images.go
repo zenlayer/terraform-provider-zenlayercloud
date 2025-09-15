@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/common"
 	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/connectivity"
 	bmc "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/bmc20221120"
 	"time"
@@ -106,7 +107,7 @@ func dataSourceZenlayerCloudImages() *schema.Resource {
 }
 
 func dataSourceZenlayerCloudImagesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	defer logElapsed(ctx, "data_source.zenlayercloud_bmc_images.read")()
+	defer common.LogElapsed(ctx, "data_source.zenlayercloud_bmc_images.read")()
 
 	bmcService := BmcService{
 		client: meta.(*connectivity.ZenlayerCloudClient),
@@ -145,9 +146,9 @@ func dataSourceZenlayerCloudImagesRead(ctx context.Context, d *schema.ResourceDa
 		var e error
 		var response *bmc.DescribeImagesResponse
 		response, e = bmcService.client.WithBmcClient().DescribeImages(request)
-		logApiRequest(ctx, "DescribeImages", request, response, e)
+		common.LogApiRequest(ctx, "DescribeImages", request, response, e)
 		if e != nil {
-			return retryError(ctx, e, InternalServerError)
+			return common.RetryError(ctx, e, common.InternalServerError)
 		}
 		images = response.Response.Images
 		return nil
@@ -170,7 +171,7 @@ func dataSourceZenlayerCloudImagesRead(ctx context.Context, d *schema.ResourceDa
 		ids = append(ids, image.ImageId)
 	}
 
-	d.SetId(dataResourceIdHash(ids))
+	d.SetId(common.DataResourceIdHash(ids))
 	err = d.Set("images", imageList)
 	if err != nil {
 		return diag.FromErr(err)
@@ -178,7 +179,7 @@ func dataSourceZenlayerCloudImagesRead(ctx context.Context, d *schema.ResourceDa
 
 	output, ok := d.GetOk("result_output_file")
 	if ok && output.(string) != "" {
-		if err := writeToFile(output.(string), imageList); err != nil {
+		if err := common.WriteToFile(output.(string), imageList); err != nil {
 			return diag.FromErr(err)
 		}
 	}

@@ -49,6 +49,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	common2 "github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/common"
 	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/connectivity"
 	bmc "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/bmc20221120"
 	"github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/common"
@@ -81,7 +82,7 @@ func resourceZenlayerCloudBmcSubnet() *schema.Resource {
 			"cidr_block": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validateCIDRNetworkAddress,
+				ValidateFunc: common2.ValidateCIDRNetworkAddress,
 				ForceNew:     true,
 				Description:  "A network address block which should be a subnet of the three internal network segments (10.0.0.0/16, 172.16.0.0/12 and 192.168.0.0/16).",
 			},
@@ -132,7 +133,7 @@ func resourceZenlayerCloudBmcSubnetDelete(ctx context.Context, d *schema.Resourc
 	err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutDelete)-time.Minute, func() *resource.RetryError {
 		subnet, errRet := bmcService.DescribeSubnetById(ctx, subnetId)
 		if errRet != nil {
-			return retryError(ctx, errRet)
+			return common2.RetryError(ctx, errRet)
 		}
 		associateInstanceCount := len(subnet.SubnetInstanceSet)
 		if associateInstanceCount == 0 {
@@ -150,9 +151,9 @@ func resourceZenlayerCloudBmcSubnetDelete(ctx context.Context, d *schema.Resourc
 		if errRet != nil {
 			ee, ok := errRet.(*common.ZenlayerCloudSdkError)
 			if !ok {
-				return retryError(ctx, errRet, InternalServerError)
+				return common2.RetryError(ctx, errRet, common2.InternalServerError)
 			}
-			if ee.Code == ResourceNotFound {
+			if ee.Code == common2.ResourceNotFound {
 				// vpc doesn't exist
 				return nil
 			}
@@ -194,7 +195,7 @@ func resourceZenlayerCloudBmcSubnetUpdate(ctx context.Context, d *schema.Resourc
 		err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate)-time.Minute, func() *resource.RetryError {
 			err := bmcService.ModifySubnetName(ctx, subnetId, d.Get("name").(string))
 			if err != nil {
-				return retryError(ctx, err, InternalServerError, common.NetworkError)
+				return common2.RetryError(ctx, err, common2.InternalServerError, common.NetworkError)
 			}
 			return nil
 		})
@@ -209,7 +210,7 @@ func resourceZenlayerCloudBmcSubnetUpdate(ctx context.Context, d *schema.Resourc
 		err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate)-time.Minute, func() *resource.RetryError {
 			err := bmcService.ModifySubnetResourceGroupById(ctx, subnetId, d.Get("resource_group_id").(string))
 			if err != nil {
-				return retryError(ctx, err, InternalServerError, common.NetworkError)
+				return common2.RetryError(ctx, err, common2.InternalServerError, common.NetworkError)
 			}
 			return nil
 		})
@@ -245,16 +246,16 @@ func resourceZenlayerCloudBmcSubnetCreate(ctx context.Context, d *schema.Resourc
 		if err != nil {
 			tflog.Info(ctx, "Fail to create bmc subnet.", map[string]interface{}{
 				"action":  request.GetAction(),
-				"request": toJsonString(request),
+				"request": common2.ToJsonString(request),
 				"err":     err.Error(),
 			})
-			return retryError(ctx, err)
+			return common2.RetryError(ctx, err)
 		}
 
 		tflog.Info(ctx, "Create subnet success", map[string]interface{}{
 			"action":   request.GetAction(),
-			"request":  toJsonString(request),
-			"response": toJsonString(response),
+			"request":  common2.ToJsonString(request),
+			"response": common2.ToJsonString(response),
 		})
 
 		if response.Response.SubnetId == "" {
@@ -307,7 +308,7 @@ func resourceZenlayerCloudBmcSubnetRead(ctx context.Context, d *schema.ResourceD
 	err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutRead)-time.Minute, func() *resource.RetryError {
 		subnet, errRet = bmcService.DescribeSubnetById(ctx, instanceId)
 		if errRet != nil {
-			return retryError(ctx, errRet)
+			return common2.RetryError(ctx, errRet)
 		}
 
 		if subnet != nil && subnetIsOperating(subnet.SubnetStatus) {

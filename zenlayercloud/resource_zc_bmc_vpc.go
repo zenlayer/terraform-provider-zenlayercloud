@@ -32,6 +32,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	common2 "github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/common"
 	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/connectivity"
 	bmc "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/bmc20221120"
 	"github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/common"
@@ -64,7 +65,7 @@ func resourceZenlayerCloudVpc() *schema.Resource {
 			"cidr_block": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validateCIDRNetworkAddress,
+				ValidateFunc: common2.ValidateCIDRNetworkAddress,
 				ForceNew:     true,
 				Description:  "A network address block which should be a subnet of the three internal network segments (10.0.0.0/16, 172.16.0.0/12 and 192.168.0.0/16).",
 			},
@@ -106,7 +107,7 @@ func resourceZenlayerCloudVpcDelete(ctx context.Context, d *schema.ResourceData,
 		}
 		subnets, errRet := bmcService.DescribeSubnets(ctx, filter)
 		if errRet != nil {
-			return retryError(ctx, errRet)
+			return common2.RetryError(ctx, errRet)
 		}
 		associateSubnetsCount := len(subnets)
 		if associateSubnetsCount == 0 {
@@ -123,9 +124,9 @@ func resourceZenlayerCloudVpcDelete(ctx context.Context, d *schema.ResourceData,
 		if errRet != nil {
 			ee, ok := errRet.(*common.ZenlayerCloudSdkError)
 			if !ok {
-				return retryError(ctx, errRet, InternalServerError)
+				return common2.RetryError(ctx, errRet, common2.InternalServerError)
 			}
-			if ee.Code == ResourceNotFound {
+			if ee.Code == common2.ResourceNotFound {
 				// vpc doesn't exist
 				return nil
 			}
@@ -168,7 +169,7 @@ func resourceZenlayerCloudVpcUpdate(ctx context.Context, d *schema.ResourceData,
 		err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate)-time.Minute, func() *resource.RetryError {
 			err := bmcService.ModifyVpcName(ctx, vpcId, d.Get("name").(string))
 			if err != nil {
-				return retryError(ctx, err, InternalServerError, common.NetworkError)
+				return common2.RetryError(ctx, err, common2.InternalServerError, common.NetworkError)
 			}
 			return nil
 		})
@@ -183,7 +184,7 @@ func resourceZenlayerCloudVpcUpdate(ctx context.Context, d *schema.ResourceData,
 		err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate)-time.Minute, func() *resource.RetryError {
 			err := bmcService.ModifyVpcResourceGroup(ctx, vpcId, d.Get("resource_group_id").(string))
 			if err != nil {
-				return retryError(ctx, err, InternalServerError, common.NetworkError)
+				return common2.RetryError(ctx, err, common2.InternalServerError, common.NetworkError)
 			}
 			return nil
 		})
@@ -216,16 +217,16 @@ func resourceZenlayerCloudVpcCreate(ctx context.Context, d *schema.ResourceData,
 		if err != nil {
 			tflog.Info(ctx, "Fail to create bmc vpc.", map[string]interface{}{
 				"action":  request.GetAction(),
-				"request": toJsonString(request),
+				"request": common2.ToJsonString(request),
 				"err":     err.Error(),
 			})
-			return retryError(ctx, err)
+			return common2.RetryError(ctx, err)
 		}
 
 		tflog.Info(ctx, "Create vpc success", map[string]interface{}{
 			"action":   request.GetAction(),
-			"request":  toJsonString(request),
-			"response": toJsonString(response),
+			"request":  common2.ToJsonString(request),
+			"response": common2.ToJsonString(response),
 		})
 
 		if response.Response.VpcId == "" {
@@ -278,7 +279,7 @@ func resourceZenlayerCloudVpcRead(ctx context.Context, d *schema.ResourceData, m
 	err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutRead)-time.Minute, func() *resource.RetryError {
 		vpc, errRet = bmcService.DescribeVpcById(ctx, instanceId)
 		if errRet != nil {
-			return retryError(ctx, errRet)
+			return common2.RetryError(ctx, errRet)
 		}
 
 		if vpc != nil && vpcIsOperating(vpc.VpcStatus) {
@@ -313,5 +314,5 @@ func resourceZenlayerCloudVpcRead(ctx context.Context, d *schema.ResourceData, m
 }
 
 func vpcIsOperating(status string) bool {
-	return IsContains(VpcOperatingStatus, status)
+	return common2.IsContains(VpcOperatingStatus, status)
 }

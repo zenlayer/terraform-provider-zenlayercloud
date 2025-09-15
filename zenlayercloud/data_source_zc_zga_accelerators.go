@@ -11,6 +11,7 @@ package zenlayercloud
 
 import (
 	"context"
+	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/common"
 	"sort"
 	"strings"
 
@@ -470,13 +471,13 @@ func dataSourceZenlayerCloudZgaAccelerators() *schema.Resource {
 }
 
 func dataSourceZenlayerCloudZgaAcceleratorsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	defer logElapsed(ctx, "data_source.zenlayercloud_zga_accelerators.read")()
+	defer common.LogElapsed(ctx, "data_source.zenlayercloud_zga_accelerators.read")()
 
 	var af AcceleratorsFilter
 	if v, ok := d.GetOk("accelerator_ids"); ok {
 		acceleratorIds := v.(*schema.Set).List()
 		if len(acceleratorIds) > 0 {
-			af.AcceleratorIds = toStringList(acceleratorIds)
+			af.AcceleratorIds = common.ToStringList(acceleratorIds)
 		}
 	}
 	if v, ok := d.GetOk("accelerator_name"); ok {
@@ -508,11 +509,11 @@ func dataSourceZenlayerCloudZgaAcceleratorsRead(ctx context.Context, d *schema.R
 	}
 
 	var accelerators []*zga.AcceleratorInfo
-	err := resource.RetryContext(ctx, readRetryTimeout, func() *resource.RetryError {
+	err := resource.RetryContext(ctx, common.ReadRetryTimeout, func() *resource.RetryError {
 		var errRet error
 		accelerators, errRet = NewZgaService(meta.(*connectivity.ZenlayerCloudClient)).DescribeAcceleratorsByFilter(ctx, &af)
 		if errRet != nil {
-			return retryError(ctx, errRet, InternalServerError, ReadTimedOut)
+			return common.RetryError(ctx, errRet, common.InternalServerError, common.ReadTimedOut)
 		}
 		return nil
 	})
@@ -532,7 +533,7 @@ func dataSourceZenlayerCloudZgaAcceleratorsRead(ctx context.Context, d *schema.R
 
 	sort.StringSlice(ids).Sort()
 
-	d.SetId(dataResourceIdHash(ids))
+	d.SetId(common.DataResourceIdHash(ids))
 
 	err = d.Set("accelerators", acceleratorList)
 	if err != nil {
@@ -541,7 +542,7 @@ func dataSourceZenlayerCloudZgaAcceleratorsRead(ctx context.Context, d *schema.R
 
 	output, ok := d.GetOk("result_output_file")
 	if ok && output.(string) != "" {
-		if err := writeToFile(output.(string), acceleratorList); err != nil {
+		if err := common.WriteToFile(output.(string), acceleratorList); err != nil {
 			return diag.FromErr(err)
 		}
 	}

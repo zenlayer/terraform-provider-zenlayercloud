@@ -1,5 +1,5 @@
 /*
-Provide a resource to create data disk.
+Provide a resource to attach a disk to an instance.
 
 Example Usage
 
@@ -27,6 +27,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	common2 "github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/common"
 	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/connectivity"
 	"github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/common"
 	vm "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/vm20230313"
@@ -63,7 +64,7 @@ func resourceZenlayerCloudVmDiskAttachmentDelete(ctx context.Context, d *schema.
 		client: meta.(*connectivity.ZenlayerCloudClient),
 	}
 
-	attachment, err := ParseResourceId(d.Id(), 2)
+	attachment, err := common2.ParseResourceId(d.Id(), 2)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -81,7 +82,7 @@ func resourceZenlayerCloudVmDiskAttachmentDelete(ctx context.Context, d *schema.
 			}
 		}
 		if errRet != nil {
-			return retryError(ctx, errRet)
+			return common2.RetryError(ctx, errRet)
 		}
 		return nil
 	}); err != nil {
@@ -112,10 +113,10 @@ func resourceZenlayerCloudVmDiskAttachmentCreate(ctx context.Context, d *schema.
 	var disk *vm.DiskInfo
 	var errRet error
 
-	err := resource.RetryContext(ctx, readRetryTimeout, func() *resource.RetryError {
+	err := resource.RetryContext(ctx, common2.ReadRetryTimeout, func() *resource.RetryError {
 		disk, errRet = vmService.DescribeDiskById(ctx, diskId)
 		if errRet != nil {
-			return retryError(ctx, errRet, InternalServerError)
+			return common2.RetryError(ctx, errRet, common2.InternalServerError)
 		}
 		if disk == nil {
 			return resource.NonRetryableError(fmt.Errorf("disk (%s) is not found", diskId))
@@ -127,10 +128,10 @@ func resourceZenlayerCloudVmDiskAttachmentCreate(ctx context.Context, d *schema.
 		return diag.FromErr(err)
 	}
 
-	err = resource.RetryContext(ctx, readRetryTimeout, func() *resource.RetryError {
+	err = resource.RetryContext(ctx, common2.ReadRetryTimeout, func() *resource.RetryError {
 		instance, errRet := vmService.DescribeInstanceById(ctx, instanceId)
 		if errRet != nil {
-			return retryError(ctx, errRet, InternalServerError)
+			return common2.RetryError(ctx, errRet, common2.InternalServerError)
 		}
 		if instance == nil {
 			return resource.NonRetryableError(fmt.Errorf("instance (%s) is not found", diskId))
@@ -157,7 +158,7 @@ func resourceZenlayerCloudVmDiskAttachmentCreate(ctx context.Context, d *schema.
 		if err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutDelete)-time.Minute, func() *resource.RetryError {
 			_, errRet := vmService.client.WithVmClient().AttachDisks(request)
 			if errRet != nil {
-				return retryError(ctx, errRet)
+				return common2.RetryError(ctx, errRet)
 			}
 			return nil
 		}); err != nil {
@@ -189,7 +190,7 @@ func resourceZenlayerCloudVmDiskAttachmentRead(ctx context.Context, d *schema.Re
 	vmService := &VmService{
 		client: meta.(*connectivity.ZenlayerCloudClient),
 	}
-	association, err := ParseResourceId(d.Id(), 2)
+	association, err := common2.ParseResourceId(d.Id(), 2)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -200,7 +201,7 @@ func resourceZenlayerCloudVmDiskAttachmentRead(ctx context.Context, d *schema.Re
 	err = resource.RetryContext(ctx, d.Timeout(schema.TimeoutRead)-time.Minute, func() *resource.RetryError {
 		disk, errRet = vmService.DescribeDiskById(ctx, association[0])
 		if errRet != nil {
-			return retryError(ctx, errRet)
+			return common2.RetryError(ctx, errRet)
 		}
 		if disk == nil {
 			d.SetId("")

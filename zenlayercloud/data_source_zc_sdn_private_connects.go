@@ -19,6 +19,7 @@ import (
 	"context"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/common"
 	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/connectivity"
 	sdn "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/sdn20230830"
 )
@@ -150,7 +151,7 @@ func dataSourceZenlayerCloudSdnPrivateConnects() *schema.Resource {
 }
 
 func dataSourceZenlayerCloudSdnPrivateConnectsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	defer logElapsed(ctx, "data_source.zenlayercloud_sdn_private_connects.read")()
+	defer common.LogElapsed(ctx, "data_source.zenlayercloud_sdn_private_connects.read")()
 	//
 	sdnService := SdnService{
 		client: meta.(*connectivity.ZenlayerCloudClient),
@@ -159,7 +160,7 @@ func dataSourceZenlayerCloudSdnPrivateConnectsRead(ctx context.Context, d *schem
 	if v, ok := d.GetOk("connect_ids"); ok {
 		portIds := v.(*schema.Set).List()
 		if len(portIds) > 0 {
-			filter.ConnectIds = toStringList(portIds)
+			filter.ConnectIds = common.ToStringList(portIds)
 		}
 	}
 
@@ -189,7 +190,7 @@ func dataSourceZenlayerCloudSdnPrivateConnectsRead(ctx context.Context, d *schem
 		connectList = append(connectList, mapping)
 		ids = append(ids, connect.PrivateConnectId)
 	}
-	d.SetId(dataResourceIdHash(ids))
+	d.SetId(common.DataResourceIdHash(ids))
 	err = d.Set("connect_list", connectList)
 	if err != nil {
 		return diag.FromErr(err)
@@ -197,7 +198,7 @@ func dataSourceZenlayerCloudSdnPrivateConnectsRead(ctx context.Context, d *schem
 
 	output, ok := d.GetOk("result_output_file")
 	if ok && output.(string) != "" {
-		if err := writeToFile(output.(string), connectList); err != nil {
+		if err := common.WriteToFile(output.(string), connectList); err != nil {
 			return diag.FromErr(err)
 		}
 	}

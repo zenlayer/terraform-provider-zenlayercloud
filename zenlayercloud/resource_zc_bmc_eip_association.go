@@ -26,6 +26,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/common"
 	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/connectivity"
 	bmc "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/bmc20221120"
 	"time"
@@ -61,7 +62,7 @@ func resourceZenlayerCloudEipAssociationDelete(ctx context.Context, d *schema.Re
 		client: meta.(*connectivity.ZenlayerCloudClient),
 	}
 
-	association, err := ParseResourceId(d.Id(), 2)
+	association, err := common.ParseResourceId(d.Id(), 2)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -72,7 +73,7 @@ func resourceZenlayerCloudEipAssociationDelete(ctx context.Context, d *schema.Re
 	if err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutDelete)-time.Minute, func() *resource.RetryError {
 		_, errRet := bmcService.client.WithBmcClient().UnassociateEipAddress(request)
 		if errRet != nil {
-			return retryError(ctx, errRet)
+			return common.RetryError(ctx, errRet)
 		}
 		return nil
 	}); err != nil {
@@ -101,10 +102,10 @@ func resourceZenlayerCloudEipAssociationCreate(ctx context.Context, d *schema.Re
 	var eip *bmc.EipAddress
 	var errRet error
 
-	err := resource.RetryContext(ctx, readRetryTimeout, func() *resource.RetryError {
+	err := resource.RetryContext(ctx, common.ReadRetryTimeout, func() *resource.RetryError {
 		eip, errRet = bmcService.DescribeEipAddressById(ctx, eipId)
 		if errRet != nil {
-			return retryError(ctx, errRet, InternalServerError)
+			return common.RetryError(ctx, errRet, common.InternalServerError)
 		}
 		if eip == nil {
 			return resource.NonRetryableError(fmt.Errorf("eip is not found"))
@@ -127,7 +128,7 @@ func resourceZenlayerCloudEipAssociationCreate(ctx context.Context, d *schema.Re
 		if err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutDelete)-time.Minute, func() *resource.RetryError {
 			_, errRet := bmcService.client.WithBmcClient().AssociateEipAddress(request)
 			if errRet != nil {
-				return retryError(ctx, errRet)
+				return common.RetryError(ctx, errRet)
 			}
 			return nil
 		}); err != nil {
@@ -155,7 +156,7 @@ func resourceZenlayerCloudEipAssociationRead(ctx context.Context, d *schema.Reso
 	bmcService := BmcService{
 		client: meta.(*connectivity.ZenlayerCloudClient),
 	}
-	association, err := ParseResourceId(d.Id(), 2)
+	association, err := common.ParseResourceId(d.Id(), 2)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -166,7 +167,7 @@ func resourceZenlayerCloudEipAssociationRead(ctx context.Context, d *schema.Reso
 	err = resource.RetryContext(ctx, d.Timeout(schema.TimeoutRead)-time.Minute, func() *resource.RetryError {
 		eipAddress, errRet = bmcService.DescribeEipAddressById(ctx, association[0])
 		if errRet != nil {
-			return retryError(ctx, errRet)
+			return common.RetryError(ctx, errRet)
 		}
 		if eipAddress == nil {
 			d.SetId("")

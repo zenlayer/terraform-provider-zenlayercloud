@@ -11,6 +11,7 @@ package zenlayercloud
 
 import (
 	"context"
+	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/common"
 	"sort"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -130,13 +131,13 @@ func dataSourceZenlayerCloudZgaCertificates() *schema.Resource {
 }
 
 func dataSourceZenlayerCloudZgaCertificatesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	defer logElapsed(ctx, "data_source.zenlayercloud_zga_certificates.read")()
+	defer common.LogElapsed(ctx, "data_source.zenlayercloud_zga_certificates.read")()
 
 	var cf CertificatesFilter
 	if v, ok := d.GetOk("certificate_ids"); ok {
 		certificateIds := v.(*schema.Set).List()
 		if len(certificateIds) > 0 {
-			cf.CertificateIds = toStringList(certificateIds)
+			cf.CertificateIds = common.ToStringList(certificateIds)
 		}
 	}
 	if v, ok := d.GetOk("certificate_label"); ok {
@@ -154,12 +155,12 @@ func dataSourceZenlayerCloudZgaCertificatesRead(ctx context.Context, d *schema.R
 	}
 
 	var certs []*zga.CertificateInfo
-	err := resource.RetryContext(ctx, readRetryTimeout, func() *resource.RetryError {
+	err := resource.RetryContext(ctx, common.ReadRetryTimeout, func() *resource.RetryError {
 		var errRet error
 		certs, errRet = NewZgaService(meta.(*connectivity.ZenlayerCloudClient)).
 			DescribeCertificatesByFilter(ctx, &cf)
 		if errRet != nil {
-			return retryError(ctx, errRet, InternalServerError, ReadTimedOut)
+			return common.RetryError(ctx, errRet, common.InternalServerError, common.ReadTimedOut)
 		}
 		return nil
 	})
@@ -179,7 +180,7 @@ func dataSourceZenlayerCloudZgaCertificatesRead(ctx context.Context, d *schema.R
 
 	sort.StringSlice(ids).Sort()
 
-	d.SetId(dataResourceIdHash(ids))
+	d.SetId(common.DataResourceIdHash(ids))
 
 	err = d.Set("certificates", certList)
 	if err != nil {
@@ -188,7 +189,7 @@ func dataSourceZenlayerCloudZgaCertificatesRead(ctx context.Context, d *schema.R
 
 	output, ok := d.GetOk("result_output_file")
 	if ok && output.(string) != "" {
-		if err := writeToFile(output.(string), certList); err != nil {
+		if err := common.WriteToFile(output.(string), certList); err != nil {
 			return diag.FromErr(err)
 		}
 	}

@@ -15,6 +15,7 @@ import (
 	"context"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	common2 "github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/common"
 	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/connectivity"
 	"github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/common"
 )
@@ -129,7 +130,7 @@ func dataSourceZenlayerCloudDdosIps() *schema.Resource {
 }
 
 func dataSourceZenlayerCloudDdosIpsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	defer logElapsed(ctx, "data_source.zenlayercloud_bmc_ddos_ips.read")()
+	defer common2.LogElapsed(ctx, "data_source.zenlayercloud_bmc_ddos_ips.read")()
 	//
 	bmcService := BmcService{
 		client: meta.(*connectivity.ZenlayerCloudClient),
@@ -138,7 +139,7 @@ func dataSourceZenlayerCloudDdosIpsRead(ctx context.Context, d *schema.ResourceD
 	if v, ok := d.GetOk("ip_ids"); ok {
 		ddosIpIds := v.(*schema.Set).List()
 		if len(ddosIpIds) > 0 {
-			filter.IpIds = toStringList(ddosIpIds)
+			filter.IpIds = common2.ToStringList(ddosIpIds)
 
 		}
 	}
@@ -181,7 +182,7 @@ func dataSourceZenlayerCloudDdosIpsRead(ctx context.Context, d *schema.ResourceD
 		ddosIpList = append(ddosIpList, mapping)
 		ids = append(ids, ddos.InstanceId)
 	}
-	d.SetId(dataResourceIdHash(ids))
+	d.SetId(common2.DataResourceIdHash(ids))
 	err = d.Set("ip_list", ddosIpList)
 	if err != nil {
 		return diag.FromErr(err)
@@ -189,7 +190,7 @@ func dataSourceZenlayerCloudDdosIpsRead(ctx context.Context, d *schema.ResourceD
 
 	output, ok := d.GetOk("result_output_file")
 	if ok && output.(string) != "" {
-		if err := writeToFile(output.(string), ddosIpList); err != nil {
+		if err := common2.WriteToFile(output.(string), ddosIpList); err != nil {
 			return diag.FromErr(err)
 		}
 	}

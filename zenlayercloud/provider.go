@@ -7,11 +7,12 @@ Use the navigation on the left to read about the available resources.
 Example Usage
 
 ```hcl
+
 terraform {
   required_providers {
-    zenlayercloud = {
-      source = "zenlayer/zenlayercloud"
-    }
+	zenlayercloud = {
+	  source = "zenlayer/zenlayercloud"
+	}
   }
 }
 
@@ -91,6 +92,60 @@ Zenlayer Global Accelerator(ZGA)
   Resource
 	zenlayercloud_zga_certificate
 	zenlayercloud_zga_accelerator
+
+Zenlayer Elastic Compute(ZEC)
+
+  Data Source
+	zenlayercloud_zec_vpcs
+	zenlayercloud_zec_subnets
+	zenlayercloud_zec_images
+	zenlayercloud_zec_disks
+	zenlayercloud_zec_disk_snapshots
+	zenlayercloud_zec_disk_snapshot_policies
+	zenlayercloud_zec_eips
+	zenlayercloud_zec_instances
+	zenlayercloud_zec_vnics
+	zenlayercloud_zec_nat_gateways
+	zenlayercloud_zec_border_gateways
+
+  Resource
+	zenlayercloud_zec_vpc
+	zenlayercloud_zec_security_group
+	zenlayercloud_zec_vpc_security_group_attachment
+	zenlayercloud_zec_vpc_route
+	zenlayercloud_zec_subnet
+	zenlayercloud_zec_vnic
+	zenlayercloud_zec_vnic_attachment
+	zenlayercloud_zec_vnic_ipv4
+	zenlayercloud_zec_eip
+	zenlayercloud_zec_eip_association
+	zenlayercloud_zec_instance
+	zenlayercloud_zec_disk
+	zenlayercloud_zec_disk_attachment
+	zenlayercloud_zec_disk_snapshot
+	zenlayercloud_zec_disk_snapshot_policy
+	zenlayercloud_zec_disk_snapshot_policy_attachment
+
+Zenlayer Load Balancing(ZLB)
+
+  Data Source
+	zenlayercloud_zlb_regions
+	zenlayercloud_zlb_instances
+	zenlayercloud_zlb_listeners
+	zenlayercloud_zlb_backends
+
+  Resource
+	zenlayercloud_zlb_instance
+	zenlayercloud_zlb_listener
+	zenlayercloud_zlb_backend
+
+Traffic
+
+  Data Source
+	zenlayercloud_traffic_bandwidth_cluster_areas
+	zenlayercloud_traffic_bandwidth_clusters
+
+  Resource
 */
 package zenlayercloud
 
@@ -108,6 +163,10 @@ package zenlayercloud
 
 import (
 	"context"
+	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/services/traffic"
+	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/services/zec"
+	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/services/zlb"
+
 	"os"
 	"strings"
 
@@ -195,6 +254,32 @@ func resourcesMap() map[string]*schema.Resource {
 		// zenlayer global accelerator
 		"zenlayercloud_zga_certificate": resourceZenlayerCloudCertificate(),
 		"zenlayercloud_zga_accelerator": resourceZenlayerCloudAccelerator(),
+
+		// zenlayer zec product
+		"zenlayercloud_zec_vpc":                           zec.ResourceZenlayerCloudGlobalVpc(),
+		"zenlayercloud_zec_security_group":           	   zec.ResourceZenlayerCloudZecSecurityGroup(),
+		"zenlayercloud_zec_vpc_security_group_attachment": zec.ResourceZenlayerCloudZecVpcSecurityGroupAttachment(),
+		"zenlayercloud_zec_vpc_route": 					   zec.ResourceZenlayerCloudGlobalVpcRoute(),
+		"zenlayercloud_zec_subnet":                        zec.ResourceZenlayerCloudZecSubnet(),
+		"zenlayercloud_zec_vnic":                          zec.ResourceZenlayerCloudZecVNic(),
+		"zenlayercloud_zec_vnic_attachment":               zec.ResourceZenlayerCloudZecVNicAttachment(),
+		"zenlayercloud_zec_vnic_ipv4":                     zec.ResourceZenlayerCloudZecVNicIPv4(),
+		"zenlayercloud_zec_instance":                      zec.ResourceZenlayerCloudZecInstance(),
+		"zenlayercloud_zec_eip":                           zec.ResourceZenlayerCloudZecElasticIP(),
+		"zenlayercloud_zec_eip_association":               zec.ResourceZenlayerCloudEipAssociation(),
+		"zenlayercloud_zec_disk":                          zec.ResourceZenlayerCloudZecDisk(),
+		"zenlayercloud_zec_disk_attachment":               zec.ResourceZenlayerCloudZecDiskAttachment(),
+		"zenlayercloud_zec_disk_snapshot":                 zec.ResourceZenlayerCloudZecSnapshot(),
+		"zenlayercloud_zec_disk_snapshot_policy":          zec.ResourceZenlayerCloudZecSnapshotPolicy(),
+		"zenlayercloud_zec_disk_snapshot_policy_attachment": zec.ResourceZenlayerCloudZecSnapshotPolicyAttachment(),
+		"zenlayercloud_zec_border_gateway":                zec.ResourceZenlayerCloudBorderGateway(),
+		"zenlayercloud_zec_border_gateway_association":    zec.ResourceZenlayerCloudBorderGatewayAssociation(),
+		"zenlayercloud_zec_nat_gateway":                   zec.ResourceZenlayerCloudZecVpcNatGateway(),
+
+		// zenlayer load balancer
+		"zenlayercloud_zlb_instance": zlb.ResourceZenlayerCloudZlbInstance(),
+		"zenlayercloud_zlb_listener": zlb.ResourceZenlayerCloudZlbListener(),
+		"zenlayercloud_zlb_backend":  zlb.ResourceZenlayerCloudZlbBackend(),
 	}
 }
 
@@ -232,6 +317,30 @@ func dataSourcesMap() map[string]*schema.Resource {
 		"zenlayercloud_zga_origin_regions":     dataSourceZenlayerCloudZgaOriginRegions(),
 		"zenlayercloud_zga_accelerate_regions": dataSourceZenlayerCloudZgaAccelerateRegions(),
 		"zenlayercloud_zga_accelerators":       dataSourceZenlayerCloudZgaAccelerators(),
+
+		// zenlayer zec product
+		"zenlayercloud_zec_images":          zec.DataSourceZenlayerCloudZecImages(),
+		"zenlayercloud_zec_vpcs":            zec.DataSourceZenlayerCloudZecVpcs(),
+		"zenlayercloud_zec_subnets":         zec.DataSourceZenlayerCloudZecSubnets(),
+		"zenlayercloud_zec_border_gateways": zec.DataSourceZenlayerCloudBorderGateways(),
+		"zenlayercloud_zec_eips":            zec.DataSourceZenlayerCloudEips(),
+		"zenlayercloud_zec_disks":           zec.DataSourceZenlayerCloudZecDisks(),
+		"zenlayercloud_zec_disk_snapshots":  zec.DataSourceZenlayerCloudZecSnapshots(),
+		"zenlayercloud_zec_disk_snapshot_policies":      zec.DataSourceZenlayerCloudZecAutoSnapshotPolicies(),
+		"zenlayercloud_zec_nat_gateways":    zec.DataSourceZenlayerCloudZecNatGateway(),
+		"zenlayercloud_zec_instances":       zec.DataSourceZenlayerCloudZecInstances(),
+		"zenlayercloud_zec_vnics":           zec.DataSourceZenlayerCloudZecVnics(),
+
+		// zenlayer load balancer
+		"zenlayercloud_zlb_regions":   zlb.DataSourceZenlayerCloudZlbRegions(),
+		"zenlayercloud_zlb_instances": zlb.DataSourceZenlayerCloudZlbInstances(),
+		"zenlayercloud_zlb_listeners": zlb.DataSourceZenlayerCloudZlbListeners(),
+		"zenlayercloud_zlb_backends":  zlb.DataSourceZenlayerCloudZlbBackends(),
+
+		// zenlayer traffic
+		"zenlayercloud_traffic_bandwidth_cluster_areas": traffic.DataSourceZenlayerCloudTrafficBandwidthClusterAreas(),
+		"zenlayercloud_traffic_bandwidth_clusters": traffic.DataSourceZenlayerCloudTrafficBandwidthClusters(),
+
 	}
 }
 

@@ -26,6 +26,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	common2 "github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/common"
 	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/connectivity"
 	"github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/common"
 	vm "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/vm20230313"
@@ -172,7 +173,7 @@ func dataSourceZenlayerCloudDisks() *schema.Resource {
 }
 
 func dataSourceZenlayerCloudDisksRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	defer logElapsed(ctx, "data_source.zenlayercloud_disks.read")()
+	defer common2.LogElapsed(ctx, "data_source.zenlayercloud_disks.read")()
 
 	vmService := VmService{
 		client: meta.(*connectivity.ZenlayerCloudClient),
@@ -221,7 +222,7 @@ func dataSourceZenlayerCloudDisksRead(ctx context.Context, d *schema.ResourceDat
 		var e error
 		result, e = vmService.DescribeDisks(ctx, request)
 		if e != nil {
-			return retryError(ctx, e, InternalServerError)
+			return common2.RetryError(ctx, e, common2.InternalServerError)
 		}
 		return nil
 	})
@@ -264,7 +265,7 @@ func dataSourceZenlayerCloudDisksRead(ctx context.Context, d *schema.ResourceDat
 		ids = append(ids, disk.DiskId)
 	}
 
-	d.SetId(dataResourceIdHash(ids))
+	d.SetId(common2.DataResourceIdHash(ids))
 	err = d.Set("disks", diskList)
 	if err != nil {
 		return diag.FromErr(err)
@@ -272,7 +273,7 @@ func dataSourceZenlayerCloudDisksRead(ctx context.Context, d *schema.ResourceDat
 
 	output, ok := d.GetOk("result_output_file")
 	if ok && output.(string) != "" {
-		if err := writeToFile(output.(string), diskList); err != nil {
+		if err := common2.WriteToFile(output.(string), diskList); err != nil {
 			return diag.FromErr(err)
 		}
 	}

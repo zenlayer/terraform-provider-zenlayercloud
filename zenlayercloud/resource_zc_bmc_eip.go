@@ -29,6 +29,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	common2 "github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/common"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -122,7 +123,7 @@ func resourceZenlayerCloudEipDelete(ctx context.Context, d *schema.ResourceData,
 	err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutDelete)-time.Minute, func() *resource.RetryError {
 		errRet := bmcService.TerminateEipAddress(ctx, eipId)
 		if errRet != nil {
-			return retryError(ctx, errRet)
+			return common2.RetryError(ctx, errRet)
 		}
 		return nil
 	})
@@ -135,7 +136,7 @@ func resourceZenlayerCloudEipDelete(ctx context.Context, d *schema.ResourceData,
 	err = resource.RetryContext(ctx, d.Timeout(schema.TimeoutDelete)-time.Minute, func() *resource.RetryError {
 		eip, errRet := bmcService.DescribeEipAddressById(ctx, eipId)
 		if errRet != nil {
-			return retryError(ctx, errRet, InternalServerError)
+			return common2.RetryError(ctx, errRet, common2.InternalServerError)
 		}
 		if eip == nil {
 			notExist = true
@@ -171,13 +172,13 @@ func resourceZenlayerCloudEipDelete(ctx context.Context, d *schema.ResourceData,
 
 			ee, ok := errRet.(*common.ZenlayerCloudSdkError)
 			if !ok {
-				return retryError(ctx, errRet)
+				return common2.RetryError(ctx, errRet)
 			}
-			if ee.Code == "INVALID_EIP_NOT_FOUND" || ee.Code == ResourceNotFound {
+			if ee.Code == "INVALID_EIP_NOT_FOUND" || ee.Code == common2.ResourceNotFound {
 				// EIP doesn't exist
 				return nil
 			}
-			return retryError(ctx, errRet, InternalServerError)
+			return common2.RetryError(ctx, errRet, common2.InternalServerError)
 		}
 		return nil
 	})
@@ -196,7 +197,7 @@ func resourceZenlayerCloudEipUpdate(ctx context.Context, d *schema.ResourceData,
 		err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate)-time.Minute, func() *resource.RetryError {
 			err := bmcService.ModifyEipResourceGroup(ctx, eipId, d.Get("resource_group_id").(string))
 			if err != nil {
-				return retryError(ctx, err, InternalServerError, common.NetworkError)
+				return common2.RetryError(ctx, err, common2.InternalServerError, common.NetworkError)
 			}
 			return nil
 		})
@@ -242,16 +243,16 @@ func resourceZenlayerCloudEipCreate(ctx context.Context, d *schema.ResourceData,
 		if err != nil {
 			tflog.Info(ctx, "Fail to create eip address.", map[string]interface{}{
 				"action":  request.GetAction(),
-				"request": toJsonString(request),
+				"request": common2.ToJsonString(request),
 				"err":     err.Error(),
 			})
-			return retryError(ctx, err)
+			return common2.RetryError(ctx, err)
 		}
 
 		tflog.Info(ctx, "Create EIP success", map[string]interface{}{
 			"action":   request.GetAction(),
-			"request":  toJsonString(request),
-			"response": toJsonString(response),
+			"request":  common2.ToJsonString(request),
+			"response": common2.ToJsonString(response),
 		})
 
 		if len(response.Response.EipIdSet) < 1 {
@@ -301,7 +302,7 @@ func resourceZenlayerCloudEipRead(ctx context.Context, d *schema.ResourceData, m
 	err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutRead)-time.Minute, func() *resource.RetryError {
 		eipAddress, errRet = bmcService.DescribeEipAddressById(ctx, eipId)
 		if errRet != nil {
-			return retryError(ctx, errRet)
+			return common2.RetryError(ctx, errRet)
 		}
 
 		if eipAddress != nil && ipIsOperating(eipAddress.EipStatus) {
@@ -341,7 +342,7 @@ func resourceZenlayerCloudEipRead(ctx context.Context, d *schema.ResourceData, m
 }
 
 func ipIsOperating(status string) bool {
-	return IsContains(EipOperatingStatus, status)
+	return common2.IsContains(EipOperatingStatus, status)
 }
 
 func BuildEipState(bmcService BmcService, eipId string, ctx context.Context, d *schema.ResourceData) *resource.StateChangeConf {

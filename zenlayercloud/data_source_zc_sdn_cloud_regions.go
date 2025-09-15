@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	common2 "github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/common"
 	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/connectivity"
 	"github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/common"
 )
@@ -82,7 +83,7 @@ func dataSourceZenlayerCloudCloudRegions() *schema.Resource {
 }
 
 func dataSourceZenlayerCloudCloudRegionsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	defer logElapsed(ctx, "data_source.zenlayercloud_sdn_cloud_regions.read")()
+	defer common2.LogElapsed(ctx, "data_source.zenlayercloud_sdn_cloud_regions.read")()
 	//
 	sdnService := SdnService{
 		client: meta.(*connectivity.ZenlayerCloudClient),
@@ -120,7 +121,7 @@ func dataSourceZenlayerCloudCloudRegionsRead(ctx context.Context, d *schema.Reso
 		cloudRegionList = append(cloudRegionList, mapping)
 		ids = append(ids, cloudRegion.CloudRegionId+":"+cloudRegion.DataCenter.DcId)
 	}
-	d.SetId(dataResourceIdHash(ids))
+	d.SetId(common2.DataResourceIdHash(ids))
 	err = d.Set("region_list", cloudRegionList)
 	if err != nil {
 		return diag.FromErr(err)
@@ -128,7 +129,7 @@ func dataSourceZenlayerCloudCloudRegionsRead(ctx context.Context, d *schema.Reso
 
 	output, ok := d.GetOk("result_output_file")
 	if ok && output.(string) != "" {
-		if err := writeToFile(output.(string), cloudRegionList); err != nil {
+		if err := common2.WriteToFile(output.(string), cloudRegionList); err != nil {
 			return diag.FromErr(err)
 		}
 	}

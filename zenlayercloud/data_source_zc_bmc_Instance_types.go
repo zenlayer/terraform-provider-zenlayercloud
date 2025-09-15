@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/common"
 	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/connectivity"
 	bmc "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/bmc20221120"
 	"time"
@@ -107,7 +108,7 @@ func dataSourceZenlayerCloudInstanceTypes() *schema.Resource {
 }
 
 func dataSourceZenlayerCloudInstanceTypesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	defer logElapsed(ctx, "data_source.zenlayercloud_bmc_instance_types.read")()
+	defer common.LogElapsed(ctx, "data_source.zenlayercloud_bmc_instance_types.read")()
 
 	bmcService := BmcService{
 		client: meta.(*connectivity.ZenlayerCloudClient),
@@ -139,9 +140,9 @@ func dataSourceZenlayerCloudInstanceTypesRead(ctx context.Context, d *schema.Res
 		var e error
 		var response *bmc.DescribeAvailableResourcesResponse
 		response, e = bmcService.client.WithBmcClient().DescribeAvailableResources(request)
-		logApiRequest(ctx, "DescribeAvailableResources", request, response, e)
+		common.LogApiRequest(ctx, "DescribeAvailableResources", request, response, e)
 		if e != nil {
-			return retryError(ctx, e, InternalServerError)
+			return common.RetryError(ctx, e, common.InternalServerError)
 		}
 		instanceTypes = response.Response.AvailableResources
 		return nil
@@ -169,7 +170,7 @@ func dataSourceZenlayerCloudInstanceTypesRead(ctx context.Context, d *schema.Res
 		ids = append(ids, instanceType.InstanceTypeId)
 	}
 
-	d.SetId(dataResourceIdHash(ids))
+	d.SetId(common.DataResourceIdHash(ids))
 	err = d.Set("instance_types", instanceTypeList)
 	if err != nil {
 		return diag.FromErr(err)
@@ -177,7 +178,7 @@ func dataSourceZenlayerCloudInstanceTypesRead(ctx context.Context, d *schema.Res
 
 	output, ok := d.GetOk("result_output_file")
 	if ok && output.(string) != "" {
-		if err := writeToFile(output.(string), instanceTypeList); err != nil {
+		if err := common.WriteToFile(output.(string), instanceTypeList); err != nil {
 			return diag.FromErr(err)
 		}
 	}

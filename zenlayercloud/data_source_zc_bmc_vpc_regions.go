@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/common"
 	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/connectivity"
 	bmc "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/bmc20221120"
 	"time"
@@ -72,7 +73,7 @@ func dataSourceZenlayerCloudVpcRegions() *schema.Resource {
 }
 
 func dataSourceZenlayerCloudVpcRegionsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	defer logElapsed(ctx, "data_source.zenlayercloud_bmc_vpc_regions.read")()
+	defer common.LogElapsed(ctx, "data_source.zenlayercloud_bmc_vpc_regions.read")()
 
 	bmcService := BmcService{
 		client: meta.(*connectivity.ZenlayerCloudClient),
@@ -92,7 +93,7 @@ func dataSourceZenlayerCloudVpcRegionsRead(ctx context.Context, d *schema.Resour
 		var response *bmc.DescribeVpcAvailableRegionsResponse
 		response, e = bmcService.client.WithBmcClient().DescribeVpcAvailableRegions(request)
 		if e != nil {
-			return retryError(ctx, e, InternalServerError, ReadTimedOut)
+			return common.RetryError(ctx, e, common.InternalServerError, common.ReadTimedOut)
 		}
 
 		regions = response.Response.VpcRegionSet
@@ -113,7 +114,7 @@ func dataSourceZenlayerCloudVpcRegionsRead(ctx context.Context, d *schema.Resour
 		ids = append(ids, region.VpcRegionId)
 	}
 
-	d.SetId(dataResourceIdHash(ids))
+	d.SetId(common.DataResourceIdHash(ids))
 	err := d.Set("regions", regionList)
 	if err != nil {
 		return diag.FromErr(err)
@@ -121,7 +122,7 @@ func dataSourceZenlayerCloudVpcRegionsRead(ctx context.Context, d *schema.Resour
 
 	output, ok := d.GetOk("result_output_file")
 	if ok && output.(string) != "" {
-		if err := writeToFile(output.(string), regionList); err != nil {
+		if err := common.WriteToFile(output.(string), regionList); err != nil {
 			return diag.FromErr(err)
 		}
 	}

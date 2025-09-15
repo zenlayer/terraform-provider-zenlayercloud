@@ -15,6 +15,7 @@ import (
 	"context"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	common2 "github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/common"
 	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/connectivity"
 	"github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/common"
 )
@@ -124,7 +125,7 @@ func dataSourceZenlayerCloudDcPorts() *schema.Resource {
 }
 
 func dataSourceZenlayerCloudDcPortsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	defer logElapsed(ctx, "data_source.zenlayercloud_sdn_ports.read")()
+	defer common2.LogElapsed(ctx, "data_source.zenlayercloud_sdn_ports.read")()
 	//
 	sdnService := SdnService{
 		client: meta.(*connectivity.ZenlayerCloudClient),
@@ -133,7 +134,7 @@ func dataSourceZenlayerCloudDcPortsRead(ctx context.Context, d *schema.ResourceD
 	if v, ok := d.GetOk("port_ids"); ok {
 		portIds := v.(*schema.Set).List()
 		if len(portIds) > 0 {
-			filter.PortIds = toStringList(portIds)
+			filter.PortIds = common2.ToStringList(portIds)
 		}
 	}
 	if v, ok := d.GetOk("datacenter"); ok {
@@ -166,7 +167,7 @@ func dataSourceZenlayerCloudDcPortsRead(ctx context.Context, d *schema.ResourceD
 		portList = append(portList, mapping)
 		ids = append(ids, port.PortId)
 	}
-	d.SetId(dataResourceIdHash(ids))
+	d.SetId(common2.DataResourceIdHash(ids))
 	err = d.Set("port_list", portList)
 	if err != nil {
 		return diag.FromErr(err)
@@ -174,7 +175,7 @@ func dataSourceZenlayerCloudDcPortsRead(ctx context.Context, d *schema.ResourceD
 
 	output, ok := d.GetOk("result_output_file")
 	if ok && output.(string) != "" {
-		if err := writeToFile(output.(string), portList); err != nil {
+		if err := common2.WriteToFile(output.(string), portList); err != nil {
 			return diag.FromErr(err)
 		}
 	}

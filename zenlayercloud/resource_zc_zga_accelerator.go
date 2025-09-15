@@ -101,6 +101,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	common2 "github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/common"
 	"math/big"
 	"strconv"
 	"strings"
@@ -127,8 +128,8 @@ func resourceZenlayerCloudAccelerator() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(zgaCreateTimeout),
-			Update: schema.DefaultTimeout(zgaUpdateTimeout),
+			Create: schema.DefaultTimeout(common2.ZgaCreateTimeout),
+			Update: schema.DefaultTimeout(common2.ZgaUpdateTimeout),
 		},
 		CustomizeDiff: customdiff.All(
 			IPAcceleratorValidFunc(),
@@ -712,16 +713,16 @@ func resourceZenlayerCloudAcceleratorCreate(ctx context.Context, d *schema.Resou
 		if errRet != nil {
 			tflog.Error(ctx, "Fail to create accelerator.", map[string]interface{}{
 				"action":  request.GetAction(),
-				"request": toJsonString(request),
+				"request": common2.ToJsonString(request),
 				"err":     errRet.Error(),
 			})
-			return retryError(ctx, errRet, InternalServerError)
+			return common2.RetryError(ctx, errRet, common2.InternalServerError)
 		}
 
 		tflog.Info(ctx, "Create accelerator success", map[string]interface{}{
 			"action":   request.GetAction(),
-			"request":  toJsonString(request),
-			"response": toJsonString(response),
+			"request":  common2.ToJsonString(request),
+			"response": common2.ToJsonString(response),
 		})
 
 		acceleratorId = response.Response.AcceleratorId
@@ -746,13 +747,13 @@ func resourceZenlayerCloudAcceleratorCreate(ctx context.Context, d *schema.Resou
 		if len(rules) != 0 {
 			errRet := zgaService.ModifyAcceleratorAccessControl(ctx, acceleratorId, rules)
 			if errRet != nil {
-				return retryError(ctx, errRet, InternalServerError)
+				return common2.RetryError(ctx, errRet, common2.InternalServerError)
 			}
 		}
 		if acEnable {
 			errRet := zgaService.OpenAcceleratorAccessControl(ctx, acceleratorId)
 			if errRet != nil {
-				return retryError(ctx, errRet, InternalServerError)
+				return common2.RetryError(ctx, errRet, common2.InternalServerError)
 			}
 		}
 		return nil
@@ -779,7 +780,7 @@ func resourceZenlayerCloudAcceleratorRead(ctx context.Context, d *schema.Resourc
 		var errRet error
 		acceleratorInfo, errRet = NewZgaService(meta.(*connectivity.ZenlayerCloudClient)).DescribeAcceleratorById(ctx, acceleratorId)
 		if errRet != nil {
-			return retryError(ctx, errRet, InternalServerError)
+			return common2.RetryError(ctx, errRet, common2.InternalServerError)
 		}
 		return nil
 	})
@@ -850,7 +851,7 @@ func resourceZenlayerCloudAcceleratorUpdate(ctx context.Context, d *schema.Resou
 		err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate)-time.Minute, func() *resource.RetryError {
 			errRet := zgaService.ModifyAcceleratorName(ctx, acceleratorId, d.Get("accelerator_name").(string))
 			if errRet != nil {
-				return retryError(ctx, errRet, InternalServerError, common.NetworkError)
+				return common2.RetryError(ctx, errRet, common2.InternalServerError, common.NetworkError)
 			}
 			return nil
 		})
@@ -865,7 +866,7 @@ func resourceZenlayerCloudAcceleratorUpdate(ctx context.Context, d *schema.Resou
 			err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate)-time.Minute, func() *resource.RetryError {
 				errRet := zgaService.ModifyAcceleratorDomain(ctx, acceleratorId, *domain)
 				if errRet != nil {
-					return retryError(ctx, errRet, InternalServerError, common.NetworkError)
+					return common2.RetryError(ctx, errRet, common2.InternalServerError, common.NetworkError)
 				}
 				return nil
 			})
@@ -879,7 +880,7 @@ func resourceZenlayerCloudAcceleratorUpdate(ctx context.Context, d *schema.Resou
 		err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate)-time.Minute, func() *resource.RetryError {
 			errRet := zgaService.ModifyAcceleratorCertificateId(ctx, acceleratorId, d.Get("certificate_id").(string))
 			if errRet != nil {
-				return retryError(ctx, errRet, InternalServerError, common.NetworkError)
+				return common2.RetryError(ctx, errRet, common2.InternalServerError, common.NetworkError)
 			}
 			return nil
 		})
@@ -892,7 +893,7 @@ func resourceZenlayerCloudAcceleratorUpdate(ctx context.Context, d *schema.Resou
 		err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate)-time.Minute, func() *resource.RetryError {
 			errRet := zgaService.ModifyAcceleratorOrigin(ctx, acceleratorId, SharpenOrigin(d))
 			if errRet != nil {
-				return retryError(ctx, errRet, InternalServerError, common.NetworkError)
+				return common2.RetryError(ctx, errRet, common2.InternalServerError, common.NetworkError)
 			}
 			return nil
 		})
@@ -905,7 +906,7 @@ func resourceZenlayerCloudAcceleratorUpdate(ctx context.Context, d *schema.Resou
 		err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate)-time.Minute, func() *resource.RetryError {
 			errRet := zgaService.ModifyAcceleratorAccRegions(ctx, acceleratorId, SharpenAccelerateRegion(d))
 			if errRet != nil {
-				return retryError(ctx, errRet, InternalServerError, common.NetworkError)
+				return common2.RetryError(ctx, errRet, common2.InternalServerError, common.NetworkError)
 			}
 			return nil
 		})
@@ -918,7 +919,7 @@ func resourceZenlayerCloudAcceleratorUpdate(ctx context.Context, d *schema.Resou
 		err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate)-time.Minute, func() *resource.RetryError {
 			errRet := zgaService.ModifyAcceleratorListener(ctx, acceleratorId, SharpenL4Listeners(d), SharpenL7Listeners(d))
 			if errRet != nil {
-				return retryError(ctx, errRet, InternalServerError, common.NetworkError)
+				return common2.RetryError(ctx, errRet, common2.InternalServerError, common.NetworkError)
 			}
 			return nil
 		})
@@ -933,7 +934,7 @@ func resourceZenlayerCloudAcceleratorUpdate(ctx context.Context, d *schema.Resou
 			err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate)-time.Minute, func() *resource.RetryError {
 				errRet := zgaService.ModifyAcceleratorProtocolOpts(ctx, acceleratorId, *protocolOpts)
 				if errRet != nil {
-					return retryError(ctx, errRet, InternalServerError, common.NetworkError)
+					return common2.RetryError(ctx, errRet, common2.InternalServerError, common.NetworkError)
 				}
 				return nil
 			})
@@ -949,7 +950,7 @@ func resourceZenlayerCloudAcceleratorUpdate(ctx context.Context, d *schema.Resou
 			err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate)-time.Minute, func() *resource.RetryError {
 				errRet := zgaService.ModifyAcceleratorHealthCheck(ctx, acceleratorId, *healthCheck)
 				if errRet != nil {
-					return retryError(ctx, errRet, InternalServerError, common.NetworkError)
+					return common2.RetryError(ctx, errRet, common2.InternalServerError, common.NetworkError)
 				}
 				return nil
 			})
@@ -964,7 +965,7 @@ func resourceZenlayerCloudAcceleratorUpdate(ctx context.Context, d *schema.Resou
 		err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate)-time.Minute, func() *resource.RetryError {
 			errRet := zgaService.ModifyAcceleratorAccessControl(ctx, acceleratorId, rules)
 			if errRet != nil {
-				return retryError(ctx, errRet, InternalServerError, common.NetworkError)
+				return common2.RetryError(ctx, errRet, common2.InternalServerError, common.NetworkError)
 			}
 			return nil
 		})
@@ -982,7 +983,7 @@ func resourceZenlayerCloudAcceleratorUpdate(ctx context.Context, d *schema.Resou
 				errRet = zgaService.CloseAcceleratorAccessControl(ctx, acceleratorId)
 			}
 			if errRet != nil {
-				return retryError(ctx, errRet, InternalServerError, common.NetworkError)
+				return common2.RetryError(ctx, errRet, common2.InternalServerError, common.NetworkError)
 			}
 			return nil
 		})
@@ -1005,10 +1006,10 @@ func resourceZenlayerCloudAcceleratorDelete(ctx context.Context, d *schema.Resou
 		errRet := NewZgaService(meta.(*connectivity.ZenlayerCloudClient)).DeleteAcceleratorById(ctx, acceleratorId)
 		if errRet != nil {
 			switch {
-			case isExpectError(errRet, []string{"INVALID_ACCELERATOR_NOT_FOUND"}):
+			case common2.IsExpectError(errRet, []string{"INVALID_ACCELERATOR_NOT_FOUND"}):
 				// DO NOTHING
 			default:
-				return retryError(ctx, errRet, InternalServerError)
+				return common2.RetryError(ctx, errRet, common2.InternalServerError)
 			}
 		}
 		return nil

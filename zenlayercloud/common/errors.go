@@ -1,4 +1,4 @@
-package zenlayercloud
+package common
 
 import (
 	"context"
@@ -27,10 +27,10 @@ func Error(msg string, args ...interface{}) error {
 	return fmt.Errorf(msg, args...)
 }
 
-func retryError(ctx context.Context, err error, additionRetryableError ...string) *resource.RetryError {
+func RetryError(ctx context.Context, err error, additionRetryableError ...string) *resource.RetryError {
 	switch realErr := errors.Cause(err).(type) {
 	case *common.ZenlayerCloudSdkError:
-		if isExpectError(realErr, retryableErrorCode) {
+		if IsExpectError(realErr, retryableErrorCode) {
 			tflog.Info(ctx, "Retryable defined error:", map[string]interface{}{
 				"err": err,
 			})
@@ -38,7 +38,7 @@ func retryError(ctx context.Context, err error, additionRetryableError ...string
 		}
 
 		if len(additionRetryableError) > 0 {
-			if isExpectError(realErr, additionRetryableError) {
+			if IsExpectError(realErr, additionRetryableError) {
 				tflog.Info(ctx, "Retryable addition error:", map[string]interface{}{
 					"err": err,
 				})
@@ -52,7 +52,7 @@ func retryError(ctx context.Context, err error, additionRetryableError ...string
 	return resource.NonRetryableError(err)
 }
 
-func isExpectError(err error, expectError []string) bool {
+func IsExpectError(err error, expectError []string) bool {
 	e, ok := err.(*common.ZenlayerCloudSdkError)
 	if !ok {
 		return false

@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/common"
 	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/connectivity"
 	vm "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/vm20230313"
 	"regexp"
@@ -124,7 +125,7 @@ func dataSourceZenlayerCloudVmImages() *schema.Resource {
 }
 
 func dataSourceZenlayerCloudVmImagesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	defer logElapsed(ctx, "data_source.zenlayercloud_images.read")()
+	defer common.LogElapsed(ctx, "data_source.zenlayercloud_images.read")()
 
 	vmService := VmService{
 		client: meta.(*connectivity.ZenlayerCloudClient),
@@ -169,7 +170,7 @@ func dataSourceZenlayerCloudVmImagesRead(ctx context.Context, d *schema.Resource
 		var e error
 		images, e = vmService.DescribeImagesByFilter(filter)
 		if e != nil {
-			return retryError(ctx, e, InternalServerError, ReadTimedOut)
+			return common.RetryError(ctx, e, common.InternalServerError, common.ReadTimedOut)
 		}
 		return nil
 	})
@@ -207,7 +208,7 @@ func dataSourceZenlayerCloudVmImagesRead(ctx context.Context, d *schema.Resource
 		ids = append(ids, image.ImageId)
 	}
 
-	d.SetId(dataResourceIdHash(ids))
+	d.SetId(common.DataResourceIdHash(ids))
 	err = d.Set("images", imageList)
 	if err != nil {
 		return diag.FromErr(err)
@@ -215,7 +216,7 @@ func dataSourceZenlayerCloudVmImagesRead(ctx context.Context, d *schema.Resource
 
 	output, ok := d.GetOk("result_output_file")
 	if ok && output.(string) != "" {
-		if err := writeToFile(output.(string), imageList); err != nil {
+		if err := common.WriteToFile(output.(string), imageList); err != nil {
 			return diag.FromErr(err)
 		}
 	}

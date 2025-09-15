@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/common"
 	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/connectivity"
 	vm "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/vm20230313"
 	"time"
@@ -120,7 +121,7 @@ func dataSourceZenlayerCloudSecurityGroups() *schema.Resource {
 }
 
 func dataSourceZenlayerCloudSecurityGroupsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	defer logElapsed(ctx, "data_source.zenlayercloud_security_groups.read")()
+	defer common.LogElapsed(ctx, "data_source.zenlayercloud_security_groups.read")()
 
 	vmService := VmService{
 		client: meta.(*connectivity.ZenlayerCloudClient),
@@ -141,7 +142,7 @@ func dataSourceZenlayerCloudSecurityGroupsRead(ctx context.Context, d *schema.Re
 		var e error
 		securityGroups, e = vmService.DescribeSecurityGroupsByFilter(request)
 		if e != nil {
-			return retryError(ctx, e, InternalServerError)
+			return common.RetryError(ctx, e, common.InternalServerError)
 		}
 		return nil
 	})
@@ -166,7 +167,7 @@ func dataSourceZenlayerCloudSecurityGroupsRead(ctx context.Context, d *schema.Re
 		ids = append(ids, securityGroup.SecurityGroupId)
 	}
 
-	d.SetId(dataResourceIdHash(ids))
+	d.SetId(common.DataResourceIdHash(ids))
 	err = d.Set("security_groups", securityGroupList)
 	if err != nil {
 		return diag.FromErr(err)
@@ -174,7 +175,7 @@ func dataSourceZenlayerCloudSecurityGroupsRead(ctx context.Context, d *schema.Re
 
 	output, ok := d.GetOk("result_output_file")
 	if ok && output.(string) != "" {
-		if err := writeToFile(output.(string), securityGroupList); err != nil {
+		if err := common.WriteToFile(output.(string), securityGroupList); err != nil {
 			return diag.FromErr(err)
 		}
 	}

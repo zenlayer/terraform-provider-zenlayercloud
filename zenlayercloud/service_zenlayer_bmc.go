@@ -15,6 +15,7 @@ package zenlayercloud
 import (
 	"context"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	common2 "github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/common"
 	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/connectivity"
 	bmc "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/bmc20221120"
 	"github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/common"
@@ -32,7 +33,7 @@ func (s *BmcService) DeleteInstance(ctx context.Context, instanceId string) (err
 	request := bmc.NewTerminateInstanceRequest()
 	request.InstanceId = instanceId
 	response, err := s.client.WithBmcClient().TerminateInstance(request)
-	defer logApiRequest(ctx, "TerminateInstance", request, response, err)
+	defer common2.LogApiRequest(ctx, "TerminateInstance", request, response, err)
 
 	if err != nil {
 		if sdkError, ok := err.(*common.ZenlayerCloudSdkError); ok {
@@ -49,7 +50,7 @@ func (s *BmcService) DestroyInstance(ctx context.Context, instanceId string) (er
 	request := bmc.NewReleaseInstancesRequest()
 	request.InstanceIds = []string{instanceId}
 	response, err := s.client.WithBmcClient().ReleaseInstances(request)
-	defer logApiRequest(ctx, "ReleaseInstances", request, response, err)
+	defer common2.LogApiRequest(ctx, "ReleaseInstances", request, response, err)
 	return
 }
 
@@ -59,7 +60,7 @@ func (s *BmcService) DescribeInstanceById(ctx context.Context, instanceId string
 
 	response, err := s.client.WithBmcClient().DescribeInstances(request)
 
-	defer logApiRequest(ctx, "DescribeInstances", request, response, err)
+	defer common2.LogApiRequest(ctx, "DescribeInstances", request, response, err)
 	if err != nil {
 		return
 	}
@@ -84,7 +85,7 @@ func (s *BmcService) InstanceStateRefreshFunc(ctx context.Context, instanceId st
 		}
 		for _, failState := range failStates {
 			if object.InstanceStatus == failState {
-				return object, object.InstanceStatus, Error("Failed to reach target status. Last status: %s.", object.InstanceStatus)
+				return object, object.InstanceStatus, common2.Error("Failed to reach target status. Last status: %s.", object.InstanceStatus)
 			}
 		}
 
@@ -97,7 +98,7 @@ func (s *BmcService) ModifyInstanceName(ctx context.Context, instanceId string, 
 	request.InstanceIds = []string{instanceId}
 	request.InstanceName = instanceName
 	response, err := s.client.WithBmcClient().ModifyInstancesAttribute(request)
-	defer logApiRequest(ctx, "ModifyInstancesAttribute", request, response, err)
+	defer common2.LogApiRequest(ctx, "ModifyInstancesAttribute", request, response, err)
 	return err
 }
 
@@ -110,7 +111,7 @@ func (s *BmcService) DescribeInstancesByFilter(instanceFilter *InstancesFilter) 
 
 	if err != nil {
 		log.Printf("[CRITAL] Api[%s] fail, request body [%s], error[%s]\n",
-			request.GetAction(), toJsonString(request), err.Error())
+			request.GetAction(), common2.ToJsonString(request), err.Error())
 		return
 	}
 	if response == nil || len(response.Response.DataSet) < 1 {
@@ -124,7 +125,7 @@ func (s *BmcService) DescribeInstancesByFilter(instanceFilter *InstancesFilter) 
 		return instances, nil
 	}
 	maxConcurrentNum := 50
-	g := NewGoRoutine(maxConcurrentNum)
+	g := common2.NewGoRoutine(maxConcurrentNum)
 	wg := sync.WaitGroup{}
 
 	var instanceSetList = make([]interface{}, num)
@@ -141,11 +142,11 @@ func (s *BmcService) DescribeInstancesByFilter(instanceFilter *InstancesFilter) 
 			response, err := s.client.WithBmcClient().DescribeInstances(request)
 			if err != nil {
 				log.Printf("[CRITAL] Api[%s] fail, request body [%s], error[%s]\n",
-					request.GetAction(), toJsonString(request), err.Error())
+					request.GetAction(), common2.ToJsonString(request), err.Error())
 				return
 			}
 			log.Printf("[DEBUG] Api[%s] success, request body [%s], response body [%s]\n",
-				request.GetAction(), toJsonString(request), toJsonString(response))
+				request.GetAction(), common2.ToJsonString(request), common2.ToJsonString(response))
 
 			instanceSetList[value] = response.Response.DataSet
 
@@ -167,7 +168,7 @@ func (s *BmcService) DescribeInstancesByFilter(instanceFilter *InstancesFilter) 
 func (s *BmcService) reinstallInstance(ctx context.Context, request *bmc.ReinstallInstanceRequest) error {
 
 	response, err := s.client.WithBmcClient().ReinstallInstance(request)
-	logApiRequest(ctx, "ReinstallInstance", request, response, err)
+	common2.LogApiRequest(ctx, "ReinstallInstance", request, response, err)
 	return err
 }
 
@@ -181,7 +182,7 @@ func (s *BmcService) DescribeEipAddressesByFilter(filter *EipFilter) (eipAddress
 
 	if err != nil {
 		log.Printf("[CRITAL] Api[%s] fail, request body [%s], error[%s]\n",
-			request.GetAction(), toJsonString(request), err.Error())
+			request.GetAction(), common2.ToJsonString(request), err.Error())
 		return
 	}
 	if response == nil || len(response.Response.DataSet) < 1 {
@@ -194,7 +195,7 @@ func (s *BmcService) DescribeEipAddressesByFilter(filter *EipFilter) (eipAddress
 		return eipAddresses, nil
 	}
 	maxConcurrentNum := 50
-	g := NewGoRoutine(maxConcurrentNum)
+	g := common2.NewGoRoutine(maxConcurrentNum)
 	wg := sync.WaitGroup{}
 
 	var eipAddressSetList = make([]interface{}, num)
@@ -211,11 +212,11 @@ func (s *BmcService) DescribeEipAddressesByFilter(filter *EipFilter) (eipAddress
 			response, err := s.client.WithBmcClient().DescribeEipAddresses(request)
 			if err != nil {
 				log.Printf("[CRITAL] Api[%s] fail, request body [%s], error[%s]\n",
-					request.GetAction(), toJsonString(request), err.Error())
+					request.GetAction(), common2.ToJsonString(request), err.Error())
 				return
 			}
 			log.Printf("[DEBUG] Api[%s] success, request body [%s], response body [%s]\n",
-				request.GetAction(), toJsonString(request), toJsonString(response))
+				request.GetAction(), common2.ToJsonString(request), common2.ToJsonString(response))
 
 			eipAddressSetList[value] = response.Response.DataSet
 
@@ -243,7 +244,7 @@ func (s *BmcService) DescribeDdosIpAddressesByFilter(filter *DDosIpFilter) (ddos
 
 	if err != nil {
 		log.Printf("[CRITAL] Api[%s] fail, request body [%s], error[%s]\n",
-			request.GetAction(), toJsonString(request), err.Error())
+			request.GetAction(), common2.ToJsonString(request), err.Error())
 		return
 	}
 	if response == nil || len(response.Response.DataSet) < 1 {
@@ -256,7 +257,7 @@ func (s *BmcService) DescribeDdosIpAddressesByFilter(filter *DDosIpFilter) (ddos
 		return ddosIpAddress, nil
 	}
 	maxConcurrentNum := 50
-	g := NewGoRoutine(maxConcurrentNum)
+	g := common2.NewGoRoutine(maxConcurrentNum)
 	wg := sync.WaitGroup{}
 
 	var eipAddressSetList = make([]interface{}, num)
@@ -273,11 +274,11 @@ func (s *BmcService) DescribeDdosIpAddressesByFilter(filter *DDosIpFilter) (ddos
 			response, err := s.client.WithBmcClient().DescribeDdosIpAddresses(request)
 			if err != nil {
 				log.Printf("[CRITAL] Api[%s] fail, request body [%s], error[%s]\n",
-					request.GetAction(), toJsonString(request), err.Error())
+					request.GetAction(), common2.ToJsonString(request), err.Error())
 				return
 			}
 			log.Printf("[DEBUG] Api[%s] success, request body [%s], response body [%s]\n",
-				request.GetAction(), toJsonString(request), toJsonString(response))
+				request.GetAction(), common2.ToJsonString(request), common2.ToJsonString(response))
 
 			eipAddressSetList[value] = response.Response.DataSet
 
@@ -318,7 +319,7 @@ func (s *BmcService) DescribeSubnetById(ctx context.Context, subnetId string) (s
 
 	var response *bmc.DescribeSubnetsResponse
 
-	defer logApiRequest(ctx, "DescribeSubnets", request, response, err)
+	defer common2.LogApiRequest(ctx, "DescribeSubnets", request, response, err)
 
 	response, err = s.client.WithBmcClient().DescribeSubnets(request)
 
@@ -346,7 +347,7 @@ func (s *BmcService) SubnetStateRefreshFunc(ctx context.Context, subnetId string
 		}
 		for _, failState := range failStates {
 			if object.SubnetStatus == failState {
-				return object, object.SubnetStatus, Error("Failed to reach target status. Last status: %s.", object.SubnetStatus)
+				return object, object.SubnetStatus, common2.Error("Failed to reach target status. Last status: %s.", object.SubnetStatus)
 			}
 		}
 
@@ -358,7 +359,7 @@ func (s *BmcService) DeleteSubnet(ctx context.Context, subnetId string) (err err
 	request := bmc.NewDeleteSubnetRequest()
 	request.SubnetId = subnetId
 	response, err := s.client.WithBmcClient().DeleteSubnet(request)
-	defer logApiRequest(ctx, "DeleteSubnet", request, response, err)
+	defer common2.LogApiRequest(ctx, "DeleteSubnet", request, response, err)
 	return
 }
 
@@ -367,7 +368,7 @@ func (s *BmcService) ModifySubnetName(ctx context.Context, subnetId string, subn
 	request.SubnetIds = []string{subnetId}
 	request.SubnetName = subnetName
 	response, err := s.client.WithBmcClient().ModifySubnetsAttribute(request)
-	defer logApiRequest(ctx, "ModifySubnetsAttribute", request, response, err)
+	defer common2.LogApiRequest(ctx, "ModifySubnetsAttribute", request, response, err)
 	return err
 }
 
@@ -376,7 +377,7 @@ func (s *BmcService) ModifySubnetResourceGroupById(ctx context.Context, subnetId
 	request.SubnetIds = []string{subnetId}
 	request.ResourceGroupId = resourceGroupId
 	response, err := s.client.WithBmcClient().ModifySubnetsResourceGroup(request)
-	logApiRequest(ctx, "ModifySubnetsResourceGroup", request, response, err)
+	common2.LogApiRequest(ctx, "ModifySubnetsResourceGroup", request, response, err)
 	return err
 }
 
@@ -390,7 +391,7 @@ func (s *BmcService) DescribeSubnets(ctx context.Context, filter *SubnetFilter) 
 
 	if err != nil {
 		log.Printf("[CRITAL] Api[%s] fail, request body [%s], error[%s]\n",
-			request.GetAction(), toJsonString(request), err.Error())
+			request.GetAction(), common2.ToJsonString(request), err.Error())
 		return
 	}
 	if response == nil || len(response.Response.DataSet) < 1 {
@@ -403,7 +404,7 @@ func (s *BmcService) DescribeSubnets(ctx context.Context, filter *SubnetFilter) 
 		return subnets, nil
 	}
 	maxConcurrentNum := 50
-	g := NewGoRoutine(maxConcurrentNum)
+	g := common2.NewGoRoutine(maxConcurrentNum)
 	wg := sync.WaitGroup{}
 
 	var subnetList = make([]interface{}, num)
@@ -420,11 +421,11 @@ func (s *BmcService) DescribeSubnets(ctx context.Context, filter *SubnetFilter) 
 			response, err := s.client.WithBmcClient().DescribeSubnets(request)
 			if err != nil {
 				log.Printf("[CRITAL] Api[%s] fail, request body [%s], error[%s]\n",
-					request.GetAction(), toJsonString(request), err.Error())
+					request.GetAction(), common2.ToJsonString(request), err.Error())
 				return
 			}
 			log.Printf("[DEBUG] Api[%s] success, request body [%s], response body [%s]\n",
-				request.GetAction(), toJsonString(request), toJsonString(response))
+				request.GetAction(), common2.ToJsonString(request), common2.ToJsonString(response))
 
 			subnetList[value] = response.Response.DataSet
 
@@ -452,7 +453,7 @@ func (s *BmcService) DescribeVpcsByFilter(ctx context.Context, filter *VpcFilter
 
 	if err != nil {
 		log.Printf("[CRITAL] Api[%s] fail, request body [%s], error[%s]\n",
-			request.GetAction(), toJsonString(request), err.Error())
+			request.GetAction(), common2.ToJsonString(request), err.Error())
 		return
 	}
 	if response == nil || len(response.Response.DataSet) < 1 {
@@ -465,7 +466,7 @@ func (s *BmcService) DescribeVpcsByFilter(ctx context.Context, filter *VpcFilter
 		return vpcs, nil
 	}
 	maxConcurrentNum := 50
-	g := NewGoRoutine(maxConcurrentNum)
+	g := common2.NewGoRoutine(maxConcurrentNum)
 	wg := sync.WaitGroup{}
 
 	var vpcList = make([]interface{}, num)
@@ -482,11 +483,11 @@ func (s *BmcService) DescribeVpcsByFilter(ctx context.Context, filter *VpcFilter
 			response, err := s.client.WithBmcClient().DescribeVpcs(request)
 			if err != nil {
 				log.Printf("[CRITAL] Api[%s] fail, request body [%s], error[%s]\n",
-					request.GetAction(), toJsonString(request), err.Error())
+					request.GetAction(), common2.ToJsonString(request), err.Error())
 				return
 			}
 			log.Printf("[DEBUG] Api[%s] success, request body [%s], response body [%s]\n",
-				request.GetAction(), toJsonString(request), toJsonString(response))
+				request.GetAction(), common2.ToJsonString(request), common2.ToJsonString(response))
 
 			vpcList[value] = response.Response.DataSet
 
@@ -518,7 +519,7 @@ func (s *BmcService) VpcStateRefreshFunc(ctx context.Context, vpcId string, fail
 		}
 		for _, failState := range failStates {
 			if object.VpcStatus == failState {
-				return object, object.VpcStatus, Error("Failed to reach target status. Last status: %s.", object.VpcStatus)
+				return object, object.VpcStatus, common2.Error("Failed to reach target status. Last status: %s.", object.VpcStatus)
 			}
 		}
 
@@ -532,7 +533,7 @@ func (s *BmcService) DescribeVpcById(ctx context.Context, vpcId string) (vpc *bm
 
 	response, err := s.client.WithBmcClient().DescribeVpcs(request)
 
-	defer logApiRequest(ctx, "DescribeVpcs", request, response, err)
+	defer common2.LogApiRequest(ctx, "DescribeVpcs", request, response, err)
 	if err != nil {
 		return
 	}
@@ -551,7 +552,7 @@ func (s *BmcService) DescribeEipAddressById(ctx context.Context, eipId string) (
 
 	response, err := s.client.WithBmcClient().DescribeEipAddresses(request)
 
-	defer logApiRequest(ctx, "DescribeEipAddresses", request, response, err)
+	defer common2.LogApiRequest(ctx, "DescribeEipAddresses", request, response, err)
 	if err != nil {
 		return
 	}
@@ -567,7 +568,7 @@ func (s *BmcService) TerminateEipAddress(ctx context.Context, eipId string) (err
 	request := bmc.NewTerminateEipAddressRequest()
 	request.EipId = eipId
 	response, err := s.client.WithBmcClient().TerminateEipAddress(request)
-	defer logApiRequest(ctx, "TerminateEipAddress", request, response, err)
+	defer common2.LogApiRequest(ctx, "TerminateEipAddress", request, response, err)
 
 	if err != nil {
 		if sdkError, ok := err.(*common.ZenlayerCloudSdkError); ok {
@@ -584,7 +585,7 @@ func (s *BmcService) ReleaseEipAddressById(ctx context.Context, eipId string) (e
 	request := bmc.NewReleaseEipAddressesRequest()
 	request.EipIds = []string{eipId}
 	response, err := s.client.WithBmcClient().ReleaseEipAddresses(request)
-	defer logApiRequest(ctx, "ReleaseEipAddresses", request, response, err)
+	defer common2.LogApiRequest(ctx, "ReleaseEipAddresses", request, response, err)
 	return
 }
 
@@ -594,7 +595,7 @@ func (s *BmcService) DescribeDdosIpAddressById(ctx context.Context, ddosIpId str
 
 	response, err := s.client.WithBmcClient().DescribeDdosIpAddresses(request)
 
-	defer logApiRequest(ctx, "DescribeDdosIpAddresses", request, response, err)
+	defer common2.LogApiRequest(ctx, "DescribeDdosIpAddresses", request, response, err)
 	if err != nil {
 		return
 	}
@@ -610,7 +611,7 @@ func (s *BmcService) TerminateDDoSIpAddress(ctx context.Context, ddosIpId string
 	request := bmc.NewTerminateDdosIpAddressRequest()
 	request.DdosIpId = ddosIpId
 	response, err := s.client.WithBmcClient().TerminateDdosIpAddress(request)
-	defer logApiRequest(ctx, "TerminateDdosIpAddress", request, response, err)
+	defer common2.LogApiRequest(ctx, "TerminateDdosIpAddress", request, response, err)
 
 	if err != nil {
 		if sdkError, ok := err.(*common.ZenlayerCloudSdkError); ok {
@@ -627,7 +628,7 @@ func (s *BmcService) ReleaseDDoSIpAddressById(ctx context.Context, ddosIpId stri
 	request := bmc.NewReleaseDdosIpAddressesRequest()
 	request.DdosIpIds = []string{ddosIpId}
 	response, err := s.client.WithBmcClient().ReleaseDdosIpAddresses(request)
-	defer logApiRequest(ctx, "ReleaseDdosIPAddresses", request, response, err)
+	defer common2.LogApiRequest(ctx, "ReleaseDdosIPAddresses", request, response, err)
 	return
 }
 
@@ -636,7 +637,7 @@ func (s *BmcService) updateInstanceInternetMaxBandwidthOut(ctx context.Context, 
 	request.InstanceId = instanceId
 	request.BandwidthOutMbps = common.Integer(internetBandwidthOut)
 	response, err := s.client.WithBmcClient().ModifyInstanceBandwidth(request)
-	defer logApiRequest(ctx, "ModifyInstanceBandwidth", request, response, err)
+	defer common2.LogApiRequest(ctx, "ModifyInstanceBandwidth", request, response, err)
 	if err != nil {
 		return err
 	}
@@ -648,7 +649,7 @@ func (s *BmcService) ModifyInstanceResourceGroup(ctx context.Context, instanceId
 	request.InstanceIds = []string{instanceId}
 	request.ResourceGroupId = resourceGroupId
 	response, err := s.client.WithBmcClient().ModifyInstancesResourceGroup(request)
-	defer logApiRequest(ctx, "ModifyInstancesResourceGroup", request, response, err)
+	defer common2.LogApiRequest(ctx, "ModifyInstancesResourceGroup", request, response, err)
 
 	if err != nil {
 		return err
@@ -674,7 +675,7 @@ func (s *BmcService) updateInstanceTrafficPackageSize(ctx context.Context, insta
 	request.InstanceId = instanceId
 	request.TrafficPackageSize = common.Float64(trafficPackageSize)
 	response, err := s.client.WithBmcClient().ModifyInstanceTrafficPackage(request)
-	defer logApiRequest(ctx, "ModifyInstanceTrafficPackageSize", request, response, err)
+	defer common2.LogApiRequest(ctx, "ModifyInstanceTrafficPackageSize", request, response, err)
 	return err
 }
 
@@ -700,7 +701,7 @@ func (s *BmcService) InstanceNetworkStateRefreshFunc(ctx context.Context, instan
 			return nil, "", nil
 		}
 		if condition.matchFail(internetStatus) {
-			return internetStatus, NetworkStatusFail, Error("Failed to reach target status. Last internet status: %v.", internetStatus)
+			return internetStatus, NetworkStatusFail, common2.Error("Failed to reach target status. Last internet status: %v.", internetStatus)
 		}
 		if condition.matchOk(internetStatus) {
 			return internetStatus, NetworkStatusOK, nil
@@ -716,7 +717,7 @@ func (s *BmcService) AssociateSubnetInstance(ctx context.Context, instanceId str
 	}}
 	request.SubnetId = subnetId
 	_, err := s.client.WithBmcClient().AssociateSubnetInstances(request)
-	defer logApiRequest(ctx, "AssociateSubnetInstances", request, nil, err)
+	defer common2.LogApiRequest(ctx, "AssociateSubnetInstances", request, nil, err)
 	return err
 }
 
@@ -725,7 +726,7 @@ func (s *BmcService) DisassociateSubnetInstance(ctx context.Context, instanceId 
 	request.InstanceId = instanceId
 	request.SubnetId = subnetId
 	_, err := s.client.WithBmcClient().UnAssociateSubnetInstance(request)
-	defer logApiRequest(ctx, "UnAssociateSubnetInstance", request, nil, err)
+	defer common2.LogApiRequest(ctx, "UnAssociateSubnetInstance", request, nil, err)
 	return err
 }
 
@@ -762,7 +763,7 @@ func (s *BmcService) ModifyDdosIpResourceGroup(ctx context.Context, ddpsIp strin
 	request.DdosIpIds = []string{ddpsIp}
 	request.ResourceGroupId = resourceGroupId
 	response, err := s.client.WithBmcClient().ModifyDdosIpAddressesResourceGroup(request)
-	defer logApiRequest(ctx, "ModifyDdosIpAddressesResourceGroup", request, response, err)
+	defer common2.LogApiRequest(ctx, "ModifyDdosIpAddressesResourceGroup", request, response, err)
 	return err
 }
 
@@ -771,7 +772,7 @@ func (s *BmcService) ModifyEipResourceGroup(ctx context.Context, eipId string, r
 	request.EipIds = []string{eipId}
 	request.ResourceGroupId = resourceGroupId
 	response, err := s.client.WithBmcClient().ModifyEipAddressesResourceGroup(request)
-	defer logApiRequest(ctx, "ModifyEipAddressesResourceGroup", request, response, err)
+	defer common2.LogApiRequest(ctx, "ModifyEipAddressesResourceGroup", request, response, err)
 	return err
 }
 
@@ -796,7 +797,7 @@ func (s *BmcService) ModifyVpcName(ctx context.Context, vpcId string, vpcName st
 	request.VpcIds = []string{vpcId}
 	request.VpcName = vpcName
 	response, err := s.client.WithBmcClient().ModifyVpcsAttribute(request)
-	defer logApiRequest(ctx, "ModifySubnetsAttribute", request, response, err)
+	defer common2.LogApiRequest(ctx, "ModifySubnetsAttribute", request, response, err)
 
 	return err
 }
@@ -805,7 +806,7 @@ func (s *BmcService) DeleteVpc(ctx context.Context, vpcId string) error {
 	request := bmc.NewDeleteVpcRequest()
 	request.VpcId = vpcId
 	response, err := s.client.WithBmcClient().DeleteVpc(request)
-	logApiRequest(ctx, "DeleteVpc", request, response, err)
+	common2.LogApiRequest(ctx, "DeleteVpc", request, response, err)
 	return err
 
 }
@@ -815,14 +816,14 @@ func (s *BmcService) ModifyVpcResourceGroup(ctx context.Context, vpcId string, r
 	request.VpcIds = []string{vpcId}
 	request.ResourceGroupId = resourceGroupId
 	response, err := s.client.WithBmcClient().ModifyVpcsResourceGroup(request)
-	logApiRequest(ctx, "ModifyVpcsResourceGroup", request, response, err)
+	common2.LogApiRequest(ctx, "ModifyVpcsResourceGroup", request, response, err)
 	return err
 }
 
 func (s *BmcService) DescribeZones(ctx context.Context) (zones []*bmc.ZoneInfo, err error) {
 	request := bmc.NewDescribeZonesRequest()
 	response, err := s.client.WithBmcClient().DescribeZones(request)
-	logApiRequest(ctx, "DescribeZones", request, response, err)
+	common2.LogApiRequest(ctx, "DescribeZones", request, response, err)
 	if err != nil {
 		return
 	}

@@ -1,5 +1,7 @@
 package zenlayercloud
 
+import "github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/common"
+
 const (
 	VmChargeTypePostpaid                    = "POSTPAID"
 	VmChargeTypePrepaid                     = "PREPAID"
@@ -90,5 +92,5 @@ var (
 )
 
 func vmInstanceIsOperating(instanceStatus string) bool {
-	return IsContains(VmInstanceOperatingStatus, instanceStatus)
+	return common.IsContains(VmInstanceOperatingStatus, instanceStatus)
 }

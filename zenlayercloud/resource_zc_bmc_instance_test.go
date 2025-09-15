@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/common"
 	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/connectivity"
 	"testing"
 )
@@ -114,10 +115,10 @@ func testAccCheckZenlayerCloudBmcInstanceExists(n string) resource.TestCheckFunc
 		}
 		instance, err := bmcService.DescribeInstanceById(ctx, rs.Primary.ID)
 		if err != nil {
-			err = resource.RetryContext(ctx, readRetryTimeout, func() *resource.RetryError {
+			err = resource.RetryContext(ctx, common.ReadRetryTimeout, func() *resource.RetryError {
 				instance, err = bmcService.DescribeInstanceById(ctx, rs.Primary.ID)
 				if err != nil {
-					return retryError(ctx, err)
+					return common.RetryError(ctx, err)
 				}
 				return nil
 			})
@@ -167,10 +168,10 @@ func testAccCheckInstanceResourceDestroy(s *terraform.State) error {
 
 		instance, err := bmcService.DescribeInstanceById(ctx, rs.Primary.ID)
 		if err != nil {
-			err = resource.RetryContext(ctx, readRetryTimeout, func() *resource.RetryError {
+			err = resource.RetryContext(ctx, common.ReadRetryTimeout, func() *resource.RetryError {
 				instance, err = bmcService.DescribeInstanceById(ctx, rs.Primary.ID)
 				if err != nil {
-					return retryError(ctx, err)
+					return common.RetryError(ctx, err)
 				}
 				return nil
 			})

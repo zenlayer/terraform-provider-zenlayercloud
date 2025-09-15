@@ -31,6 +31,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	common2 "github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/common"
 	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/connectivity"
 	"github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/common"
 	vm "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/vm20230313"
@@ -95,7 +96,7 @@ func resourceZenlayerCloudSecurityGroupRule() *schema.Resource {
 }
 
 func resourceZenlayerCloudSecurityGroupRuleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	defer logElapsed(ctx, "resource.zenlayercloud_security_group_rule.delete")()
+	defer common2.LogElapsed(ctx, "resource.zenlayercloud_security_group_rule.delete")()
 
 	vmService := VmService{
 		client: meta.(*connectivity.ZenlayerCloudClient),
@@ -118,9 +119,9 @@ func resourceZenlayerCloudSecurityGroupRuleDelete(ctx context.Context, d *schema
 		if errRet != nil {
 			ee, ok := errRet.(*common.ZenlayerCloudSdkError)
 			if !ok {
-				return retryError(ctx, errRet, InternalServerError)
+				return common2.RetryError(ctx, errRet, common2.InternalServerError)
 			}
-			if ee.Code == ResourceNotFound {
+			if ee.Code == common2.ResourceNotFound {
 				// security group rule doesn't exist
 				return nil
 			}
@@ -154,7 +155,7 @@ func resourceZenlayerCloudSecurityGroupRuleCreate(ctx context.Context, d *schema
 
 		ruleId, err := vmService.CreateSecurityGroupRule(ctx, info)
 		if err != nil {
-			return retryError(ctx, err)
+			return common2.RetryError(ctx, err)
 		}
 
 		id = ruleId
@@ -182,7 +183,7 @@ func resourceZenlayerCloudSecurityGroupRuleRead(ctx context.Context, d *schema.R
 	err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutRead)-time.Minute, func() *resource.RetryError {
 		securityGroupId, rule, err := vmService.DescribeSecurityGroupRule(ruleId)
 		if err != nil {
-			return retryError(ctx, err)
+			return common2.RetryError(ctx, err)
 		}
 
 		if rule == nil {

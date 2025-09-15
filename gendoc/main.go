@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/common"
 	"go/parser"
 	"go/token"
 	"os"
@@ -29,8 +30,10 @@ const (
 )
 
 var (
-	hclMatch  = regexp.MustCompile("(?si)([^`]+)?```(hcl)?(.*?)```")
-	bigSymbol = regexp.MustCompile("([\u007F-\uffff])")
+	hclMatch          = regexp.MustCompile("(?si)([^`]+)?```(hcl)?(.*?)```")
+	bigSymbol         = regexp.MustCompile("([\u007F-\uffff])")
+	productNameRegexp = regexp.MustCompile(`^.*\((.*)\)$`)
+	productV1         = []string{"bmc", "vm", "zga", "sdn"}
 )
 
 func main() {
@@ -63,7 +66,7 @@ func genIdx(filePath string) (prods []Product) {
 
 	message("[START]get description from file: %s\n", filename)
 
-	description, err := getFileDescription(filepath.Join(filePath, filename))
+	description, err := getFileDescription(filepath.Join(filePath, filename), true)
 	if err != nil {
 		message("[SKIP!]get description failed, skip: %s", err)
 		return
@@ -132,10 +135,23 @@ func genDoc(product, dtype, fpath, name string, resource *schema.Resource) {
 		"import":            "",
 	}
 
-	filename := fmt.Sprintf("%s_%s_%s.go", dtype, cloudMarkShort, data["resource"])
-	message("[START]get description from file: %s\n", filename)
+	productDir := strings.ToLower(product)
+	groups := productNameRegexp.FindStringSubmatch(productDir)
+	if groups != nil {
+		productDir = groups[1]
+	}
 
-	description, err := getFileDescription(filepath.Join(fpath, filename))
+	var filename string
+	v1 := common.IsContains(productV1, productDir)
+	if v1 {
+		filename = fmt.Sprintf("%s_%s_%s.go", dtype, cloudMarkShort, data["resource"])
+	} else {
+		filename = fmt.Sprintf("services/%s/%s_%s_%s.md", productDir, dtype, cloudMarkShort, data["resource"])
+	}
+
+	message("[START]get description from file: %v\n", data)
+
+	description, err := getFileDescription(filepath.Join(fpath, filename), v1)
 	if err != nil {
 		message("[FAIL!]get description failed: %s", err)
 		os.Exit(1)
@@ -335,15 +351,27 @@ func getAttributes(step int, k string, v *schema.Schema) []string {
 }
 
 // getFileDescription get description from go file
-func getFileDescription(fname string) (string, error) {
-	fset := token.NewFileSet()
+func getFileDescription(fname string, v1 bool) (string, error) {
+	if v1 {
+		fset := token.NewFileSet()
 
-	parsedAst, err := parser.ParseFile(fset, fname, nil, parser.ParseComments)
-	if err != nil {
-		return "", err
+		parsedAst, err := parser.ParseFile(fset, fname, nil, parser.ParseComments)
+		if err != nil {
+			return "", err
+		}
+
+		return parsedAst.Doc.Text(), nil
 	}
 
-	return parsedAst.Doc.Text(), nil
+	raw, err := os.ReadFile(fname)
+	if err != nil {
+		message("[FAIL!]get description failed: %s", err)
+		os.Exit(1)
+	}
+	description := string(raw)
+
+	description = strings.TrimSpace(description)
+	return description, err
 }
 
 // getSubStruct get sub structure from go file

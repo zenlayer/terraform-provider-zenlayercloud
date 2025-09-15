@@ -60,6 +60,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	common2 "github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/common"
 	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/connectivity"
 	bmc "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/bmc20221120"
 	"github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/common"
@@ -78,8 +79,8 @@ func resourceZenlayerCloudInstance() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(bmcCreateTimeout),
-			Update: schema.DefaultTimeout(bmcUpdateTimeout),
+			Create: schema.DefaultTimeout(common2.BmcCreateTimeout),
+			Update: schema.DefaultTimeout(common2.BmcUpdateTimeout),
 		},
 		CustomizeDiff: customdiff.All(
 			internetMaxBandwidthOutForceNew(),
@@ -387,7 +388,7 @@ func resourceZenlayerCloudInstanceDelete(ctx context.Context, d *schema.Resource
 	err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutDelete)-time.Minute, func() *resource.RetryError {
 		errRet := bmcService.DeleteInstance(ctx, instanceId)
 		if errRet != nil {
-			return retryError(ctx, errRet)
+			return common2.RetryError(ctx, errRet)
 		}
 		return nil
 	})
@@ -403,12 +404,12 @@ func resourceZenlayerCloudInstanceDelete(ctx context.Context, d *schema.Resource
 		if errRet != nil {
 			ee, ok := errRet.(*common.ZenlayerCloudSdkError)
 			if !ok {
-				return retryError(ctx, errRet, InternalServerError)
-			} else if ee.Code == "INVALID_INSTANCE_NOT_FOUND" || ee.Code == ResourceNotFound {
+				return common2.RetryError(ctx, errRet, common2.InternalServerError)
+			} else if ee.Code == "INVALID_INSTANCE_NOT_FOUND" || ee.Code == common2.ResourceNotFound {
 				notExist = true
 				return nil
 			}
-			return retryError(ctx, errRet, InternalServerError)
+			return common2.RetryError(ctx, errRet, common2.InternalServerError)
 		}
 		if instance == nil {
 			notExist = true
@@ -441,13 +442,13 @@ func resourceZenlayerCloudInstanceDelete(ctx context.Context, d *schema.Resource
 			//check InvalidInstanceState.Terminating
 			ee, ok := errRet.(*common.ZenlayerCloudSdkError)
 			if !ok {
-				return retryError(ctx, errRet)
+				return common2.RetryError(ctx, errRet)
 			}
-			if ee.Code == "INVALID_INSTANCE_NOT_FOUND" || ee.Code == ResourceNotFound {
+			if ee.Code == "INVALID_INSTANCE_NOT_FOUND" || ee.Code == common2.ResourceNotFound {
 				// instance doesn't exist
 				return nil
 			}
-			return retryError(ctx, errRet, InternalServerError)
+			return common2.RetryError(ctx, errRet, common2.InternalServerError)
 		}
 		return nil
 	})
@@ -467,7 +468,7 @@ func resourceZenlayerCloudInstanceUpdate(ctx context.Context, d *schema.Resource
 		err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate)-time.Minute, func() *resource.RetryError {
 			err := bmcService.ModifyInstanceName(ctx, instanceId, d.Get("instance_name").(string))
 			if err != nil {
-				return retryError(ctx, err, InternalServerError, common.NetworkError)
+				return common2.RetryError(ctx, err, common2.InternalServerError, common.NetworkError)
 			}
 			return nil
 		})
@@ -503,7 +504,7 @@ func resourceZenlayerCloudInstanceUpdate(ctx context.Context, d *schema.Resource
 		err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate)-time.Minute, func() *resource.RetryError {
 			err := bmcService.ModifyInstanceResourceGroup(ctx, instanceId, d.Get("resource_group_id").(string))
 			if err != nil {
-				return retryError(ctx, err, InternalServerError, common.NetworkError)
+				return common2.RetryError(ctx, err, common2.InternalServerError, common.NetworkError)
 			}
 			return nil
 		})
@@ -557,7 +558,7 @@ func resourceZenlayerCloudInstanceUpdate(ctx context.Context, d *schema.Resource
 		if v, ok := d.GetOk("ssh_keys"); ok {
 			sshKeys := v.(*schema.Set).List()
 			if len(sshKeys) > 0 {
-				request.SshKeys = toStringList(sshKeys)
+				request.SshKeys = common2.ToStringList(sshKeys)
 			}
 		}
 		if v, ok := d.GetOk("image_id"); ok {
@@ -603,7 +604,7 @@ func resourceZenlayerCloudInstanceUpdate(ctx context.Context, d *schema.Resource
 
 				raidParams = append(raidParams, &bmc.CustomRaid{
 					RaidType:     common.Integer(raidType),
-					DiskSequence: toIntList(diskSequence),
+					DiskSequence: common2.ToIntList(diskSequence),
 				})
 			}
 			request.RaidConfig = &bmc.RaidConfig{
@@ -750,7 +751,7 @@ func resourceZenlayerCloudInstanceCreate(ctx context.Context, d *schema.Resource
 	if v, ok := d.GetOk("ssh_keys"); ok {
 		sshKeys := v.(*schema.Set).List()
 		if len(sshKeys) > 0 {
-			request.SshKeys = toStringList(sshKeys)
+			request.SshKeys = common2.ToStringList(sshKeys)
 		}
 	}
 	request.InternetChargeType = d.Get("internet_charge_type").(string)
@@ -796,7 +797,7 @@ func resourceZenlayerCloudInstanceCreate(ctx context.Context, d *schema.Resource
 
 			customRaidConf := bmc.CustomRaid{
 				RaidType:     &raidType,
-				DiskSequence: toIntList(diskSeq),
+				DiskSequence: common2.ToIntList(diskSeq),
 			}
 			request.RaidConfig.CustomRaids = append(request.RaidConfig.CustomRaids, &customRaidConf)
 		}
@@ -841,16 +842,16 @@ func resourceZenlayerCloudInstanceCreate(ctx context.Context, d *schema.Resource
 		if err != nil {
 			tflog.Info(ctx, "Fail to create bmc instance.", map[string]interface{}{
 				"action":  request.GetAction(),
-				"request": toJsonString(request),
+				"request": common2.ToJsonString(request),
 				"err":     err.Error(),
 			})
-			return retryError(ctx, err)
+			return common2.RetryError(ctx, err)
 		}
 
 		tflog.Info(ctx, "Create instance success", map[string]interface{}{
 			"action":   request.GetAction(),
-			"request":  toJsonString(request),
-			"response": toJsonString(response),
+			"request":  common2.ToJsonString(request),
+			"response": common2.ToJsonString(response),
 		})
 
 		if len(response.Response.InstanceIdSet) < 1 {
@@ -906,11 +907,11 @@ func resourceZenlayerCloudInstanceRead(ctx context.Context, d *schema.ResourceDa
 		if errRet != nil {
 			ee, ok := errRet.(*common.ZenlayerCloudSdkError)
 			if !ok {
-				return retryError(ctx, errRet)
-			} else if ee.Code == "INVALID_INSTANCE_NOT_FOUND" || ee.Code == ResourceNotFound {
+				return common2.RetryError(ctx, errRet)
+			} else if ee.Code == "INVALID_INSTANCE_NOT_FOUND" || ee.Code == common2.ResourceNotFound {
 				return nil
 			}
-			return retryError(ctx, errRet)
+			return common2.RetryError(ctx, errRet)
 		}
 		if instance != nil && instanceIsOperating(instance.InstanceStatus) {
 			return resource.RetryableError(fmt.Errorf("waiting for instance %s operation, current status: %s", instance.InstanceId, instance.InstanceStatus))

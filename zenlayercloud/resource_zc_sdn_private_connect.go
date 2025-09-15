@@ -58,6 +58,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	common2 "github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/common"
 	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/connectivity"
 	"github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/common"
 	sdn "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/sdn20230830"
@@ -189,7 +190,7 @@ func resourceZenlayerCloudPrivateConnect() *schema.Resource {
 }
 
 func resourceZenlayerCloudPrivateConnectDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	defer logElapsed(ctx, "resource.zenlayercloud_sdn_private_connect.delete")()
+	defer common2.LogElapsed(ctx, "resource.zenlayercloud_sdn_private_connect.delete")()
 
 	// force_delete: terminate and then delete
 	forceDelete := d.Get("force_delete").(bool)
@@ -202,7 +203,7 @@ func resourceZenlayerCloudPrivateConnectDelete(ctx context.Context, d *schema.Re
 	err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutDelete)-time.Minute, func() *resource.RetryError {
 		errRet := sdnService.DeletePrivateConnectById(ctx, connectId)
 		if errRet != nil {
-			return retryError(ctx, errRet)
+			return common2.RetryError(ctx, errRet)
 		}
 		return nil
 	})
@@ -215,7 +216,7 @@ func resourceZenlayerCloudPrivateConnectDelete(ctx context.Context, d *schema.Re
 	err = resource.RetryContext(ctx, d.Timeout(schema.TimeoutDelete)-time.Minute, func() *resource.RetryError {
 		connect, errRet := sdnService.DescribePrivateConnectById(ctx, connectId)
 		if errRet != nil {
-			return retryError(ctx, errRet, InternalServerError)
+			return common2.RetryError(ctx, errRet, common2.InternalServerError)
 		}
 		if connect == nil {
 			notExist = true
@@ -252,13 +253,13 @@ func resourceZenlayerCloudPrivateConnectDelete(ctx context.Context, d *schema.Re
 
 			ee, ok := errRet.(*common.ZenlayerCloudSdkError)
 			if !ok {
-				return retryError(ctx, errRet)
+				return common2.RetryError(ctx, errRet)
 			}
-			if ee.Code == "INVALID_PRIVATE_CONNECT_NOT_FOUND" || ee.Code == ResourceNotFound {
+			if ee.Code == "INVALID_PRIVATE_CONNECT_NOT_FOUND" || ee.Code == common2.ResourceNotFound {
 				// connect doesn't exist
 				return nil
 			}
-			return retryError(ctx, errRet, InternalServerError)
+			return common2.RetryError(ctx, errRet, common2.InternalServerError)
 		}
 		return nil
 	})
@@ -267,7 +268,7 @@ func resourceZenlayerCloudPrivateConnectDelete(ctx context.Context, d *schema.Re
 }
 
 func resourceZenlayerCloudPrivateConnectUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	defer logElapsed(ctx, "resource.zenlayercloud_sdn_private_connect.update")()
+	defer common2.LogElapsed(ctx, "resource.zenlayercloud_sdn_private_connect.update")()
 
 	sdnService := SdnService{
 		client: meta.(*connectivity.ZenlayerCloudClient),
@@ -278,7 +279,7 @@ func resourceZenlayerCloudPrivateConnectUpdate(ctx context.Context, d *schema.Re
 			connectName := d.Get("connect_name").(string)
 			err := sdnService.ModifyPrivateConnectName(ctx, connectId, connectName)
 			if err != nil {
-				return retryError(ctx, err, InternalServerError, common.NetworkError)
+				return common2.RetryError(ctx, err, common2.InternalServerError, common.NetworkError)
 			}
 			return nil
 		})
@@ -293,7 +294,7 @@ func resourceZenlayerCloudPrivateConnectUpdate(ctx context.Context, d *schema.Re
 			bandwidth := d.Get("connect_bandwidth").(int)
 			err := sdnService.ModifyPrivateConnectBandwidth(ctx, connectId, bandwidth)
 			if err != nil {
-				return retryError(ctx, err, InternalServerError, common.NetworkError)
+				return common2.RetryError(ctx, err, common2.InternalServerError, common.NetworkError)
 			}
 			return nil
 		})
@@ -307,7 +308,7 @@ func resourceZenlayerCloudPrivateConnectUpdate(ctx context.Context, d *schema.Re
 }
 
 func resourceZenlayerCloudPrivateConnectCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	defer logElapsed(ctx, "resource.zenlayercloud_sdn_private_connect.create")()
+	defer common2.LogElapsed(ctx, "resource.zenlayercloud_sdn_private_connect.create")()
 
 	sdnService := SdnService{
 		client: meta.(*connectivity.ZenlayerCloudClient),
@@ -329,16 +330,16 @@ func resourceZenlayerCloudPrivateConnectCreate(ctx context.Context, d *schema.Re
 		if err != nil {
 			tflog.Info(ctx, "Fail to create private connect.", map[string]interface{}{
 				"action":  request.GetAction(),
-				"request": toJsonString(request),
+				"request": common2.ToJsonString(request),
 				"err":     err.Error(),
 			})
-			return retryError(ctx, err)
+			return common2.RetryError(ctx, err)
 		}
 
 		tflog.Info(ctx, "Create private connect success", map[string]interface{}{
 			"action":   request.GetAction(),
-			"request":  toJsonString(request),
-			"response": toJsonString(response),
+			"request":  common2.ToJsonString(request),
+			"response": common2.ToJsonString(response),
 		})
 
 		if response.Response.PrivateConnectId == "" {
@@ -397,7 +398,7 @@ func parseEndpoint(endpointParam interface{}) sdn.CreateEndpointParam {
 }
 
 func resourceZenlayerCloudPrivateConnectRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	defer logElapsed(ctx, "resource.zenlayercloud_sdn_private_connect.read")()
+	defer common2.LogElapsed(ctx, "resource.zenlayercloud_sdn_private_connect.read")()
 
 	var diags diag.Diagnostics
 
@@ -413,7 +414,7 @@ func resourceZenlayerCloudPrivateConnectRead(ctx context.Context, d *schema.Reso
 	err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutRead)-time.Minute, func() *resource.RetryError {
 		connect, errRet = sdnService.DescribePrivateConnectById(ctx, connectId)
 		if errRet != nil {
-			return retryError(ctx, errRet)
+			return common2.RetryError(ctx, errRet)
 		}
 		if connect != nil && IsOperating(connect.PrivateConnectStatus) {
 			return resource.RetryableError(fmt.Errorf("waiting for private connect %s operation, current status: %s", connect.PrivateConnectId, connect.PrivateConnectStatus))
