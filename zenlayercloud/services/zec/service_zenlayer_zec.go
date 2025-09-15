@@ -1218,6 +1218,85 @@ func (s *ZecService) DescribeCidrById(ctx context.Context, cidrId string) (*zec2
 	return response.Response.DataSet[0], nil
 }
 
+func (s *ZecService) DescribeCidrsByFilter(ctx context.Context, filter *CidrFilter) (cidrs []*zec2.CidrInfo, err error) {
+	request := convertCidrRequestFilter(filter)
+
+	var limit = 100
+	request.PageSize = &limit
+	request.PageNum = common2.Integer(1)
+	response, err := s.client.WithZec2Client().DescribeCidrs(request)
+
+	if err != nil {
+		log.Printf("[CRITAL] Api[%s] fail, request body [%s], error[%s]\n",
+			request.GetAction(), common.ToJsonString(request), err.Error())
+		return
+	}
+	if response == nil || len(response.Response.DataSet) < 1 {
+		return
+	}
+
+	cidrs = response.Response.DataSet
+	num := int(math.Ceil(float64(*response.Response.TotalCount)/float64(limit))) - 1
+	if num == 0 {
+		return cidrs, nil
+	}
+	maxConcurrentNum := 50
+	g := common.NewGoRoutine(maxConcurrentNum)
+	wg := sync.WaitGroup{}
+
+	var vpcList = make([]interface{}, num)
+
+	for i := 0; i < num; i++ {
+		wg.Add(1)
+		value := i
+		goFunc := func() {
+			request := convertCidrRequestFilter(filter)
+
+			request.PageNum = common2.Integer(value + 2)
+			request.PageSize = common2.Integer(limit)
+
+			response, err := s.client.WithZec2Client().DescribeCidrs(request)
+			if err != nil {
+				log.Printf("[CRITAL] Api[%s] fail, request body [%s], error[%s]\n",
+					request.GetAction(), common.ToJsonString(request), err.Error())
+				return
+			}
+			log.Printf("[DEBUG] Api[%s] success, request body [%s], response body [%s]\n",
+				request.GetAction(), common.ToJsonString(request), common.ToJsonString(response))
+
+			vpcList[value] = response.Response.DataSet
+
+			wg.Done()
+			log.Printf("[DEBUG] thread %d finished", value)
+		}
+		g.Run(goFunc)
+	}
+	wg.Wait()
+
+	log.Printf("[DEBUG] DescribeCidrs request finished")
+	for _, v := range vpcList {
+		cidrs = append(cidrs, v.([]*zec2.CidrInfo)...)
+	}
+	log.Printf("[DEBUG] transfer CIDR block instances finished")
+	return
+
+}
+
+func convertCidrRequestFilter(filter *CidrFilter) *zec2.DescribeCidrsRequest {
+	request := zec2.NewDescribeCidrsRequest()
+	if len(filter.Ids) > 0 {
+		request.CidrIds = filter.Ids
+	}
+	if filter.RegionId != "" {
+		request.RegionId = &filter.RegionId
+	}
+
+	if filter.ResourceGroupId != "" {
+		request.ResourceGroupId = &filter.ResourceGroupId
+	}
+	return request
+}
+
 func convertSnapshotPolicyFilter(filter *ZecAutoSnapshotPolicyFilter) *zec.DescribeAutoSnapshotPoliciesRequest {
 
 	request := zec.NewDescribeAutoSnapshotPoliciesRequest()
