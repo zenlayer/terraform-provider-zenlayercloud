@@ -160,10 +160,17 @@ func resourceZenlayerCloudInstance() *schema.Resource {
 			"ssh_keys": {
 				Type:          schema.TypeSet,
 				Optional:      true,
-				ConflictsWith: []string{"password"},
+				ConflictsWith: []string{"password", "key_id"},
 				Description:   "The ssh keys to use for the instance. The max number of ssh keys is 5. Modifying will cause the instance reset.",
 				Set:           schema.HashString,
+				Deprecated:    "please use 'key_id' instead.",
 				Elem:          &schema.Schema{Type: schema.TypeString},
+			},
+			"key_id": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ConflictsWith: []string{"password", "ssh_keys"},
+				Description:   "The ssh key pair id to use for the instance. Modifications may cause the instance reset.",
 			},
 			"internet_charge_type": {
 				Type:         schema.TypeString,
@@ -545,7 +552,7 @@ func resourceZenlayerCloudInstanceUpdate(ctx context.Context, d *schema.Resource
 		}
 	}
 	// need to reinstall the bmc instance
-	if d.HasChanges("hostname", "password", "ssh_keys", "image_id", "partitions", "raid_config_type", "raid_config_custom", "nic_lan_name", "nic_wan_name") {
+	if d.HasChanges("hostname", "password", "ssh_keys", "image_id", "partitions", "raid_config_type", "raid_config_custom", "nic_lan_name", "nic_wan_name", "key_id") {
 
 		request := bmc.NewReinstallInstanceRequest()
 		request.InstanceId = d.Id()
@@ -560,6 +567,9 @@ func resourceZenlayerCloudInstanceUpdate(ctx context.Context, d *schema.Resource
 			if len(sshKeys) > 0 {
 				request.SshKeys = common2.ToStringList(sshKeys)
 			}
+		}
+		if v, ok := d.GetOk("key_id"); ok {
+			request.KeyId = common.String(v.(string))
 		}
 		if v, ok := d.GetOk("image_id"); ok {
 			request.ImageId = v.(string)
@@ -754,6 +764,9 @@ func resourceZenlayerCloudInstanceCreate(ctx context.Context, d *schema.Resource
 			request.SshKeys = common2.ToStringList(sshKeys)
 		}
 	}
+	if v, ok := d.GetOk("key_id"); ok {
+		request.KeyId = common.String(v.(string))
+	}
 	request.InternetChargeType = d.Get("internet_charge_type").(string)
 	if request.InternetChargeType == BmcInternetChargeTypeTrafficPackage && request.InstanceChargeType == VmChargeTypePrepaid {
 		if v, ok := d.GetOk("traffic_package_size"); ok {
@@ -944,6 +957,8 @@ func resourceZenlayerCloudInstanceRead(ctx context.Context, d *schema.ResourceDa
 	_ = d.Set("internet_charge_type", instance.InternetChargeType)
 	_ = d.Set("internet_max_bandwidth_out", instance.BandwidthOutMbps)
 	_ = d.Set("instance_charge_type", instance.InstanceChargeType)
+	_ = d.Set("key_id", instance.KeyId)
+
 	if instance.InstanceChargeType == BmcChargeTypePrepaid {
 		_ = d.Set("instance_charge_prepaid_period", instance.Period)
 	}

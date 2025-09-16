@@ -4,9 +4,11 @@ Use this data source to query bmc instances.
 Example Usage
 
 ```hcl
+
 data "zenlayercloud_bmc_instances" "foo" {
   availability_zone = "SEL-A"
 }
+
 ```
 */
 package zenlayercloud
@@ -34,9 +36,9 @@ func dataSourceZenlayerCloudInstances() *schema.Resource {
 				Description: "IDs of the instances to be queried.",
 			},
 			"availability_zone": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Description:  "The ID of zone that the bmc instance locates at.",
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "The ID of zone that the bmc instance locates at.",
 			},
 			"instance_type_id": {
 				Type:        schema.TypeString,
@@ -114,6 +116,11 @@ func dataSourceZenlayerCloudInstances() *schema.Resource {
 							Type:        schema.TypeString,
 							Computed:    true,
 							Description: "The ID of image to use for the instance.",
+						},
+						"key_id": {
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "The ssh key pair id used for the instance.",
 						},
 						"image_name": {
 							Type:        schema.TypeString,
@@ -344,6 +351,7 @@ func dataSourceZenlayerCloudInstancesRead(ctx context.Context, d *schema.Resourc
 			"expired_time":               instance.ExpiredTime,
 			"private_ipv4_addresses":     instance.PrivateIpAddresses,
 			"public_ipv4_addresses":      instance.PublicIpAddresses,
+			"key_id":                     instance.KeyId,
 		}
 		if instance.InstanceChargeType == BmcChargeTypePrepaid {
 			mapping["instance_charge_prepaid_period"] = instance.Period
@@ -380,7 +388,7 @@ func dataSourceZenlayerCloudInstancesRead(ctx context.Context, d *schema.Resourc
 
 	output, ok := d.GetOk("result_output_file")
 	if ok && output.(string) != "" {
-		if err :=  common2.WriteToFile(output.(string), instanceList); err != nil {
+		if err := common2.WriteToFile(output.(string), instanceList); err != nil {
 			return diag.FromErr(err)
 		}
 	}

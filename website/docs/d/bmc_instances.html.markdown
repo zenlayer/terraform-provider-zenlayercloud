@@ -54,6 +54,7 @@ In addition to all arguments above, the following attributes are exported:
    * `instance_status` - Current status of the instance.
    * `instance_type_id` - The type of the instance.
    * `internet_max_bandwidth_out` - Maximum outgoing bandwidth to the public network, measured in Mbps (Mega bits per second).
+   * `key_id` - The ssh key pair id used for the instance.
    * `nic_lan_name` - The lan name of the nic. The lan name should be a combination of 4 to 10 characters comprised of letters (case insensitive), numbers. The lan name must start with letter. Modifying will cause the instance reset.
    * `nic_wan_name` - The wan name of the nic. The wan name should be a combination of 4 to 10 characters comprised of letters (case insensitive), numbers. The wan name must start with letter. Modifying will cause the instance reset.
    * `partitions` - Partition for the instance. Modifying will cause the instance reset.

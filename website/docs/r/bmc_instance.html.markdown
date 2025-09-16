@@ -64,6 +64,7 @@ The following arguments are supported:
 * `instance_charge_type` - (Optional, String, ForceNew) The charge type of instance. Valid values are `PREPAID`, `POSTPAID`. The default is `POSTPAID`. Note: `PREPAID` instance may not allow to delete before expired.
 * `instance_name` - (Optional, String) The name of the instance. The max length of instance_name is 64, and default value is `Terraform-Instance`.
 * `internet_max_bandwidth_out` - (Optional, Int) Maximum outgoing bandwidth to the public network, measured in Mbps (Mega bits per second).
+* `key_id` - (Optional, String) The ssh key pair id to use for the instance. Modifications may cause the instance reset.
 * `nic_lan_name` - (Optional, String) The lan name of the nic. The lan name should be a combination of 4 to 10 characters comprised of letters (case insensitive), numbers. The lan name must start with letter. Modifying will cause the instance reset.
 * `nic_wan_name` - (Optional, String) The wan name of the nic. The wan name should be a combination of 4 to 10 characters comprised of letters (case insensitive), numbers. The wan name must start with letter. Modifying will cause the instance reset.
 * `partitions` - (Optional, List) Partition for the instance. Modifying will cause the instance reset.
@@ -71,7 +72,7 @@ The following arguments are supported:
 * `raid_config_custom` - (Optional, List) Custom config for instance raid. Modifying will cause the instance reset.
 * `raid_config_type` - (Optional, String) Simple config for instance raid. Modifying will cause the instance reset.
 * `resource_group_id` - (Optional, String) The resource group id the instance belongs to, default to Default Resource Group.
-* `ssh_keys` - (Optional, Set: [`String`]) The ssh keys to use for the instance. The max number of ssh keys is 5. Modifying will cause the instance reset.
+* `ssh_keys` - (Optional, Set: [`String`], **Deprecated**) please use 'key_id' instead. The ssh keys to use for the instance. The max number of ssh keys is 5. Modifying will cause the instance reset.
 * `subnet_id` - (Optional, String) The ID of a VPC subnet. If you want to create instances in a VPC network, this parameter must be set.
 * `traffic_package_size` - (Optional, Float64) Traffic package size. Only valid when the charge type of instance is `ByTrafficPackage` and the instance charge type is `PREPAID`.
 
