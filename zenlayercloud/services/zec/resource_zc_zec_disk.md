@@ -15,7 +15,7 @@ resource "zenlayercloud_zec_disk" "test" {
 }
 ```
 
-# Import
+Import
 
 Disk instance can be imported, e.g.
 

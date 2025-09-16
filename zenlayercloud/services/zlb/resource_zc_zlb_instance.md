@@ -20,7 +20,7 @@ resource "zenlayercloud_zlb_instance" "zlb" {
 }
 ```
 
-# Import
+Import
 
 ZLB instance can be imported, e.g.
 

@@ -98,14 +98,6 @@ resource "zenlayercloud_zec_eip_association" "eip_association" {
 }
 ```
 
-# Import
-
-EIP association can be imported, e.g.
-
-```hcl
-$ terraform import zenlayercloud_zec_eip_association.eip_association eip-id : associated-id : associated-type
-```
-
 ## Argument Reference
 
 The following arguments are supported:
@@ -123,4 +115,12 @@ In addition to all arguments above, the following attributes are exported:
 * `id` - ID of the resource.
 
 
+
+## Import
+
+EIP association can be imported, e.g.
+
+```
+$ terraform import zenlayercloud_zec_eip_association.eip_association eip-id:associated-id:associated-type
+```
 

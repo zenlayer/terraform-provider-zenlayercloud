@@ -53,14 +53,6 @@ resource "zenlayercloud_zec_vnic_ipv4" "foo" {
 }
 ```
 
-# Import
-
-Disk instance can be imported, e.g.
-
-```hcl
-$ terraform import zenlayercloud_zec_vnic_ipv4.test vnic-id
-```
-
 ## Argument Reference
 
 The following arguments are supported:
@@ -76,4 +68,12 @@ In addition to all arguments above, the following attributes are exported:
 * `id` - ID of the resource.
 
 
+
+## Import
+
+Disk instance can be imported, e.g.
+
+```
+$ terraform import zenlayercloud_zec_vnic_ipv4.test vnic-id
+```
 

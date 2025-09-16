@@ -87,7 +87,7 @@ resource "zenlayercloud_zec_eip_association" "eip_association" {
 
 ```
 
-# Import
+Import
 
 EIP association can be imported, e.g.
 

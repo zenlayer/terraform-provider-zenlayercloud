@@ -31,14 +31,6 @@ resource "zenlayercloud_zlb_instance" "zlb" {
 }
 ```
 
-# Import
-
-ZLB instance can be imported, e.g.
-
-```hcl
-$ terraform import zenlayercloud_zlb_instance.zlb zlb-id
-```
-
 ## Argument Reference
 
 The following arguments are supported:
@@ -59,4 +51,12 @@ In addition to all arguments above, the following attributes are exported:
 * `resource_group_name` - The resource group name the load balancer belongs to.
 * `zlb_status` - Status of the load balancer instance.
 
+
+## Import
+
+ZLB instance can be imported, e.g.
+
+```
+$ terraform import zenlayercloud_zlb_instance.zlb zlb-id
+```
 

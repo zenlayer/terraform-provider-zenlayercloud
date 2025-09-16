@@ -28,7 +28,7 @@ resource "zenlayercloud_zec_disk_snapshot_policy_attachment" "test" {
 }
 ```
 
-# Import
+Import
 
 Disk Snapshot Policy attachment can be imported, e.g.
 

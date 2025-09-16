@@ -23,13 +23,6 @@ resource "zenlayercloud_zec_disk_snapshot_policy" "example" {
 }
 ```
 
-, e.g.
-
-```hcl
-bash
-$ terraform import zc_zec_disk_snapshot_policy.example policy-id
-```
-
 ## Argument Reference
 
 The following arguments are supported:
@@ -49,4 +42,12 @@ In addition to all arguments above, the following attributes are exported:
 * `create_time` - Creation time of the snapshot policy.
 * `resource_group_name` - The Name of resource group grouped snapshot policy.
 
+
+## Import
+
+Snapshot Policy can be imported using the `id`, e.g.
+
+```bash
+$ terraform import zc_zec_disk_snapshot_policy.example policy-id
+```
 

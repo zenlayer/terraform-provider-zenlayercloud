@@ -12,7 +12,7 @@ resource "zenlayercloud_zec_disk_snapshot_policy" "example" {
 }
 ```
 
-# Import
+Import
 
 Snapshot Policy can be imported using the `id`, e.g.
 

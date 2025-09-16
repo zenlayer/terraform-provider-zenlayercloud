@@ -34,7 +34,7 @@ resource "zenlayercloud_zec_vnic" "vnic" {
 }
 ```
 
-# Import
+Import
 
 vNIC can be imported, e.g.
 

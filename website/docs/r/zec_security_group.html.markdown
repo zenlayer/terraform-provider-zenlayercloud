@@ -19,14 +19,6 @@ resource "zenlayercloud_zec_security_group" "foo" {
 }
 ```
 
-# Import
-
-Security group can be imported, e.g.
-
-```hcl
-$ terraform import zenlayercloud_zec_security_group.security_group security-group-id
-```
-
 ## Argument Reference
 
 The following arguments are supported:
@@ -40,4 +32,12 @@ In addition to all arguments above, the following attributes are exported:
 * `id` - ID of the resource.
 * `create_time` - Creation time of the security group.
 
+
+## Import
+
+Security group can be imported, e.g.
+
+```
+$ terraform import zenlayercloud_zec_security_group.security_group security-group-id
+```
 

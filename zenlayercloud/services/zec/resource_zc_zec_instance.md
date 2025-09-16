@@ -55,7 +55,7 @@ resource "zenlayercloud_zec_instance" "instance" {
 
 ```
 
-# Import
+Import
 
 Instance can be imported using the id, e.g.
 

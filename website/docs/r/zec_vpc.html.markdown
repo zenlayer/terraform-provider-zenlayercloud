@@ -24,14 +24,6 @@ resource "zenlayercloud_zec_vpc" "foo" {
 }
 ```
 
-# Import
-
-Global Vpc instance can be imported, e.g.
-
-```hcl
-$ terraform import zenlayercloud_zec_vpc.test vpc-id
-```
-
 ## Argument Reference
 
 The following arguments are supported:
@@ -52,4 +44,12 @@ In addition to all arguments above, the following attributes are exported:
 * `is_default` - Indicates whether it is the default VPC.
 * `resource_group_name` - The resource group name the VPC belongs to, default to Default Resource Group.
 
+
+## Import
+
+Global Vpc instance can be imported, e.g.
+
+```
+$ terraform import zenlayercloud_zec_vpc.test vpc-id
+```
 

@@ -14,7 +14,7 @@ resource "zenlayercloud_zec_vpc" "foo" {
 
 ```
 
-# Import
+Import
 
 Global Vpc instance can be imported, e.g.
 

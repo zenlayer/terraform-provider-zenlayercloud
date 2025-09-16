@@ -48,14 +48,6 @@ resource "zenlayercloud_zlb_listener" "listener" {
 }
 ```
 
-# Import
-
-ZLB listener can be imported, e.g.
-
-```hcl
-$ terraform import zenlayercloud_zlb_listener.listener zlb-id : listener-id
-```
-
 ## Argument Reference
 
 The following arguments are supported:
@@ -83,4 +75,12 @@ In addition to all arguments above, the following attributes are exported:
 * `id` - ID of the resource.
 * `create_time` - Create time of the listener.
 
+
+## Import
+
+ZLB listener can be imported, e.g.
+
+```
+$ terraform import zenlayercloud_zlb_listener.listener zlb-id:listener-id
+```
 

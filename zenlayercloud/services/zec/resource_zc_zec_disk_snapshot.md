@@ -27,7 +27,7 @@ resource "zenlayercloud_zec_disk_snapshot" "snapshot" {
 }
 ```
 
-# Import
+Import
 
 Snapshot can be imported, e.g.
 

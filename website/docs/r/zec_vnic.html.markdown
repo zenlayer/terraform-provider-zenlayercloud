@@ -44,14 +44,6 @@ resource "zenlayercloud_zec_vnic" "vnic" {
 }
 ```
 
-# Import
-
-vNIC can be imported, e.g.
-
-```hcl
-$ terraform import zenlayercloud_zec_vnic.vnic vnic-id
-```
-
 ## Argument Reference
 
 The following arguments are supported:
@@ -76,4 +68,12 @@ In addition to all arguments above, the following attributes are exported:
 * `primary_ipv6` - The primary IPv6 address of the vNIC.
 * `resource_group_name` - The resource group name the vNIC belongs to, default to Default Resource Group.
 
+
+## Import
+
+vNIC can be imported, e.g.
+
+```
+$ terraform import zenlayercloud_zec_vnic.vnic vnic-id
+```
 

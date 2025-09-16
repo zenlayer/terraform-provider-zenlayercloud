@@ -64,14 +64,6 @@ resource "zenlayercloud_zec_instance" "instance" {
 }
 ```
 
-# Import
-
-Instance can be imported using the id, e.g.
-
-```hcl
-terraform import zenlayercloud_zec_instance.instance instance-id
-```
-
 ## Argument Reference
 
 The following arguments are supported:
@@ -107,4 +99,12 @@ In addition to all arguments above, the following attributes are exported:
 * `resource_group_name` - The resource group name the ZEC instance belongs to, default to Default Resource Group.
 * `system_disk_id` - ID of the system disk.
 
+
+## Import
+
+Instance can be imported using the id, e.g.
+
+```
+terraform import zenlayercloud_zec_instance.instance instance-id
+```
 

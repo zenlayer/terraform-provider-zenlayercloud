@@ -54,7 +54,7 @@ resource "zenlayercloud_zec_subnet" "foo" {
 
 ```
 
-# Import
+Import
 
 Subnet instance can be imported, e.g.
 

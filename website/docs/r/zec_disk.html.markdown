@@ -26,14 +26,6 @@ resource "zenlayercloud_zec_disk" "test" {
 }
 ```
 
-# Import
-
-Disk instance can be imported, e.g.
-
-```hcl
-$ terraform import zenlayercloud_zec_disk.test disk-id
-```
-
 ## Argument Reference
 
 The following arguments are supported:
@@ -53,4 +45,12 @@ In addition to all arguments above, the following attributes are exported:
 * `create_time` - Create time of the disk.
 * `disk_type` - Type of the disk. Values are: `SYSTEM`, `DATA`.
 
+
+## Import
+
+Disk instance can be imported, e.g.
+
+```
+$ terraform import zenlayercloud_zec_disk.test disk-id
+```
 

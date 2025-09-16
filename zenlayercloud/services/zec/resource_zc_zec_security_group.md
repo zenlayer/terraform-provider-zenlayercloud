@@ -10,7 +10,7 @@ resource "zenlayercloud_zec_security_group" "foo" {
 
 ```
 
-# Import
+Import
 
 Security group can be imported, e.g.
 

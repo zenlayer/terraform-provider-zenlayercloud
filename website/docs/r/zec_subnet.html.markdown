@@ -62,14 +62,6 @@ resource "zenlayercloud_zec_subnet" "foo" {
 }
 ```
 
-# Import
-
-Subnet instance can be imported, e.g.
-
-```hcl
-$ terraform import zenlayercloud_zec_subnet.foo subnet_id
-```
-
 ## Argument Reference
 
 The following arguments are supported:
@@ -90,4 +82,12 @@ In addition to all arguments above, the following attributes are exported:
 * `ipv6_cidr_block` - The IPv6 network segment.
 * `is_default` - Indicates whether it is the default subnet.
 
+
+## Import
+
+Subnet instance can be imported, e.g.
+
+```
+$ terraform import zenlayercloud_zec_subnet.foo subnet_id
+```
 

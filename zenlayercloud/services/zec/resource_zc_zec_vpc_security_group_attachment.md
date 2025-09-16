@@ -23,7 +23,7 @@ resource "zenlayercloud_zec_vpc_security_group_attachment" "foo" {
 
 ```
 
-# Import
+Import
 
 VPC instance can be imported, e.g.
 

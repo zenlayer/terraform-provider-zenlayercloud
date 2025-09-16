@@ -46,7 +46,7 @@ resource "zenlayercloud_zec_vnic_ipv4" "foo" {
 }
 ```
 
-# Import
+Import
 
 Disk instance can be imported, e.g.
 

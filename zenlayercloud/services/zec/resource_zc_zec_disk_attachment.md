@@ -9,7 +9,7 @@ resource "zenlayercloud_zec_disk_attachment" "test" {
 }
 ```
 
-# Import
+Import
 
 Disk attachment can be imported, e.g.
 

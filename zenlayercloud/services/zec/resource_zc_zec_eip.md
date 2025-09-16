@@ -17,7 +17,7 @@ resource "zenlayercloud_zec_eip" "eip" {
 }
 ```
 
-# Import
+Import
 
 EIP instance can be imported, e.g.
 

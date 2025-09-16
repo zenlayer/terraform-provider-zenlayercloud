@@ -33,14 +33,6 @@ resource "zenlayercloud_zec_vpc_security_group_attachment" "foo" {
 }
 ```
 
-# Import
-
-VPC instance can be imported, e.g.
-
-```hcl
-$ terraform import zenlayercloud_zec_vpc_security_group_attachment.test vpc-id : security-group-id
-```
-
 ## Argument Reference
 
 The following arguments are supported:
@@ -55,4 +47,12 @@ In addition to all arguments above, the following attributes are exported:
 * `id` - ID of the resource.
 
 
+
+## Import
+
+VPC instance can be imported, e.g.
+
+```
+$ terraform import zenlayercloud_zec_vpc_security_group_attachment.test vpc-id:security-group-id
+```
 

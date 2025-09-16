@@ -69,7 +69,7 @@ resource "zenlayercloud_zec_vnic_attachment" "foo" {
 
 ```
 
-# Import
+Import
 
 vNIC attachment can be imported, e.g.
 

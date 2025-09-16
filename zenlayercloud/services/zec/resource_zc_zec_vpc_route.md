@@ -40,7 +40,7 @@ resource "zenlayercloud_zec_vpc_route" "example" {
 
 ```
 
-# Import
+Import
 
 VPC route can be imported, e.g.
 

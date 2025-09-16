@@ -80,14 +80,6 @@ resource "zenlayercloud_zec_vnic_attachment" "foo" {
 }
 ```
 
-# Import
-
-vNIC attachment can be imported, e.g.
-
-```hcl
-$ terraform import zenlayercloud_zec_vnic_attachment.foo vnic-id : instance-id
-```
-
 ## Argument Reference
 
 The following arguments are supported:
@@ -102,4 +94,12 @@ In addition to all arguments above, the following attributes are exported:
 * `id` - ID of the resource.
 
 
+
+## Import
+
+vNIC attachment can be imported, e.g.
+
+```
+$ terraform import zenlayercloud_zec_vnic_attachment.foo vnic-id:instance-id
+```
 

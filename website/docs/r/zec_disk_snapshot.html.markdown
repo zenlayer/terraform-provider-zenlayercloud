@@ -37,14 +37,6 @@ resource "zenlayercloud_zec_disk_snapshot" "snapshot" {
 }
 ```
 
-# Import
-
-Snapshot can be imported, e.g.
-
-```hcl
-$ terraform import zenlayercloud_zec_disk_snapshot.snapshot snapshot-id
-```
-
 ## Argument Reference
 
 The following arguments are supported:
@@ -66,4 +58,12 @@ In addition to all arguments above, the following attributes are exported:
 * `snapshot_type` - The type of the snapshot to be queried. Valid values: `Auto`, `Manual`.
 * `status` - Status of snapshot. Valid values: `CREATING`, `AVAILABLE`, `FAILED`, `ROLLING_BACK`, `DELETING`.
 
+
+## Import
+
+Snapshot can be imported, e.g.
+
+```
+$ terraform import zenlayercloud_zec_disk_snapshot.snapshot snapshot-id
+```
 

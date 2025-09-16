@@ -50,14 +50,6 @@ resource "zenlayercloud_zec_vpc_route" "example" {
 }
 ```
 
-# Import
-
-VPC route can be imported, e.g.
-
-```hcl
-$ terraform import zenlayercloud_zec_vpc_route.example vpc-route-id
-```
-
 ## Argument Reference
 
 The following arguments are supported:
@@ -78,4 +70,12 @@ In addition to all arguments above, the following attributes are exported:
 * `id` - ID of the resource.
 * `create_time` - Creation time of the VPC route.
 
+
+## Import
+
+VPC route can be imported, e.g.
+
+```
+$ terraform import zenlayercloud_zec_vpc_route.example vpc-route-id
+```
 

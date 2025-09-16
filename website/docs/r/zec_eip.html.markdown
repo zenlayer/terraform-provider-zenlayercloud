@@ -29,14 +29,6 @@ resource "zenlayercloud_zec_eip" "eip" {
 }
 ```
 
-# Import
-
-EIP instance can be imported, e.g.
-
-```hcl
-$ terraform import zenlayercloud_zec_eip.eip eip-id
-```
-
 ## Argument Reference
 
 The following arguments are supported:
@@ -62,4 +54,12 @@ In addition to all arguments above, the following attributes are exported:
 * `resource_group_name` - The Name of resource group.
 * `status` - Status of the elastic IP.
 
+
+## Import
+
+EIP instance can be imported, e.g.
+
+```
+$ terraform import zenlayercloud_zec_eip.eip eip-id
+```
 
