@@ -57,15 +57,12 @@ Bare Metal Cloud(BMC)
     zenlayercloud_bmc_images
 	zenlayercloud_bmc_instances
 	zenlayercloud_bmc_eips
-	zenlayercloud_bmc_ddos_ips
 	zenlayercloud_bmc_vpc_regions
 	zenlayercloud_bmc_vpcs
 	zenlayercloud_bmc_subnets
 
   Resource
 	zenlayercloud_bmc_instance
-	zenlayercloud_bmc_ddos_ip
-	zenlayercloud_bmc_ddos_ip_association
 	zenlayercloud_bmc_eip
 	zenlayercloud_bmc_eip_association
 	zenlayercloud_bmc_vpc
@@ -231,8 +228,6 @@ func resourcesMap() map[string]*schema.Resource {
 		"zenlayercloud_bmc_instance":            resourceZenlayerCloudInstance(),
 		"zenlayercloud_bmc_eip":                 resourceZenlayerCloudEip(),
 		"zenlayercloud_bmc_eip_association":     resourceZenlayerCloudEipAssociationAssociation(),
-		"zenlayercloud_bmc_ddos_ip":             resourceZenlayerCloudDDosIp(),
-		"zenlayercloud_bmc_ddos_ip_association": resourceZenlayerCloudDdosIpAssociationAssociation(),
 		"zenlayercloud_bmc_vpc":                 resourceZenlayerCloudVpc(),
 		"zenlayercloud_bmc_subnet":              resourceZenlayerCloudBmcSubnet(),
 
@@ -291,7 +286,6 @@ func dataSourcesMap() map[string]*schema.Resource {
 		"zenlayercloud_bmc_images":         dataSourceZenlayerCloudImages(),
 		"zenlayercloud_bmc_instances":      dataSourceZenlayerCloudInstances(),
 		"zenlayercloud_bmc_eips":           dataSourceZenlayerCloudEips(),
-		"zenlayercloud_bmc_ddos_ips":       dataSourceZenlayerCloudDdosIps(),
 		"zenlayercloud_bmc_vpc_regions":    dataSourceZenlayerCloudVpcRegions(),
 		"zenlayercloud_bmc_vpcs":           dataSourceZenlayerCloudVpcs(),
 		"zenlayercloud_bmc_subnets":        dataSourceZenlayerCloudVpcSubnets(),
