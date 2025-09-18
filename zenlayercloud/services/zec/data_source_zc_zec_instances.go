@@ -110,6 +110,11 @@ func DataSourceZenlayerCloudZecInstances() *schema.Resource {
 							Computed:    true,
 							Description: "The image name to use for the ZEC instance.",
 						},
+						"security_group_id": {
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "The ID of a security group for primary vNIC of instance.",
+						},
 						"nic_network_type": {
 							Type:        schema.TypeString,
 							Computed:    true,
