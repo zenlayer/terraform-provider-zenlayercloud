@@ -7,7 +7,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	common2 "github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/common"
 	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/connectivity"
-	zec "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/zec20240401"
+	zec "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/zec20250901"
 	"regexp"
 	"time"
 )
@@ -255,7 +255,7 @@ func dataSourceZenlayerCloudZecInstancesRead(ctx context.Context, d *schema.Reso
 	instanceList := make([]map[string]interface{}, 0, len(instances))
 	ids := make([]string, 0, len(instances))
 	for _, instance := range instances {
-		if nameRegex != nil && !nameRegex.MatchString(instance.InstanceName) {
+		if nameRegex != nil && !nameRegex.MatchString(*instance.InstanceName) {
 			continue
 		}
 		mapping := map[string]interface{}{
@@ -277,6 +277,7 @@ func dataSourceZenlayerCloudZecInstancesRead(ctx context.Context, d *schema.Reso
 			"create_time":          instance.CreateTime,
 			"private_ip_addresses": instance.PrivateIpAddresses,
 			"public_ip_addresses":  instance.PublicIpAddresses,
+			"security_group_id":    instance.SecurityGroupId,
 		}
 
 		dataDisks := make([]map[string]interface{}, 0, len(instance.DataDisks))
@@ -293,7 +294,7 @@ func dataSourceZenlayerCloudZecInstancesRead(ctx context.Context, d *schema.Reso
 		mapping["data_disks"] = dataDisks
 
 		instanceList = append(instanceList, mapping)
-		ids = append(ids, instance.InstanceId)
+		ids = append(ids, *instance.InstanceId)
 	}
 
 	d.SetId(common2.DataResourceIdHash(ids))

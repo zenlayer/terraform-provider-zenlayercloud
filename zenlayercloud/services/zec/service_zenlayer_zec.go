@@ -330,13 +330,13 @@ func (s *ZecService) DescribeNatGateways(ctx context.Context, filter *ZecNatGate
 	return
 }
 
-func (s *ZecService) DescribeInstancesByFilter(filter *ZecInstancesFilter) (instances []*zec.InstanceInfo, err error) {
+func (s *ZecService) DescribeInstancesByFilter(filter *ZecInstancesFilter) (instances []*zec2.InstanceInfo, err error) {
 	request := convertInstanceRequestFilter(filter)
 
 	var limit = 100
-	request.PageSize = limit
-	request.PageNum = 1
-	response, err := s.client.WithZecClient().DescribeInstances(request)
+	request.PageSize = &limit
+	request.PageNum = common2.Integer(1)
+	response, err := s.client.WithZec2Client().DescribeInstances(request)
 
 	if err != nil {
 		log.Printf("[CRITAL] Api[%s] fail, request body [%s], error[%s]\n",
@@ -348,7 +348,7 @@ func (s *ZecService) DescribeInstancesByFilter(filter *ZecInstancesFilter) (inst
 	}
 
 	instances = response.Response.DataSet
-	num := int(math.Ceil(float64(response.Response.TotalCount)/float64(limit))) - 1
+	num := int(math.Ceil(float64(*response.Response.TotalCount)/float64(limit))) - 1
 	if num == 0 {
 		return instances, nil
 	}
@@ -364,10 +364,10 @@ func (s *ZecService) DescribeInstancesByFilter(filter *ZecInstancesFilter) (inst
 		goFunc := func() {
 			request := convertInstanceRequestFilter(filter)
 
-			request.PageNum = value + 2
-			request.PageSize = limit
+			request.PageNum = common2.Integer(value + 2)
+			request.PageSize = &limit
 
-			response, err := s.client.WithZecClient().DescribeInstances(request)
+			response, err := s.client.WithZec2Client().DescribeInstances(request)
 			if err != nil {
 				log.Printf("[CRITAL] Api[%s] fail, request body [%s], error[%s]\n",
 					request.GetAction(), common.ToJsonString(request), err.Error())
@@ -387,7 +387,7 @@ func (s *ZecService) DescribeInstancesByFilter(filter *ZecInstancesFilter) (inst
 
 	log.Printf("[DEBUG] DescribeInstances request finished")
 	for _, v := range instanceList {
-		instances = append(instances, v.([]*zec.InstanceInfo)...)
+		instances = append(instances, v.([]*zec2.InstanceInfo)...)
 	}
 	log.Printf("[DEBUG] transfer ZEC instances finished")
 	return
@@ -1401,17 +1401,30 @@ func convertVnicRequestFilter(filter *ZecNicFilter) *zec2.DescribeNetworkInterfa
 	return request
 }
 
-func convertInstanceRequestFilter(filter *ZecInstancesFilter) *zec.DescribeInstancesRequest {
-	request := zec.NewDescribeInstancesRequest()
+func convertInstanceRequestFilter(filter *ZecInstancesFilter) *zec2.DescribeInstancesRequest {
+	request := zec2.NewDescribeInstancesRequest()
 	request.InstanceIds = filter.InstancesIds
-	request.Name = filter.InstanceName
-	request.Status = filter.InstanceStatus
-	request.Ipv6Address = filter.Ipv6
-	request.Ipv4Address = filter.Ipv4
-	request.ResourceGroupId = filter.ResourceGroupId
-	request.ZoneId = filter.ZoneId
-	request.ImageId = filter.ImageId
-
+	if filter.InstanceName != "" {
+		request.Name = common2.String(filter.InstanceName)
+	}
+	if filter.InstanceStatus != "" {
+		request.Status = common2.String(filter.InstanceStatus)
+	}
+	if filter.Ipv6 != "" {
+		request.Ipv6Address = common2.String(filter.Ipv6)
+	}
+	if filter.Ipv4 != "" {
+		request.Ipv4Address = common2.String(filter.Ipv4)
+	}
+	if filter.ResourceGroupId != "" {
+		request.ResourceGroupId = common2.String(filter.ResourceGroupId)
+	}
+	if filter.ZoneId != "" {
+		request.ZoneId = common2.String(filter.ZoneId)
+	}
+	if filter.ImageId != "" {
+		request.ImageId = common2.String(filter.ImageId)
+	}
 	return request
 }
 
