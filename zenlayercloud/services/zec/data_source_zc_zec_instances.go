@@ -275,14 +275,16 @@ func dataSourceZenlayerCloudZecInstancesRead(ctx context.Context, d *schema.Reso
 			"nic_network_type":     instance.NicNetworkType,
 			"resource_group_id":    instance.ResourceGroupId,
 			"resource_group_name":  instance.ResourceGroupName,
-			"system_disk_id":       instance.SystemDisk.DiskId,
-			"system_disk_size":     instance.SystemDisk.DiskSize,
-			"system_disk_category": instance.SystemDisk.DiskCategory,
 			"instance_status":      instance.Status,
 			"create_time":          instance.CreateTime,
 			"private_ip_addresses": instance.PrivateIpAddresses,
 			"public_ip_addresses":  instance.PublicIpAddresses,
 			"security_group_id":    instance.SecurityGroupId,
+		}
+		if instance.SystemDisk != nil {
+			mapping["system_disk_id"] = instance.SystemDisk.DiskId
+			mapping["system_disk_size"] = instance.SystemDisk.DiskSize
+			mapping["system_disk_category"] = instance.SystemDisk.DiskCategory
 		}
 
 		dataDisks := make([]map[string]interface{}, 0, len(instance.DataDisks))
