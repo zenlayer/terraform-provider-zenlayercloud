@@ -471,6 +471,32 @@ func resourceZenlayerCloudZecInstanceUpdate(ctx context.Context, d *schema.Resou
 		}
 	}
 
+	if d.HasChange("security_group_id") {
+		_, newSecurityId := d.GetChange("security_group_id")
+
+		err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate)-time.Minute, func() *resource.RetryError {
+
+			instance, errRet := zecService.DescribeInstanceById(ctx, instanceId)
+			if errRet != nil {
+				return common2.RetryError(ctx, errRet, common2.InternalServerError)
+			}
+			var primaryNic *zec.NicInfo
+			for i := range instance.Nics {
+				if *instance.Nics[i].NicType == "Primary" {
+					primaryNic = instance.Nics[i]
+				}
+			}
+
+			errRet = zecService.ModifyVNicAttribute(ctx, *primaryNic.NicId, "", newSecurityId.(string))
+			if errRet != nil {
+				return common2.RetryError(ctx, errRet, common2.InternalServerError)
+			}
+			return nil
+		})
+		if err != nil {
+			return diag.FromErr(err)
+		}
+	}
 	if d.HasChange("running_flag") {
 		running := d.Get("running_flag").(bool)
 		if running {
@@ -488,7 +514,6 @@ func resourceZenlayerCloudZecInstanceUpdate(ctx context.Context, d *schema.Resou
 					return nil
 				}
 				return resource.RetryableError(fmt.Errorf("zec instance status is %s, retry...", instance.Status))
-
 			})
 			if err != nil {
 				return diag.FromErr(err)

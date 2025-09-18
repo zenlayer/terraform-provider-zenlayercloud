@@ -98,7 +98,6 @@ func DataSourceZenlayerCloudZecVnics() *schema.Resource {
 						},
 						"stack_type": {
 							Type:        schema.TypeString,
-							Optional:    true,
 							Computed:    true,
 							Description: "The stack type of the subnet. Valid values: `IPv4`, `IPv6`, `IPv4_IPv6`.",
 						},
@@ -120,17 +119,17 @@ func DataSourceZenlayerCloudZecVnics() *schema.Resource {
 						},
 						"subnet_id": {
 							Type:        schema.TypeString,
-							Optional:    true,
+							Computed:    true,
 							Description: "ID of the subnet.",
 						},
 						"vpc_id": {
 							Type:        schema.TypeString,
-							Optional:    true,
+							Computed:    true,
 							Description: "ID of the global VPC.",
 						},
 						"instance_id": {
 							Type:        schema.TypeString,
-							Optional:    true,
+							Computed:    true,
 							Description: "ID of the ZEC instance.",
 						},
 						"resource_group_id": {

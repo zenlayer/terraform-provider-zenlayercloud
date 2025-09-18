@@ -809,7 +809,9 @@ func (s *ZecService) DeleteVnicById(ctx context.Context, nicId string) error {
 func (s *ZecService) ModifyVNicAttribute(ctx context.Context, vnicId string, name string, securityGroupId string) error {
 	request := zec2.NewModifyNetworkInterfaceAttributeRequest()
 	request.NicId = &vnicId
-	request.Name = &name
+	if name != "" {
+		request.Name = &name
+	}
 	request.SecurityGroupId = &securityGroupId
 	response, err := s.client.WithZec2Client().ModifyNetworkInterfaceAttribute(request)
 	common.LogApiRequest(ctx, "ModifyNetworkInterfacesAttribute", request, response, err)
