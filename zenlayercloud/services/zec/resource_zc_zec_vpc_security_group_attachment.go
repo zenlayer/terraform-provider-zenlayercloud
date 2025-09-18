@@ -1,26 +1,3 @@
-/*
-Provides a resource to bind vpc and security group.
-
-# Example Usage
-
-```hcl
-
-		// TODO wolfgang
-		resource "zenlayercloud_zec_vpc_security_group_attachment" "foo" {
-		  vpc_id 	 		= "<vpcId>"
-	      security_group_id = "<securityGroupId>"
-		}
-
-```
-
-# Import
-
-VPC instance can be imported, e.g.
-
-```
-$ terraform import zenlayercloud_zec_vpc_security_group_attachment.test vpc-id:security-group-id
-```
-*/
 package zec
 
 import (

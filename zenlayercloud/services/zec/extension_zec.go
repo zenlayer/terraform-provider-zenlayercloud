@@ -52,6 +52,13 @@ const (
 	SnapshotCreating  = "CREATING"
 	SnapshotAvailable  = "AVAILABLE"
 	SnapshotDeleting = "DELETING"
+
+	CidrStatusCreating = "CREATING"
+	CidrStatusAvailable = "AVAILABLE"
+	CidrStatusRecycling = "RECYCLING"
+	CidrStatusRecycled = "RECYCLED"
+	CidrStatusDeleting = "DELETING"
+	CidrStatusFailed = "FAILED"
 )
 
 var (

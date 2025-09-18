@@ -81,6 +81,7 @@ The following arguments are supported:
 * `password` - (Optional, String) Password for the ZEC instance.The password must be 8-16 characters, including letters, numbers, and special characters `~!@$^*-_=+|;:,.?`.
 * `resource_group_id` - (Optional, String) The resource group id the ZEC instance belongs to, default to Default Resource Group.
 * `running_flag` - (Optional, Bool) Set instance to running or stop. Default value is true, the instance will shutdown when this flag is false.
+* `security_group_id` - (Optional, String) The ID of a security group for primary vNIC of instance. If absent, the security group under VPC will be used.
 * `system_disk_category` - (Optional, String, ForceNew) Category of the system disk. Valid values: `Standard NVMe SSD`, `Basic NVMe SSD`, Default is `Standard NVMe SSD`.
 * `time_zone` - (Optional, String) Time zone of instance. such as `America/Los_Angeles`. Default is `Asia/Shanghai`. Changing `time_zone` will cause the ZEC instance reset.
 

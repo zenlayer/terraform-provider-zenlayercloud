@@ -88,6 +88,7 @@ In addition to all arguments above, the following attributes are exported:
 * `vnics` - An information list of vNICs. Each element contains the following attributes:
    * `create_time` - Create time of the vNIC.
    * `id` - ID of the vNIC.
+   * `instance_id` - ID of the ZEC instance.
    * `name` - Name of the vNIC.
    * `primary_ipv4_address` - The primary private IPv4 address of the vNIC.
    * `primary_ipv6_address` - The primary IPv6 address of the vNIC.
@@ -99,5 +100,7 @@ In addition to all arguments above, the following attributes are exported:
    * `resource_group_name` - The resource group name that the NAT gateway belongs to.
    * `security_group_id` - ID of the security group.
    * `stack_type` - The stack type of the subnet. Valid values: `IPv4`, `IPv6`, `IPv4_IPv6`.
+   * `subnet_id` - ID of the subnet.
+   * `vpc_id` - ID of the global VPC.
 
 

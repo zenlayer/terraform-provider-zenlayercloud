@@ -25,7 +25,7 @@ resource "zenlayercloud_zec_vpc_security_group_attachment" "foo" {
 
 Import
 
-VPC instance can be imported, e.g.
+VPC security group attachment can be imported, e.g.
 
 ```
 $ terraform import zenlayercloud_zec_vpc_security_group_attachment.test vpc-id:security-group-id

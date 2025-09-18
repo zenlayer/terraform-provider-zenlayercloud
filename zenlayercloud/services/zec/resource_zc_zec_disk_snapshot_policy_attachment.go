@@ -25,7 +25,7 @@ func ResourceZenlayerCloudZecSnapshotPolicyAttachment() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
-				Description: "The ID of the disk. Note: system disk is not support yet.",
+				Description: "The ID of the disk.",
 			},
 			"auto_snapshot_policy_id": {
 				Type:        schema.TypeString,

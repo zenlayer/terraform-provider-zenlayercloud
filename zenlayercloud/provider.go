@@ -57,12 +57,15 @@ Bare Metal Cloud(BMC)
     zenlayercloud_bmc_images
 	zenlayercloud_bmc_instances
 	zenlayercloud_bmc_eips
+	zenlayercloud_bmc_ddos_ips
 	zenlayercloud_bmc_vpc_regions
 	zenlayercloud_bmc_vpcs
 	zenlayercloud_bmc_subnets
 
   Resource
 	zenlayercloud_bmc_instance
+	zenlayercloud_bmc_ddos_ip
+	zenlayercloud_bmc_ddos_ip_association
 	zenlayercloud_bmc_eip
 	zenlayercloud_bmc_eip_association
 	zenlayercloud_bmc_vpc
@@ -99,6 +102,7 @@ Zenlayer Elastic Compute(ZEC)
 	zenlayercloud_zec_disks
 	zenlayercloud_zec_disk_snapshots
 	zenlayercloud_zec_disk_snapshot_policies
+	zenlayercloud_zec_cidrs
 	zenlayercloud_zec_eips
 	zenlayercloud_zec_instances
 	zenlayercloud_zec_vnics
@@ -108,12 +112,14 @@ Zenlayer Elastic Compute(ZEC)
   Resource
 	zenlayercloud_zec_vpc
 	zenlayercloud_zec_security_group
+	zenlayercloud_zec_security_group_rule_set
 	zenlayercloud_zec_vpc_security_group_attachment
 	zenlayercloud_zec_vpc_route
 	zenlayercloud_zec_subnet
 	zenlayercloud_zec_vnic
 	zenlayercloud_zec_vnic_attachment
 	zenlayercloud_zec_vnic_ipv4
+	zenlayercloud_zec_cidr
 	zenlayercloud_zec_eip
 	zenlayercloud_zec_eip_association
 	zenlayercloud_zec_instance
@@ -228,6 +234,8 @@ func resourcesMap() map[string]*schema.Resource {
 		"zenlayercloud_bmc_instance":            resourceZenlayerCloudInstance(),
 		"zenlayercloud_bmc_eip":                 resourceZenlayerCloudEip(),
 		"zenlayercloud_bmc_eip_association":     resourceZenlayerCloudEipAssociationAssociation(),
+		"zenlayercloud_bmc_ddos_ip":             resourceZenlayerCloudDDosIp(),
+		"zenlayercloud_bmc_ddos_ip_association": resourceZenlayerCloudDdosIpAssociationAssociation(),
 		"zenlayercloud_bmc_vpc":                 resourceZenlayerCloudVpc(),
 		"zenlayercloud_bmc_subnet":              resourceZenlayerCloudBmcSubnet(),
 
@@ -253,6 +261,7 @@ func resourcesMap() map[string]*schema.Resource {
 		// zenlayer zec product
 		"zenlayercloud_zec_vpc":                           zec.ResourceZenlayerCloudGlobalVpc(),
 		"zenlayercloud_zec_security_group":           	   zec.ResourceZenlayerCloudZecSecurityGroup(),
+		"zenlayercloud_zec_security_group_rule_set":       zec.ResourceZenlayerCloudZecSecurityGroupRuleSet(),
 		"zenlayercloud_zec_vpc_security_group_attachment": zec.ResourceZenlayerCloudZecVpcSecurityGroupAttachment(),
 		"zenlayercloud_zec_vpc_route": 					   zec.ResourceZenlayerCloudGlobalVpcRoute(),
 		"zenlayercloud_zec_subnet":                        zec.ResourceZenlayerCloudZecSubnet(),
@@ -260,6 +269,7 @@ func resourcesMap() map[string]*schema.Resource {
 		"zenlayercloud_zec_vnic_attachment":               zec.ResourceZenlayerCloudZecVNicAttachment(),
 		"zenlayercloud_zec_vnic_ipv4":                     zec.ResourceZenlayerCloudZecVNicIPv4(),
 		"zenlayercloud_zec_instance":                      zec.ResourceZenlayerCloudZecInstance(),
+		"zenlayercloud_zec_cidr": 						   zec.ResourceZenlayerCloudZecCidr(),
 		"zenlayercloud_zec_eip":                           zec.ResourceZenlayerCloudZecElasticIP(),
 		"zenlayercloud_zec_eip_association":               zec.ResourceZenlayerCloudEipAssociation(),
 		"zenlayercloud_zec_disk":                          zec.ResourceZenlayerCloudZecDisk(),
@@ -286,6 +296,7 @@ func dataSourcesMap() map[string]*schema.Resource {
 		"zenlayercloud_bmc_images":         dataSourceZenlayerCloudImages(),
 		"zenlayercloud_bmc_instances":      dataSourceZenlayerCloudInstances(),
 		"zenlayercloud_bmc_eips":           dataSourceZenlayerCloudEips(),
+		"zenlayercloud_bmc_ddos_ips":       dataSourceZenlayerCloudDdosIps(),
 		"zenlayercloud_bmc_vpc_regions":    dataSourceZenlayerCloudVpcRegions(),
 		"zenlayercloud_bmc_vpcs":           dataSourceZenlayerCloudVpcs(),
 		"zenlayercloud_bmc_subnets":        dataSourceZenlayerCloudVpcSubnets(),
@@ -317,6 +328,7 @@ func dataSourcesMap() map[string]*schema.Resource {
 		"zenlayercloud_zec_vpcs":            zec.DataSourceZenlayerCloudZecVpcs(),
 		"zenlayercloud_zec_subnets":         zec.DataSourceZenlayerCloudZecSubnets(),
 		"zenlayercloud_zec_border_gateways": zec.DataSourceZenlayerCloudBorderGateways(),
+		"zenlayercloud_zec_cidrs": 			 zec.DataSourceZenlayerCloudCidrs(),
 		"zenlayercloud_zec_eips":            zec.DataSourceZenlayerCloudEips(),
 		"zenlayercloud_zec_disks":           zec.DataSourceZenlayerCloudZecDisks(),
 		"zenlayercloud_zec_disk_snapshots":  zec.DataSourceZenlayerCloudZecSnapshots(),
