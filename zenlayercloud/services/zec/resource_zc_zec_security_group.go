@@ -80,6 +80,7 @@ func resourceZenlayerCloudZecSecurityGroupDelete(ctx context.Context, d *schema.
 				// security group doesn't exist
 				return nil
 			}
+			return resource.NonRetryableError(errRet)
 		}
 		return nil
 	})
