@@ -50,7 +50,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-VPC instance can be imported, e.g.
+VPC security group attachment can be imported, e.g.
 
 ```
 $ terraform import zenlayercloud_zec_vpc_security_group_attachment.test vpc-id:security-group-id

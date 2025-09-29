@@ -71,10 +71,12 @@ The following arguments are supported:
 * `password` - (Optional, String) Password for the instance. The max length of password is 16. Modifying will cause the instance reset.
 * `raid_config_custom` - (Optional, List) Custom config for instance raid. Modifying will cause the instance reset.
 * `raid_config_type` - (Optional, String) Simple config for instance raid. Modifying will cause the instance reset.
+* `reinstall` - (Optional, Bool) Whether to reinstall the instance when modifying field including `user_data`.
 * `resource_group_id` - (Optional, String) The resource group id the instance belongs to, default to Default Resource Group.
 * `ssh_keys` - (Optional, Set: [`String`], **Deprecated**) please use 'key_id' instead. The ssh keys to use for the instance. The max number of ssh keys is 5. Modifying will cause the instance reset.
 * `subnet_id` - (Optional, String) The ID of a VPC subnet. If you want to create instances in a VPC network, this parameter must be set.
 * `traffic_package_size` - (Optional, Float64) Traffic package size. Only valid when the charge type of instance is `ByTrafficPackage` and the instance charge type is `PREPAID`.
+* `user_data` - (Optional, String) A string of the user data to be injected into this instance. If `reinstall` is set to `true`, updates to this field will trigger the instance reset instead of recreated.
 
 The `partitions` object supports the following:
 

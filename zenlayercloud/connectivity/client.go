@@ -14,6 +14,7 @@ package connectivity
 
 import (
 	bmc "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/bmc20221120"
+	ccs "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/ccs20250901"
 	"github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/common"
 	sdn "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/sdn20230830"
 	traffic "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/traffic20240326"
@@ -42,6 +43,7 @@ type ZenlayerCloudClient struct {
 	ZlbConn           *zlb.Client
 	tfkConn           *traffic.Client
 	usrConn           *user.Client
+	CcsConn           *ccs.Client
 }
 
 func (client *ZenlayerCloudClient) WithSdnClient() *sdn.Client {
@@ -72,6 +74,16 @@ func (client *ZenlayerCloudClient) WithVmClient() *vm.Client {
 	client.VmConn, _ = vm.NewClient(config, client.SecretKeyId, client.SecretKeyPassword)
 	client.VmConn.WithRequestClient(ReqClient)
 	return client.VmConn
+}
+
+func (client *ZenlayerCloudClient) WithCcsClient() *ccs.Client {
+	if client.CcsConn != nil {
+		return client.CcsConn
+	}
+	config := client.NewConfig()
+	client.CcsConn, _ = ccs.NewClient(config, client.SecretKeyId, client.SecretKeyPassword)
+	client.CcsConn.WithRequestClient(ReqClient)
+	return client.CcsConn
 }
 
 func (client *ZenlayerCloudClient) WithZgaClient() *zga.Client {

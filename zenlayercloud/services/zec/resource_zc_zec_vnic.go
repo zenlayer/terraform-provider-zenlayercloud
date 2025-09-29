@@ -27,7 +27,7 @@ func ResourceZenlayerCloudZecVNic() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		CustomizeDiff: customdiff.All(
-			//stackTypeForceNewFunc(),
+		//stackTypeForceNewFunc(),
 		),
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -54,7 +54,7 @@ func ResourceZenlayerCloudZecVNic() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Computed:    true,
-				Description: "The ID of a security group.",
+				Description: "The ID of a security group. If absent, the security group under VPC will be used.",
 			},
 			"primary_ipv4": {
 				Type:        schema.TypeString,
@@ -174,9 +174,9 @@ func resourceZenlayerCloudZecVNicUpdate(ctx context.Context, d *schema.ResourceD
 		client: meta.(*connectivity.ZenlayerCloudClient),
 	}
 	nicId := d.Id()
-	if d.HasChange("name") {
+	if d.HasChanges("name", "security_group_id") {
 		err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate)-time.Minute, func() *resource.RetryError {
-			err := zecService.ModifyVNicAttribute(ctx, nicId, d.Get("name").(string))
+			err := zecService.ModifyVNicAttribute(ctx, nicId, d.Get("name").(string), d.Get("security_group_id").(string))
 			if err != nil {
 				return common2.RetryError(ctx, err, common2.InternalServerError, common.NetworkError)
 			}
@@ -230,7 +230,7 @@ func resourceZenlayerCloudZecVNicCreate(ctx context.Context, d *schema.ResourceD
 	}
 
 	if v, ok := d.GetOk("resource_group_id"); ok {
-		request.ResourceGroupId =common.String(v.(string))
+		request.ResourceGroupId = common.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("stack_type"); ok {
@@ -310,7 +310,7 @@ func resourceZenlayerCloudZecVNicRead(ctx context.Context, d *schema.ResourceDat
 			Summary:  "The vNIC is not exist",
 			Detail:   fmt.Sprintf("The vNIC %s is not exist", vnicId),
 		})
-		return nil
+		return diags
 	}
 
 	if *nic.Status == ZecVnicStatusCreateFailed {
@@ -336,8 +336,7 @@ func resourceZenlayerCloudZecVNicRead(ctx context.Context, d *schema.ResourceDat
 	_ = d.Set("resource_group_id", nic.ResourceGroup.ResourceGroupId)
 	_ = d.Set("resource_group_name", nic.ResourceGroup.ResourceGroupName)
 	_ = d.Set("create_time", nic.CreateTime)
-	//// TODO security group
-	//_ = d.Set("security_group_id", nic.SecurityGroupId)
+	_ = d.Set("security_group_id", nic.SecurityGroupId)
 	return diags
 
 }

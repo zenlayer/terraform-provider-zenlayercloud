@@ -87,6 +87,9 @@ func resourceZenlayerCloudInstance() *schema.Resource {
 			trafficPackageSizeForceNew(),
 			trafficPackageSizeValidFunc(),
 			trafficPackageSizeForPostPaidFunc(),
+			customdiff.ForceNewIf("user_data", func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
+				return !diff.Get("reinstall").(bool)
+			}),
 		),
 		Schema: map[string]*schema.Schema{
 			"availability_zone": {
@@ -171,6 +174,17 @@ func resourceZenlayerCloudInstance() *schema.Resource {
 				Optional:      true,
 				ConflictsWith: []string{"password", "ssh_keys"},
 				Description:   "The ssh key pair id to use for the instance. Modifications may cause the instance reset.",
+			},
+			"user_data": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "A string of the user data to be injected into this instance. If `reinstall` is set to `true`, updates to this field will trigger the instance reset instead of recreated.",
+			},
+			"reinstall": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     true,
+				Description: "Whether to reinstall the instance when modifying field including `user_data`.",
 			},
 			"internet_charge_type": {
 				Type:         schema.TypeString,
@@ -552,7 +566,7 @@ func resourceZenlayerCloudInstanceUpdate(ctx context.Context, d *schema.Resource
 		}
 	}
 	// need to reinstall the bmc instance
-	if d.HasChanges("hostname", "password", "ssh_keys", "image_id", "partitions", "raid_config_type", "raid_config_custom", "nic_lan_name", "nic_wan_name", "key_id") {
+	if d.HasChanges("hostname", "password", "ssh_keys", "image_id", "partitions", "raid_config_type", "raid_config_custom", "nic_lan_name", "nic_wan_name", "key_id", "user_data") {
 
 		request := bmc.NewReinstallInstanceRequest()
 		request.InstanceId = d.Id()
@@ -561,6 +575,10 @@ func resourceZenlayerCloudInstanceUpdate(ctx context.Context, d *schema.Resource
 		}
 		if v, ok := d.GetOk("password"); ok {
 			request.Password = v.(string)
+		}
+
+		if v, ok := d.GetOk("user_data"); ok {
+			request.UserData = common.String(v.(string))
 		}
 		if v, ok := d.GetOk("ssh_keys"); ok {
 			sshKeys := v.(*schema.Set).List()
@@ -757,6 +775,9 @@ func resourceZenlayerCloudInstanceCreate(ctx context.Context, d *schema.Resource
 	}
 	if v, ok := d.GetOk("password"); ok {
 		request.Password = v.(string)
+	}
+	if v, ok := d.GetOk("user_data"); ok {
+		request.UserData = common.String(v.(string))
 	}
 	if v, ok := d.GetOk("ssh_keys"); ok {
 		sshKeys := v.(*schema.Set).List()

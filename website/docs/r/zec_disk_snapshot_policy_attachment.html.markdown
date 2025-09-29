@@ -44,7 +44,7 @@ resource "zenlayercloud_zec_disk_snapshot_policy_attachment" "test" {
 The following arguments are supported:
 
 * `auto_snapshot_policy_id` - (Required, String, ForceNew) The ID of the auto snapshot policy.
-* `disk_id` - (Required, String, ForceNew) The ID of the disk. Note: system disk is not support yet.
+* `disk_id` - (Required, String, ForceNew) The ID of the disk.
 
 ## Attributes Reference
 

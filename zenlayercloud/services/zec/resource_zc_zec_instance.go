@@ -12,7 +12,7 @@ import (
 	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/connectivity"
 	"github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/common"
 	user "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/user20240529"
-	zec "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/zec20240401"
+	zec "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/zec20250901"
 	"time"
 )
 
@@ -110,6 +110,12 @@ func ResourceZenlayerCloudZecInstance() *schema.Resource {
 				ForceNew:    true,
 				Description: "The ID of a VPC subnet. Note: The **IPv6 only** stack subnet is not support for instance creation.",
 			},
+			"security_group_id": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Computed:    true,
+				Description: "The ID of a security group for primary vNIC of instance. If absent, the security group under VPC will be used.",
+			},
 			"resource_group_id": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -127,12 +133,12 @@ func ResourceZenlayerCloudZecInstance() *schema.Resource {
 				Description: "ID of the system disk.",
 			},
 			"system_disk_category": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Computed:    true,
-				ForceNew:    true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice([]string{"Standard NVMe SSD", "Basic NVMe SSD"}, false),
-				Description: "Category of the system disk. Valid values: `Standard NVMe SSD`, `Basic NVMe SSD`, Default is `Standard NVMe SSD`.",
+				Description:  "Category of the system disk. Valid values: `Standard NVMe SSD`, `Basic NVMe SSD`, Default is `Standard NVMe SSD`.",
 			},
 			"system_disk_size": {
 				Type:        schema.TypeInt,
@@ -238,12 +244,12 @@ func resourceZenlayerCloudZecInstanceDelete(ctx context.Context, d *schema.Resou
 			return nil
 		}
 
-		if instance.Status == ZecInstanceStatusRecycle {
+		if *instance.Status == ZecInstanceStatusRecycle {
 			//in recycle bin
 			return nil
 		}
 
-		if instanceIsOperating(instance.Status) {
+		if instanceIsOperating(*instance.Status) {
 			return resource.RetryableError(fmt.Errorf("waiting for instance %s recycling, current status: %s", instance.InstanceId, instance.Status))
 		}
 
@@ -299,9 +305,9 @@ func resourceZenlayerCloudZecInstanceUpdate(ctx context.Context, d *schema.Resou
 		err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate)-time.Minute, func() *resource.RetryError {
 			request := zec.NewModifyInstancesAttributeRequest()
 			request.InstanceIds = []string{instanceId}
-			request.InstanceName = d.Get("instance_name").(string)
+			request.InstanceName = common.String(d.Get("instance_name").(string))
 
-			response, err := zecService.client.WithZecClient().ModifyInstancesAttribute(request)
+			response, err := zecService.client.WithZec2Client().ModifyInstancesAttribute(request)
 			defer common2.LogApiRequest(ctx, "ModifyInstancesAttribute", request, response, err)
 
 			if err != nil {
@@ -363,11 +369,11 @@ func resourceZenlayerCloudZecInstanceUpdate(ctx context.Context, d *schema.Resou
 				return common2.RetryError(ctx, errRet, common2.InternalServerError)
 			}
 
-			if instance.Status == ZecInstanceStatusStopped {
+			if *instance.Status == ZecInstanceStatusStopped {
 				return nil
 			}
 
-			if instanceIsOperating(instance.Status) {
+			if instanceIsOperating(*instance.Status) {
 				return resource.RetryableError(fmt.Errorf("waiting for instance %s stopping, current status: %s", instance.InstanceId, instance.Status))
 			}
 
@@ -375,27 +381,27 @@ func resourceZenlayerCloudZecInstanceUpdate(ctx context.Context, d *schema.Resou
 		})
 
 		request := zec.NewResetInstanceRequest()
-		request.InstanceId = d.Id()
+		request.InstanceId = common.String(d.Id())
 		if v, ok := d.GetOk("image_id"); ok {
-			request.ImageId = v.(string)
+			request.ImageId = common.String(v.(string))
 		}
 
 		if v, ok := d.GetOk("key_id"); ok {
-			request.KeyId = v.(string)
+			request.KeyId = common.String(v.(string))
 		}
 
 		if v, ok := d.GetOk("time_zone"); ok {
-			request.Timezone = v.(string)
+			request.Timezone = common.String(v.(string))
 		}
 
 		if v, ok := d.GetOk("password"); ok {
-			request.Password = v.(string)
+			request.Password = common.String(v.(string))
 		}
 
 		if v, ok := d.GetOk("disable_qga_agent"); ok {
-			request.EnableAgent = !v.(bool)
+			request.EnableAgent = common.Bool(!v.(bool))
 		} else {
-			request.EnableAgent = true
+			request.EnableAgent = common.Bool(true)
 		}
 
 		err = zecService.resetInstance(ctx, request)
@@ -439,11 +445,11 @@ func resourceZenlayerCloudZecInstanceUpdate(ctx context.Context, d *schema.Resou
 				return common2.RetryError(ctx, errRet, common2.InternalServerError)
 			}
 
-			if instance.Status == ZecInstanceStatusRunning {
+			if *instance.Status == ZecInstanceStatusRunning {
 				return nil
 			}
 
-			if instanceIsOperating(instance.Status) {
+			if instanceIsOperating(*instance.Status) {
 				return resource.RetryableError(fmt.Errorf("waiting for instance %s stopping, current status: %s", instance.InstanceId, instance.Status))
 			}
 
@@ -465,6 +471,32 @@ func resourceZenlayerCloudZecInstanceUpdate(ctx context.Context, d *schema.Resou
 		}
 	}
 
+	if d.HasChange("security_group_id") {
+		_, newSecurityId := d.GetChange("security_group_id")
+
+		err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate)-time.Minute, func() *resource.RetryError {
+
+			instance, errRet := zecService.DescribeInstanceById(ctx, instanceId)
+			if errRet != nil {
+				return common2.RetryError(ctx, errRet, common2.InternalServerError)
+			}
+			var primaryNic *zec.NicInfo
+			for i := range instance.Nics {
+				if *instance.Nics[i].NicType == "Primary" {
+					primaryNic = instance.Nics[i]
+				}
+			}
+
+			errRet = zecService.ModifyVNicAttribute(ctx, *primaryNic.NicId, "", newSecurityId.(string))
+			if errRet != nil {
+				return common2.RetryError(ctx, errRet, common2.InternalServerError)
+			}
+			return nil
+		})
+		if err != nil {
+			return diag.FromErr(err)
+		}
+	}
 	if d.HasChange("running_flag") {
 		running := d.Get("running_flag").(bool)
 		if running {
@@ -478,11 +510,10 @@ func resourceZenlayerCloudZecInstanceUpdate(ctx context.Context, d *schema.Resou
 				if errRet != nil {
 					return common2.RetryError(ctx, errRet, common2.InternalServerError)
 				}
-				if instance.Status == ZecInstanceStatusRunning {
+				if *instance.Status == ZecInstanceStatusRunning {
 					return nil
 				}
 				return resource.RetryableError(fmt.Errorf("zec instance status is %s, retry...", instance.Status))
-
 			})
 			if err != nil {
 				return diag.FromErr(err)
@@ -499,7 +530,7 @@ func resourceZenlayerCloudZecInstanceUpdate(ctx context.Context, d *schema.Resou
 				if errRet != nil {
 					return common2.RetryError(ctx, errRet, common2.InternalServerError)
 				}
-				if instance.Status == ZecInstanceStatusStopped {
+				if *instance.Status == ZecInstanceStatusStopped {
 					return nil
 				}
 				return resource.RetryableError(fmt.Errorf("zec instance status is %s, retry...", instance.Status))
@@ -523,24 +554,27 @@ func resourceZenlayerCloudZecInstanceCreate(ctx context.Context, d *schema.Resou
 		client: meta.(*connectivity.ZenlayerCloudClient),
 	}
 	request := zec.NewCreateZecInstancesRequest()
-	request.InstanceCount = 1
-	request.ZoneId = d.Get("availability_zone").(string)
+	request.InstanceCount = common.Integer(1)
+	request.ZoneId = common.String(d.Get("availability_zone").(string))
 
-	request.InstanceType = d.Get("instance_type").(string)
-	request.ImageId = d.Get("image_id").(string)
-	request.InstanceName = d.Get("instance_name").(string)
+	request.InstanceType = common.String(d.Get("instance_type").(string))
+	request.ImageId = common.String(d.Get("image_id").(string))
+	request.InstanceName = common.String(d.Get("instance_name").(string))
 
 	if v, ok := d.GetOk("password"); ok {
-		request.Password = v.(string)
+		request.Password = common.String(v.(string))
 	}
 	if v, ok := d.GetOk("key_id"); ok {
-		request.KeyId = v.(string)
+		request.KeyId = common.String(v.(string))
 	}
 	system := &zec.SystemDisk{}
-	system.DiskSize = d.Get("system_disk_size").(int)
+	system.DiskSize = common.Integer(d.Get("system_disk_size").(int))
 
 	if v, ok := d.GetOk("system_disk_category"); ok {
-		system.DiskCategory = v.(string)
+		system.DiskCategory = common.String(v.(string))
+	}
+	if v, ok := d.GetOk("security_group_id"); ok {
+		request.SecurityGroupId = common.String(v.(string))
 	}
 	request.SystemDisk = system
 
@@ -559,30 +593,30 @@ func resourceZenlayerCloudZecInstanceCreate(ctx context.Context, d *schema.Resou
 	//if v, ok := d.GetOk("internet_max_bandwidth_out"); ok {
 	//	request.InternetMaxBandwidthOut = v.(int)
 	//}
-	request.SubnetId = d.Get("subnet_id").(string)
+	request.SubnetId = common.String(d.Get("subnet_id").(string))
 
 	if v, ok := d.GetOk("resource_group_id"); ok {
-		request.ResourceGroupId = v.(string)
+		request.ResourceGroupId = common.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("time_zone"); ok {
-		request.TimeZone = v.(string)
+		request.TimeZone = common.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("disable_qga_agent"); ok {
-		request.EnableAgent = !v.(bool)
+		request.EnableAgent = common.Bool(!v.(bool))
 	} else {
-		request.EnableAgent = true
+		request.EnableAgent = common.Bool(true)
 	}
 
 	if v, ok := d.GetOk("enable_ip_forwarding"); ok {
-		request.EnableIpForward = v.(bool)
+		request.EnableIpForward = common.Bool(v.(bool))
 	}
 
 	instanceId := ""
 
 	err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
-		response, err := meta.(*connectivity.ZenlayerCloudClient).WithZecClient().CreateZecInstances(request)
+		response, err := meta.(*connectivity.ZenlayerCloudClient).WithZec2Client().CreateZecInstances(request)
 		if err != nil {
 			tflog.Info(ctx, "Fail to create zec instance.", map[string]interface{}{
 				"action":  request.GetAction(),
@@ -602,7 +636,7 @@ func resourceZenlayerCloudZecInstanceCreate(ctx context.Context, d *schema.Resou
 			err = fmt.Errorf("instance id is nil")
 			return resource.NonRetryableError(err)
 		}
-		instanceId = *response.Response.InstanceIdSet[0]
+		instanceId = response.Response.InstanceIdSet[0]
 
 		return nil
 	})
@@ -656,7 +690,7 @@ func resourceZenlayerCloudZecInstanceRead(ctx context.Context, d *schema.Resourc
 			}
 			return common2.RetryError(ctx, errRet)
 		}
-		if instance != nil && instanceIsOperating(instance.Status) {
+		if instance != nil && instanceIsOperating(*instance.Status) {
 			return resource.RetryableError(fmt.Errorf("waiting for zec instance %s operation, current status: %s", instance.InstanceId, instance.Status))
 		}
 		return nil
@@ -666,8 +700,8 @@ func resourceZenlayerCloudZecInstanceRead(ctx context.Context, d *schema.Resourc
 		return diag.FromErr(err)
 	}
 
-	if instance == nil || instance.Status == ZecInstanceStatusCreateFailed ||
-		instance.Status == ZecInstanceStatusRecycle {
+	if instance == nil || *instance.Status == ZecInstanceStatusCreateFailed ||
+		*instance.Status == ZecInstanceStatusRecycle {
 		d.SetId("")
 		tflog.Info(ctx, "instance not exist or created failed or recycled", map[string]interface{}{
 			"instanceId": instanceId,
@@ -704,7 +738,8 @@ func resourceZenlayerCloudZecInstanceRead(ctx context.Context, d *schema.Resourc
 	}
 	_ = d.Set("create_time", instance.CreateTime)
 	_ = d.Set("time_zone", instance.TimeZone)
-	_ = d.Set("running_flag", instance.Status == ZecInstanceStatusRunning)
+	_ = d.Set("running_flag", *instance.Status == ZecInstanceStatusRunning)
+	_ = d.Set("security_group_id", instance.SecurityGroupId)
 
 	_ = d.Set("disable_qga_agent", !*instance.EnableAgent)
 	_ = d.Set("enable_ip_forwarding", *instance.EnableIpForward)

@@ -37,7 +37,6 @@ Zenlayer Virtual Machine(VM)
 	zenlayercloud_instance_types
 	zenlayercloud_disks
 	zenlayercloud_subnets
-	zenlayercloud_key_pairs
 
   Resource
 	zenlayercloud_image
@@ -48,7 +47,6 @@ Zenlayer Virtual Machine(VM)
 	zenlayercloud_disk
 	zenlayercloud_disk_attachment
 	zenlayercloud_subnet
-	zenlayercloud_key_pair
 
 Bare Metal Cloud(BMC)
   Data Source
@@ -99,6 +97,7 @@ Zenlayer Elastic Compute(ZEC)
 	zenlayercloud_zec_disks
 	zenlayercloud_zec_disk_snapshots
 	zenlayercloud_zec_disk_snapshot_policies
+	zenlayercloud_zec_cidrs
 	zenlayercloud_zec_eips
 	zenlayercloud_zec_instances
 	zenlayercloud_zec_vnics
@@ -108,12 +107,14 @@ Zenlayer Elastic Compute(ZEC)
   Resource
 	zenlayercloud_zec_vpc
 	zenlayercloud_zec_security_group
+	zenlayercloud_zec_security_group_rule_set
 	zenlayercloud_zec_vpc_security_group_attachment
 	zenlayercloud_zec_vpc_route
 	zenlayercloud_zec_subnet
 	zenlayercloud_zec_vnic
 	zenlayercloud_zec_vnic_attachment
 	zenlayercloud_zec_vnic_ipv4
+	zenlayercloud_zec_cidr
 	zenlayercloud_zec_eip
 	zenlayercloud_zec_eip_association
 	zenlayercloud_zec_instance
@@ -143,6 +144,13 @@ Traffic
 	zenlayercloud_traffic_bandwidth_clusters
 
   Resource
+
+Keypair
+  Data Source
+	zenlayercloud_key_pairs
+
+  Resource
+	zenlayercloud_key_pair
 */
 package zenlayercloud
 
@@ -160,6 +168,7 @@ package zenlayercloud
 
 import (
 	"context"
+	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/services/keypair"
 	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/services/traffic"
 	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/services/zec"
 	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/services/zlb"
@@ -240,7 +249,6 @@ func resourcesMap() map[string]*schema.Resource {
 		"zenlayercloud_subnet":                    resourceZenlayerCloudSubnet(),
 		"zenlayercloud_disk":                      resourceZenlayerCloudVmDisk(),
 		"zenlayercloud_disk_attachment":           resourceZenlayerCloudVmDiskAttachment(),
-		"zenlayercloud_key_pair":                  resourceZenlayerCloudKeyPair(),
 
 		// cloud networking product
 		"zenlayercloud_sdn_port":            resourceZenlayerCloudDcPorts(),
@@ -253,6 +261,7 @@ func resourcesMap() map[string]*schema.Resource {
 		// zenlayer zec product
 		"zenlayercloud_zec_vpc":                           zec.ResourceZenlayerCloudGlobalVpc(),
 		"zenlayercloud_zec_security_group":           	   zec.ResourceZenlayerCloudZecSecurityGroup(),
+		"zenlayercloud_zec_security_group_rule_set":       zec.ResourceZenlayerCloudZecSecurityGroupRuleSet(),
 		"zenlayercloud_zec_vpc_security_group_attachment": zec.ResourceZenlayerCloudZecVpcSecurityGroupAttachment(),
 		"zenlayercloud_zec_vpc_route": 					   zec.ResourceZenlayerCloudGlobalVpcRoute(),
 		"zenlayercloud_zec_subnet":                        zec.ResourceZenlayerCloudZecSubnet(),
@@ -260,6 +269,7 @@ func resourcesMap() map[string]*schema.Resource {
 		"zenlayercloud_zec_vnic_attachment":               zec.ResourceZenlayerCloudZecVNicAttachment(),
 		"zenlayercloud_zec_vnic_ipv4":                     zec.ResourceZenlayerCloudZecVNicIPv4(),
 		"zenlayercloud_zec_instance":                      zec.ResourceZenlayerCloudZecInstance(),
+		"zenlayercloud_zec_cidr": 						   zec.ResourceZenlayerCloudZecCidr(),
 		"zenlayercloud_zec_eip":                           zec.ResourceZenlayerCloudZecElasticIP(),
 		"zenlayercloud_zec_eip_association":               zec.ResourceZenlayerCloudEipAssociation(),
 		"zenlayercloud_zec_disk":                          zec.ResourceZenlayerCloudZecDisk(),
@@ -275,6 +285,10 @@ func resourcesMap() map[string]*schema.Resource {
 		"zenlayercloud_zlb_instance": zlb.ResourceZenlayerCloudZlbInstance(),
 		"zenlayercloud_zlb_listener": zlb.ResourceZenlayerCloudZlbListener(),
 		"zenlayercloud_zlb_backend":  zlb.ResourceZenlayerCloudZlbBackend(),
+
+		// key service
+		"zenlayercloud_key_pair":                  keypair.ResourceZenlayerCloudKeyPair(),
+
 	}
 }
 
@@ -297,7 +311,6 @@ func dataSourcesMap() map[string]*schema.Resource {
 		"zenlayercloud_instance_types":  dataSourceZenlayerCloudVmInstanceTypes(),
 		"zenlayercloud_disks":           dataSourceZenlayerCloudDisks(),
 		"zenlayercloud_subnets":         dataSourceZenlayerCloudSubnets(),
-		"zenlayercloud_key_pairs":       dataSourceZenlayerCloudKeyPairs(),
 
 		// cloud networking product
 		"zenlayercloud_sdn_datacenters":      dataSourceZenlayerCloudSdnDatacenters(),
@@ -317,6 +330,7 @@ func dataSourcesMap() map[string]*schema.Resource {
 		"zenlayercloud_zec_vpcs":            zec.DataSourceZenlayerCloudZecVpcs(),
 		"zenlayercloud_zec_subnets":         zec.DataSourceZenlayerCloudZecSubnets(),
 		"zenlayercloud_zec_border_gateways": zec.DataSourceZenlayerCloudBorderGateways(),
+		"zenlayercloud_zec_cidrs": 			 zec.DataSourceZenlayerCloudCidrs(),
 		"zenlayercloud_zec_eips":            zec.DataSourceZenlayerCloudEips(),
 		"zenlayercloud_zec_disks":           zec.DataSourceZenlayerCloudZecDisks(),
 		"zenlayercloud_zec_disk_snapshots":  zec.DataSourceZenlayerCloudZecSnapshots(),
@@ -335,6 +349,8 @@ func dataSourcesMap() map[string]*schema.Resource {
 		"zenlayercloud_traffic_bandwidth_cluster_areas": traffic.DataSourceZenlayerCloudTrafficBandwidthClusterAreas(),
 		"zenlayercloud_traffic_bandwidth_clusters": traffic.DataSourceZenlayerCloudTrafficBandwidthClusters(),
 
+		// key service
+		"zenlayercloud_key_pairs":       keypair.DataSourceZenlayerCloudKeyPairs(),
 	}
 }
 

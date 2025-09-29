@@ -1,6 +1,5 @@
 package zec
 
-
 import (
 	"context"
 	"fmt"
@@ -12,7 +11,7 @@ import (
 	common2 "github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/common"
 	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/connectivity"
 	"github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/common"
-	zec "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/zec20240401"
+	zec "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/zec20250901"
 	"time"
 )
 
@@ -55,11 +54,15 @@ func resourceZenlayerCloudZecSecurityGroupDelete(ctx context.Context, d *schema.
 		if errRet != nil {
 			return common2.RetryError(ctx, errRet)
 		}
-		associateVpcCount := len(sucurityGroup.VpcIds)
-		if associateVpcCount == 0 {
-			return nil
+		associateNatCount := len(sucurityGroup.NatIdList)
+		if associateNatCount != 0 {
+			return resource.RetryableError(fmt.Errorf("security group %s still have %d nats", securityGroupId, associateNatCount))
 		}
-		return resource.RetryableError(fmt.Errorf("security group %s still have %d vpcs", securityGroupId, associateVpcCount))
+
+		if len(sucurityGroup.NicIdList) != 0 {
+			return resource.RetryableError(fmt.Errorf("security group %s still have %d vnics", securityGroupId, associateNatCount))
+		}
+		return nil
 	})
 
 	if err != nil {
@@ -77,6 +80,7 @@ func resourceZenlayerCloudZecSecurityGroupDelete(ctx context.Context, d *schema.
 				// security group doesn't exist
 				return nil
 			}
+			return resource.NonRetryableError(errRet)
 		}
 		return nil
 	})
@@ -114,12 +118,12 @@ func resourceZenlayerCloudZecSecurityGroupUpdate(ctx context.Context, d *schema.
 func resourceZenlayerCloudZecSecurityGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 
 	request := zec.NewCreateSecurityGroupRequest()
-	request.SecurityGroupName = d.Get("name").(string)
+	request.SecurityGroupName = common.String(d.Get("name").(string))
 
 	securityGroupId := ""
 
 	err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
-		response, err := meta.(*connectivity.ZenlayerCloudClient).WithZecClient().CreateSecurityGroup(request)
+		response, err := meta.(*connectivity.ZenlayerCloudClient).WithZec2Client().CreateSecurityGroup(request)
 		if err != nil {
 			tflog.Info(ctx, "Fail to create zec security group.", map[string]interface{}{
 				"action":  request.GetAction(),
@@ -135,11 +139,11 @@ func resourceZenlayerCloudZecSecurityGroupCreate(ctx context.Context, d *schema.
 			"response": common2.ToJsonString(response),
 		})
 
-		if response.Response.SecurityGroupId == "" {
+		if response.Response.SecurityGroupId == nil {
 			err = fmt.Errorf("zec security group id is nil")
 			return resource.NonRetryableError(err)
 		}
-		securityGroupId = response.Response.SecurityGroupId
+		securityGroupId = *response.Response.SecurityGroupId
 
 		return nil
 	})
@@ -190,7 +194,7 @@ func resourceZenlayerCloudZecSecurityGroupRead(ctx context.Context, d *schema.Re
 	}
 
 	// security group info
-	d.SetId(securityGroup.SecurityGroupId)
+	d.SetId(*securityGroup.SecurityGroupId)
 	_ = d.Set("name", securityGroup.SecurityGroupName)
 
 	return diags

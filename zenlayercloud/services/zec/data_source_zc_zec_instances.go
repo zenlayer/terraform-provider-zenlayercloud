@@ -7,7 +7,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	common2 "github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/common"
 	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/connectivity"
-	zec "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/zec20240401"
+	zec "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/zec20250901"
 	"regexp"
 	"time"
 )
@@ -109,6 +109,11 @@ func DataSourceZenlayerCloudZecInstances() *schema.Resource {
 							Type:        schema.TypeString,
 							Computed:    true,
 							Description: "The image name to use for the ZEC instance.",
+						},
+						"security_group_id": {
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "The ID of a security group for primary vNIC of instance.",
 						},
 						"nic_network_type": {
 							Type:        schema.TypeString,
@@ -255,7 +260,7 @@ func dataSourceZenlayerCloudZecInstancesRead(ctx context.Context, d *schema.Reso
 	instanceList := make([]map[string]interface{}, 0, len(instances))
 	ids := make([]string, 0, len(instances))
 	for _, instance := range instances {
-		if nameRegex != nil && !nameRegex.MatchString(instance.InstanceName) {
+		if nameRegex != nil && !nameRegex.MatchString(*instance.InstanceName) {
 			continue
 		}
 		mapping := map[string]interface{}{
@@ -270,13 +275,16 @@ func dataSourceZenlayerCloudZecInstancesRead(ctx context.Context, d *schema.Reso
 			"nic_network_type":     instance.NicNetworkType,
 			"resource_group_id":    instance.ResourceGroupId,
 			"resource_group_name":  instance.ResourceGroupName,
-			"system_disk_id":       instance.SystemDisk.DiskId,
-			"system_disk_size":     instance.SystemDisk.DiskSize,
-			"system_disk_category": instance.SystemDisk.DiskCategory,
 			"instance_status":      instance.Status,
 			"create_time":          instance.CreateTime,
 			"private_ip_addresses": instance.PrivateIpAddresses,
 			"public_ip_addresses":  instance.PublicIpAddresses,
+			"security_group_id":    instance.SecurityGroupId,
+		}
+		if instance.SystemDisk != nil {
+			mapping["system_disk_id"] = instance.SystemDisk.DiskId
+			mapping["system_disk_size"] = instance.SystemDisk.DiskSize
+			mapping["system_disk_category"] = instance.SystemDisk.DiskCategory
 		}
 
 		dataDisks := make([]map[string]interface{}, 0, len(instance.DataDisks))
@@ -293,7 +301,7 @@ func dataSourceZenlayerCloudZecInstancesRead(ctx context.Context, d *schema.Reso
 		mapping["data_disks"] = dataDisks
 
 		instanceList = append(instanceList, mapping)
-		ids = append(ids, instance.InstanceId)
+		ids = append(ids, *instance.InstanceId)
 	}
 
 	d.SetId(common2.DataResourceIdHash(ids))

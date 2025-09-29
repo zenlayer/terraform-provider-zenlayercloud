@@ -23,7 +23,7 @@ Key pair can be imported, e.g.
 $ terraform import zenlayercloud_key_pair.foo key-xxxxxxx
 ```
 */
-package zenlayercloud
+package keypair
 
 import (
 	"context"
@@ -35,12 +35,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	common2 "github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/common"
 	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/connectivity"
+	ccs "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/ccs20250901"
 	"github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/common"
-	vm "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/vm20230313"
 	"time"
 )
 
-func resourceZenlayerCloudKeyPair() *schema.Resource {
+func ResourceZenlayerCloudKeyPair() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: resourceZenlayerCloudKeyPairCreate,
 		ReadContext:   resourceZenlayerCloudKeyPairRead,
@@ -68,8 +68,8 @@ func resourceZenlayerCloudKeyPair() *schema.Resource {
 			"key_description": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(2, 255),
-				Description:  "Description of key pair.",
+				ValidateFunc: validation.StringLenBetween(0, 255),
+				Description:  "Description of key pair. The length should be less than 256 characters.",
 			},
 		},
 	}
@@ -78,14 +78,14 @@ func resourceZenlayerCloudKeyPair() *schema.Resource {
 func resourceZenlayerCloudKeyPairDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	defer common2.LogElapsed(ctx, "resource.zenlayercloud_key_pair.delete")()
 
-	vmService := VmService{
+	ccsService := CcsService{
 		client: meta.(*connectivity.ZenlayerCloudClient),
 	}
 	keyId := d.Id()
 
 	// delete key pair
 	err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutDelete)-time.Minute, func() *resource.RetryError {
-		errRet := vmService.DeleteKeyPair(keyId)
+		errRet := ccsService.DeleteKeyPair(keyId)
 		if errRet != nil {
 			return common2.RetryError(ctx, errRet)
 		}
@@ -100,14 +100,14 @@ func resourceZenlayerCloudKeyPairDelete(ctx context.Context, d *schema.ResourceD
 }
 
 func resourceZenlayerCloudKeyPairUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	vmService := VmService{
+	ccsService := CcsService{
 		client: meta.(*connectivity.ZenlayerCloudClient),
 	}
 	keyId := d.Id()
 	if d.HasChange("key_description") {
 		err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate)-time.Minute, func() *resource.RetryError {
-			keyDesc := d.Get("key_description").(*string)
-			err := vmService.ModifyKeyPair(ctx, keyId, keyDesc)
+			keyDesc := common.String(d.Get("key_description").(string))
+			err := ccsService.ModifyKeyPair(ctx, keyId, keyDesc)
 			if err != nil {
 				return common2.RetryError(ctx, err, common2.InternalServerError, common.NetworkError)
 			}
@@ -125,16 +125,16 @@ func resourceZenlayerCloudKeyPairUpdate(ctx context.Context, d *schema.ResourceD
 func resourceZenlayerCloudKeyPairCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	defer common2.LogElapsed(ctx, "resource.zenlayercloud_key_pair.create")()
 
-	request := vm.NewImportKeyPairRequest()
-	request.KeyName = d.Get("key_name").(string)
-	request.PublicKey = d.Get("public_key").(string)
+	request := ccs.NewImportKeyPairRequest()
+	request.KeyName = common.String(d.Get("key_name").(string))
+	request.PublicKey = common.String(d.Get("public_key").(string))
 	if v, ok := d.GetOk("key_description"); ok {
-		request.KeyDescription = v.(*string)
+		request.KeyDescription = common.String(v.(string))
 	}
 	keyId := ""
 
 	err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
-		response, err := meta.(*connectivity.ZenlayerCloudClient).WithVmClient().ImportKeyPair(request)
+		response, err := meta.(*connectivity.ZenlayerCloudClient).WithCcsClient().ImportKeyPair(request)
 		if err != nil {
 			tflog.Info(ctx, "Fail to import key pair.", map[string]interface{}{
 				"action":  request.GetAction(),
@@ -150,11 +150,11 @@ func resourceZenlayerCloudKeyPairCreate(ctx context.Context, d *schema.ResourceD
 			"response": common2.ToJsonString(response),
 		})
 
-		if response.Response.KeyId == "" {
+		if response.Response.KeyId == nil {
 			err = fmt.Errorf("keyId is nil")
 			return resource.NonRetryableError(err)
 		}
-		keyId = response.Response.KeyId
+		keyId = *response.Response.KeyId
 
 		return nil
 	})
@@ -173,15 +173,15 @@ func resourceZenlayerCloudKeyPairRead(ctx context.Context, d *schema.ResourceDat
 
 	keyId := d.Id()
 
-	vmService := VmService{
+	ccsService := CcsService{
 		client: meta.(*connectivity.ZenlayerCloudClient),
 	}
 
-	var keyPair *vm.KeyPair
+	var keyPair *ccs.KeyPair
 	var errRet error
 
 	err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutRead)-time.Minute, func() *resource.RetryError {
-		keyPair, errRet = vmService.DescribeKeyPairById(ctx, keyId)
+		keyPair, errRet = ccsService.DescribeKeyPairById(ctx, keyId)
 		if errRet != nil {
 			return common2.RetryError(ctx, errRet, common2.InternalServerError)
 		}

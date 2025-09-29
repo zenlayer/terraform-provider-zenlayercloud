@@ -330,13 +330,13 @@ func (s *ZecService) DescribeNatGateways(ctx context.Context, filter *ZecNatGate
 	return
 }
 
-func (s *ZecService) DescribeInstancesByFilter(filter *ZecInstancesFilter) (instances []*zec.InstanceInfo, err error) {
+func (s *ZecService) DescribeInstancesByFilter(filter *ZecInstancesFilter) (instances []*zec2.InstanceInfo, err error) {
 	request := convertInstanceRequestFilter(filter)
 
 	var limit = 100
-	request.PageSize = limit
-	request.PageNum = 1
-	response, err := s.client.WithZecClient().DescribeInstances(request)
+	request.PageSize = &limit
+	request.PageNum = common2.Integer(1)
+	response, err := s.client.WithZec2Client().DescribeInstances(request)
 
 	if err != nil {
 		log.Printf("[CRITAL] Api[%s] fail, request body [%s], error[%s]\n",
@@ -348,7 +348,7 @@ func (s *ZecService) DescribeInstancesByFilter(filter *ZecInstancesFilter) (inst
 	}
 
 	instances = response.Response.DataSet
-	num := int(math.Ceil(float64(response.Response.TotalCount)/float64(limit))) - 1
+	num := int(math.Ceil(float64(*response.Response.TotalCount)/float64(limit))) - 1
 	if num == 0 {
 		return instances, nil
 	}
@@ -364,10 +364,10 @@ func (s *ZecService) DescribeInstancesByFilter(filter *ZecInstancesFilter) (inst
 		goFunc := func() {
 			request := convertInstanceRequestFilter(filter)
 
-			request.PageNum = value + 2
-			request.PageSize = limit
+			request.PageNum = common2.Integer(value + 2)
+			request.PageSize = &limit
 
-			response, err := s.client.WithZecClient().DescribeInstances(request)
+			response, err := s.client.WithZec2Client().DescribeInstances(request)
 			if err != nil {
 				log.Printf("[CRITAL] Api[%s] fail, request body [%s], error[%s]\n",
 					request.GetAction(), common.ToJsonString(request), err.Error())
@@ -387,7 +387,7 @@ func (s *ZecService) DescribeInstancesByFilter(filter *ZecInstancesFilter) (inst
 
 	log.Printf("[DEBUG] DescribeInstances request finished")
 	for _, v := range instanceList {
-		instances = append(instances, v.([]*zec.InstanceInfo)...)
+		instances = append(instances, v.([]*zec2.InstanceInfo)...)
 	}
 	log.Printf("[DEBUG] transfer ZEC instances finished")
 	return
@@ -673,11 +673,11 @@ func (s *ZecService) DeleteInstance(ctx context.Context, instanceId string) erro
 	return err
 }
 
-func (s *ZecService) DescribeInstanceById(ctx context.Context, instanceId string) (instance *zec.InstanceInfo, err error) {
-	request := zec.NewDescribeInstancesRequest()
+func (s *ZecService) DescribeInstanceById(ctx context.Context, instanceId string) (instance *zec2.InstanceInfo, err error) {
+	request := zec2.NewDescribeInstancesRequest()
 	request.InstanceIds = []string{instanceId}
 
-	response, err := s.client.WithZecClient().DescribeInstances(request)
+	response, err := s.client.WithZec2Client().DescribeInstances(request)
 
 	defer common.LogApiRequest(ctx, "DescribeInstances", request, response, err)
 	if err != nil {
@@ -691,16 +691,16 @@ func (s *ZecService) DescribeInstanceById(ctx context.Context, instanceId string
 	return
 }
 
-func (s *ZecService) DescribeSecurityGroupById(ctx context.Context, securityGroupId string) (securityGroup *zec.SecurityGroupInfo, err error) {
+func (s *ZecService) DescribeSecurityGroupById(ctx context.Context, securityGroupId string) (securityGroup *zec2.SecurityGroupInfo, err error) {
 
-	request := zec.NewDescribeSecurityGroupsRequest()
+	request := zec2.NewDescribeSecurityGroupsRequest()
 	request.SecurityGroupIds = []string{securityGroupId}
 
-	var response *zec.DescribeSecurityGroupsResponse
+	var response *zec2.DescribeSecurityGroupsResponse
 
 	defer common.LogApiRequest(ctx, "DescribeSecurityGroups", request, response, err)
 
-	response, err = s.client.WithZecClient().DescribeSecurityGroups(request)
+	response, err = s.client.WithZec2Client().DescribeSecurityGroups(request)
 
 	if err != nil {
 		return
@@ -806,11 +806,14 @@ func (s *ZecService) DeleteVnicById(ctx context.Context, nicId string) error {
 	return err
 }
 
-func (s *ZecService) ModifyVNicAttribute(ctx context.Context, vnicId string, name string) error {
-	request := zec.NewModifyNetworkInterfacesAttributeRequest()
-	request.NicIds = []string{vnicId}
-	request.Name = name
-	response, err := s.client.WithZecClient().ModifyNetworkInterfacesAttribute(request)
+func (s *ZecService) ModifyVNicAttribute(ctx context.Context, vnicId string, name string, securityGroupId string) error {
+	request := zec2.NewModifyNetworkInterfaceAttributeRequest()
+	request.NicId = &vnicId
+	if name != "" {
+		request.Name = &name
+	}
+	request.SecurityGroupId = &securityGroupId
+	response, err := s.client.WithZec2Client().ModifyNetworkInterfaceAttribute(request)
 	common.LogApiRequest(ctx, "ModifyNetworkInterfacesAttribute", request, response, err)
 	return err
 }
@@ -827,12 +830,12 @@ func (s *ZecService) InstanceStateRefreshFunc(ctx context.Context, instanceId st
 			return nil, "", nil
 		}
 		for _, failState := range failStates {
-			if object.Status == failState {
-				return object, object.Status, common.Error("Failed to reach target status. Last status: %s.", object.Status)
+			if *object.Status == failState {
+				return object, *object.Status, common.Error("Failed to reach target status. Last status: %s.", object.Status)
 			}
 		}
 
-		return object, object.Status, nil
+		return object, *object.Status, nil
 	}
 }
 
@@ -844,8 +847,8 @@ func (s *ZecService) shutdownInstance(ctx context.Context, instanceId string) er
 	return err
 }
 
-func (s *ZecService) resetInstance(ctx context.Context, request *zec.ResetInstanceRequest) error {
-	response, err := s.client.WithZecClient().ResetInstance(request)
+func (s *ZecService) resetInstance(ctx context.Context, request *zec2.ResetInstanceRequest) error {
+	response, err := s.client.WithZec2Client().ResetInstance(request)
 	common.LogApiRequest(ctx, "ResetInstance", request, response, err)
 	return err
 }
@@ -1194,6 +1197,108 @@ func (s *ZecService) switchInstanceIpForwarding(ctx context.Context, id string, 
 	}
 }
 
+func (s *ZecService) DescribeSecurityGroupRules(ctx context.Context, securityGroupId string) ([]*zec2.SecurityGroupRuleInfo, []*zec2.SecurityGroupRuleInfo, error) {
+	request := zec2.NewDescribeSecurityGroupRuleRequest()
+	request.SecurityGroupId = &securityGroupId
+	response, err := s.client.WithZec2Client().DescribeSecurityGroupRule(request)
+	defer common.LogApiRequest(ctx, "DescribeSecurityGroupRule", request, response, err)
+	return response.Response.IngressRuleList, response.Response.EgressRuleList, err
+}
+
+func (s *ZecService) DescribeCidrById(ctx context.Context, cidrId string) (*zec2.CidrInfo, error) {
+	request := zec2.NewDescribeCidrsRequest()
+	request.CidrIds = []string{cidrId}
+
+	response, err := s.client.WithZec2Client().DescribeCidrs(request)
+	defer common.LogApiRequest(ctx, "DescribeCidrs", request, response, err)
+
+	if err != nil {
+		return nil, err
+	} else if len(response.Response.DataSet) == 0 {
+		return nil, nil
+	}
+	return response.Response.DataSet[0], nil
+}
+
+func (s *ZecService) DescribeCidrsByFilter(ctx context.Context, filter *CidrFilter) (cidrs []*zec2.CidrInfo, err error) {
+	request := convertCidrRequestFilter(filter)
+
+	var limit = 100
+	request.PageSize = &limit
+	request.PageNum = common2.Integer(1)
+	response, err := s.client.WithZec2Client().DescribeCidrs(request)
+
+	if err != nil {
+		log.Printf("[CRITAL] Api[%s] fail, request body [%s], error[%s]\n",
+			request.GetAction(), common.ToJsonString(request), err.Error())
+		return
+	}
+	if response == nil || len(response.Response.DataSet) < 1 {
+		return
+	}
+
+	cidrs = response.Response.DataSet
+	num := int(math.Ceil(float64(*response.Response.TotalCount)/float64(limit))) - 1
+	if num == 0 {
+		return cidrs, nil
+	}
+	maxConcurrentNum := 50
+	g := common.NewGoRoutine(maxConcurrentNum)
+	wg := sync.WaitGroup{}
+
+	var vpcList = make([]interface{}, num)
+
+	for i := 0; i < num; i++ {
+		wg.Add(1)
+		value := i
+		goFunc := func() {
+			request := convertCidrRequestFilter(filter)
+
+			request.PageNum = common2.Integer(value + 2)
+			request.PageSize = common2.Integer(limit)
+
+			response, err := s.client.WithZec2Client().DescribeCidrs(request)
+			if err != nil {
+				log.Printf("[CRITAL] Api[%s] fail, request body [%s], error[%s]\n",
+					request.GetAction(), common.ToJsonString(request), err.Error())
+				return
+			}
+			log.Printf("[DEBUG] Api[%s] success, request body [%s], response body [%s]\n",
+				request.GetAction(), common.ToJsonString(request), common.ToJsonString(response))
+
+			vpcList[value] = response.Response.DataSet
+
+			wg.Done()
+			log.Printf("[DEBUG] thread %d finished", value)
+		}
+		g.Run(goFunc)
+	}
+	wg.Wait()
+
+	log.Printf("[DEBUG] DescribeCidrs request finished")
+	for _, v := range vpcList {
+		cidrs = append(cidrs, v.([]*zec2.CidrInfo)...)
+	}
+	log.Printf("[DEBUG] transfer CIDR block instances finished")
+	return
+
+}
+
+func convertCidrRequestFilter(filter *CidrFilter) *zec2.DescribeCidrsRequest {
+	request := zec2.NewDescribeCidrsRequest()
+	if len(filter.Ids) > 0 {
+		request.CidrIds = filter.Ids
+	}
+	if filter.RegionId != "" {
+		request.RegionId = &filter.RegionId
+	}
+
+	if filter.ResourceGroupId != "" {
+		request.ResourceGroupId = &filter.ResourceGroupId
+	}
+	return request
+}
+
 func convertSnapshotPolicyFilter(filter *ZecAutoSnapshotPolicyFilter) *zec.DescribeAutoSnapshotPoliciesRequest {
 
 	request := zec.NewDescribeAutoSnapshotPoliciesRequest()
@@ -1298,17 +1403,30 @@ func convertVnicRequestFilter(filter *ZecNicFilter) *zec2.DescribeNetworkInterfa
 	return request
 }
 
-func convertInstanceRequestFilter(filter *ZecInstancesFilter) *zec.DescribeInstancesRequest {
-	request := zec.NewDescribeInstancesRequest()
+func convertInstanceRequestFilter(filter *ZecInstancesFilter) *zec2.DescribeInstancesRequest {
+	request := zec2.NewDescribeInstancesRequest()
 	request.InstanceIds = filter.InstancesIds
-	request.Name = filter.InstanceName
-	request.Status = filter.InstanceStatus
-	request.Ipv6Address = filter.Ipv6
-	request.Ipv4Address = filter.Ipv4
-	request.ResourceGroupId = filter.ResourceGroupId
-	request.ZoneId = filter.ZoneId
-	request.ImageId = filter.ImageId
-
+	if filter.InstanceName != "" {
+		request.Name = common2.String(filter.InstanceName)
+	}
+	if filter.InstanceStatus != "" {
+		request.Status = common2.String(filter.InstanceStatus)
+	}
+	if filter.Ipv6 != "" {
+		request.Ipv6Address = common2.String(filter.Ipv6)
+	}
+	if filter.Ipv4 != "" {
+		request.Ipv4Address = common2.String(filter.Ipv4)
+	}
+	if filter.ResourceGroupId != "" {
+		request.ResourceGroupId = common2.String(filter.ResourceGroupId)
+	}
+	if filter.ZoneId != "" {
+		request.ZoneId = common2.String(filter.ZoneId)
+	}
+	if filter.ImageId != "" {
+		request.ImageId = common2.String(filter.ImageId)
+	}
 	return request
 }
 

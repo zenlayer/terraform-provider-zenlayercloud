@@ -1,18 +1,19 @@
 /*
 Use this data source to query SSH key pair list.
 
-Example Usage
+# Example Usage
 
 ```hcl
 data "zenlayercloud_key_pairs" "all" {
 }
 
-data "zenlayercloud_key_pairs" "myname" {
-	key_name = "myname"
-}
+	data "zenlayercloud_key_pairs" "myname" {
+		key_name = "myname"
+	}
+
 ```
 */
-package zenlayercloud
+package keypair
 
 import (
 	"context"
@@ -21,10 +22,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/common"
 	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/connectivity"
-	vm "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/vm20230313"
+	ccs "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/ccs20250901"
+	common2 "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/common"
 )
 
-func dataSourceZenlayerCloudKeyPairs() *schema.Resource {
+func DataSourceZenlayerCloudKeyPairs() *schema.Resource {
 	return &schema.Resource{
 		ReadContext: dataSourceZenlayerCloudKeyPairsRead,
 
@@ -87,16 +89,16 @@ func dataSourceZenlayerCloudKeyPairs() *schema.Resource {
 func dataSourceZenlayerCloudKeyPairsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	defer common.LogElapsed(ctx, "data_source.zenlayercloud_key_pairs.read")()
 
-	vmService := VmService{
+	ccsService := CcsService{
 		client: meta.(*connectivity.ZenlayerCloudClient),
 	}
 
 	var errRet error
 
-	request := vm.NewDescribeKeyPairsRequest()
+	request := ccs.NewDescribeKeyPairsRequest()
 	if v, ok := d.GetOk("key_name"); ok {
 		if v != "" {
-			request.KeyName = v.(string)
+			request.KeyName = common2.String(v.(string))
 		}
 	}
 	if v, ok := d.GetOk("key_ids"); ok {
@@ -106,9 +108,9 @@ func dataSourceZenlayerCloudKeyPairsRead(ctx context.Context, d *schema.Resource
 		}
 	}
 
-	var keyPairs []*vm.KeyPair
+	var keyPairs []*ccs.KeyPair
 	err := resource.RetryContext(ctx, common.ReadRetryTimeout, func() *resource.RetryError {
-		keyPairs, errRet = vmService.DescribeKeyPairs(ctx, request)
+		keyPairs, errRet = ccsService.DescribeKeyPairs(ctx, request)
 		if errRet != nil {
 			return common.RetryError(ctx, errRet, common.InternalServerError, common.ReadTimedOut)
 		}
@@ -126,7 +128,7 @@ func dataSourceZenlayerCloudKeyPairsRead(ctx context.Context, d *schema.Resource
 			"create_time":     keyPair.CreateTime,
 		}
 		keyPairList = append(keyPairList, mapping)
-		ids = append(ids, keyPair.KeyId)
+		ids = append(ids, *keyPair.KeyId)
 	}
 
 	d.SetId(common.DataResourceIdHash(ids))

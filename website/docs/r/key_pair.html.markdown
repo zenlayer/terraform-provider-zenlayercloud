@@ -1,5 +1,5 @@
 ---
-subcategory: "Zenlayer Virtual Machine(VM)"
+subcategory: "Keypair"
 layout: "zenlayercloud"
 page_title: "ZenlayerCloud: zenlayercloud_key_pair"
 sidebar_current: "docs-zenlayercloud-resource-key_pair"
@@ -31,7 +31,7 @@ The following arguments are supported:
 
 * `key_name` - (Required, String, ForceNew) Key pair name. Up to 32 characters in length are supported, containing letters, digits and special character -_. The names cannot be duplicated.
 * `public_key` - (Required, String, ForceNew) Public SSH keys in OpenSSH format. Up to 5 public keys are allowed, separated by pressing ENTER key.
-* `key_description` - (Optional, String) Description of key pair.
+* `key_description` - (Optional, String) Description of key pair. The length should be less than 256 characters.
 
 ## Attributes Reference
 

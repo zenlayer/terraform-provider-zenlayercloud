@@ -98,6 +98,7 @@ In addition to all arguments above, the following attributes are exported:
    * `public_ip_addresses` - Public Ipv6 addresses of the ZEC instance.
    * `resource_group_id` - The ID of resource group that the ZEC instance belongs to.
    * `resource_group_name` - The name of resource group that the ZEC instance belongs to.
+   * `security_group_id` - The ID of a security group for primary vNIC of instance.
    * `system_disk_category` - Category of the system disk.
    * `system_disk_id` - ID of the system disk.
    * `system_disk_size` - Size of the system disk.
