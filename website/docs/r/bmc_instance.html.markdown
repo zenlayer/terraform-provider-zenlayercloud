@@ -13,7 +13,7 @@ Provides a BMC instance resource.
 
 ~> **NOTE:** You can launch an BMC instance for a private network via specifying parameter `subnet_id`.
 
-~> **NOTE:** At present, 'PREPAID' instance cannot be deleted and must wait it to be outdated and released automatically.
+~> **NOTE:** At present, 'PREPAID' instance cannot be deleted. Executing terraform destroy will only cancel the subscription, and the instance will not be immediately destroyed. It will be automatically destroyed after expiration.
 
 ## Example Usage
 

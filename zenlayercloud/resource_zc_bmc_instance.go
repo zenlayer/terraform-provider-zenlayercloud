@@ -3,7 +3,7 @@ Provides a BMC instance resource.
 
 ~> **NOTE:** You can launch an BMC instance for a private network via specifying parameter `subnet_id`.
 
-~> **NOTE:** At present, 'PREPAID' instance cannot be deleted and must wait it to be outdated and released automatically.
+~> **NOTE:** At present, 'PREPAID' instance cannot be deleted. Executing terraform destroy will only cancel the subscription, and the instance will not be immediately destroyed. It will be automatically destroyed after expiration.
 
 Example Usage
 
@@ -397,6 +397,8 @@ func forceNewIfBandwidthDowngradeForPrepaidInstance(_ context.Context, d *schema
 }
 
 func resourceZenlayerCloudInstanceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	instanceId := d.Id()
 
 	// force_delete: terminate and then delete
@@ -418,6 +420,7 @@ func resourceZenlayerCloudInstanceDelete(ctx context.Context, d *schema.Resource
 	}
 
 	notExist := false
+	prepaid := false
 
 	err = resource.RetryContext(ctx, d.Timeout(schema.TimeoutDelete)-time.Minute, func() *resource.RetryError {
 		instance, errRet := bmcService.DescribeInstanceById(ctx, instanceId)
@@ -436,22 +439,38 @@ func resourceZenlayerCloudInstanceDelete(ctx context.Context, d *schema.Resource
 			notExist = true
 			return nil
 		}
+		if instance.InstanceChargeType == "PREPAID" {
+			prepaid = true
+			return nil
+		}
 
 		if instance.InstanceStatus == BmcInstanceStatusRecycle {
 			//in recycling
 			return nil
 		}
 
-		return resource.NonRetryableError(fmt.Errorf("bmc instance status is not recycle, current status %s", instance.InstanceStatus))
+		return resource.NonRetryableError(fmt.Errorf("bmc instance status %s is not recycle, current status %s",instance.InstanceId, instance.InstanceStatus))
 	})
 
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
+	if prepaid {
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Warning,
+			Summary:  "Prepaid instance destroy",
+			Detail:   fmt.Sprintf("The instance %s is prepaid, executing `terraform destroy` will only cancel the subscription, and the instance will not be immediately destroyed. It will be automatically destroyed after expiration", instanceId),
+		})
+		return diags
+	}
+
 	if notExist || !forceDelete {
 		return nil
 	}
+
+
+
 	tflog.Debug(ctx, "Releasing Instance ...", map[string]interface{}{
 		"instanceId": instanceId,
 	})
