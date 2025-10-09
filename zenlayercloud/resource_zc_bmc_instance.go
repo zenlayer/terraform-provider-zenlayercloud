@@ -3,9 +3,9 @@ Provides a BMC instance resource.
 
 ~> **NOTE:** You can launch an BMC instance for a private network via specifying parameter `subnet_id`.
 
-~> **NOTE:** At present, 'PREPAID' instance cannot be deleted and must wait it to be outdated and released automatically.
+~> **NOTE:** At present, 'PREPAID' instance cannot be deleted. Executing terraform destroy will only cancel the subscription, and the instance will not be immediately destroyed. It will be automatically destroyed after expiration.
 
-Example Usage
+# Example Usage
 
 ```hcl
 
@@ -13,35 +13,38 @@ data "zenlayercloud_bmc_zones" "default" {
 
 }
 
-data "zenlayercloud_bmc_instance_types" "default" {
-  availability_zone = data.zenlayercloud_bmc_zones.default.zones.0.id
-}
+	data "zenlayercloud_bmc_instance_types" "default" {
+	  availability_zone = data.zenlayercloud_bmc_zones.default.zones.0.id
+	}
 
 # Get a centos image which also supported to install on given instance type
-data "zenlayercloud_bmc_images" "default" {
-  catalog          = "centos"
-  instance_type_id = data.zenlayercloud_bmc_instance_types.default.instance_types.0.id
-}
 
-resource "zenlayercloud_bmc_subnet" "default" {
-  availability_zone = data.zenlayercloud_bmc_zones.default.zones.0.id
-  name              = "test-subnet"
-  cidr_block        = "10.0.10.0/24"
-}
+	data "zenlayercloud_bmc_images" "default" {
+	  catalog          = "centos"
+	  instance_type_id = data.zenlayercloud_bmc_instance_types.default.instance_types.0.id
+	}
+
+	resource "zenlayercloud_bmc_subnet" "default" {
+	  availability_zone = data.zenlayercloud_bmc_zones.default.zones.0.id
+	  name              = "test-subnet"
+	  cidr_block        = "10.0.10.0/24"
+	}
 
 # Create a web server
-resource "zenlayercloud_bmc_instance" "web" {
-  availability_zone    = data.zenlayercloud_bmc_zones.default.zones.0.id
-  image_id             = data.zenlayercloud_bmc_images.default.images.0.image_id
-  internet_charge_type = "ByBandwidth"
-  instance_type_id     = data.zenlayercloud_bmc_instance_types.default.instance_types.0.id
-  password             = "Example~123"
-  instance_name        = "web"
-  subnet_id            =  zenlayercloud_bmc_subnet.default.id
-}
+
+	resource "zenlayercloud_bmc_instance" "web" {
+	  availability_zone    = data.zenlayercloud_bmc_zones.default.zones.0.id
+	  image_id             = data.zenlayercloud_bmc_images.default.images.0.image_id
+	  internet_charge_type = "ByBandwidth"
+	  instance_type_id     = data.zenlayercloud_bmc_instance_types.default.instance_types.0.id
+	  password             = "Example~123"
+	  instance_name        = "web"
+	  subnet_id            =  zenlayercloud_bmc_subnet.default.id
+	}
+
 ```
 
-Import
+# Import
 
 BMC instance can be imported using the id, e.g.
 
@@ -397,6 +400,8 @@ func forceNewIfBandwidthDowngradeForPrepaidInstance(_ context.Context, d *schema
 }
 
 func resourceZenlayerCloudInstanceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	instanceId := d.Id()
 
 	// force_delete: terminate and then delete
@@ -418,6 +423,7 @@ func resourceZenlayerCloudInstanceDelete(ctx context.Context, d *schema.Resource
 	}
 
 	notExist := false
+	prepaid := false
 
 	err = resource.RetryContext(ctx, d.Timeout(schema.TimeoutDelete)-time.Minute, func() *resource.RetryError {
 		instance, errRet := bmcService.DescribeInstanceById(ctx, instanceId)
@@ -436,22 +442,38 @@ func resourceZenlayerCloudInstanceDelete(ctx context.Context, d *schema.Resource
 			notExist = true
 			return nil
 		}
+		if instance.InstanceChargeType == "PREPAID" {
+			prepaid = true
+			return nil
+		}
 
 		if instance.InstanceStatus == BmcInstanceStatusRecycle {
 			//in recycling
 			return nil
 		}
 
-		return resource.NonRetryableError(fmt.Errorf("bmc instance status is not recycle, current status %s", instance.InstanceStatus))
+		return resource.NonRetryableError(fmt.Errorf("bmc instance status %s is not recycle, current status %s",instance.InstanceId, instance.InstanceStatus))
 	})
 
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
+	if prepaid {
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Warning,
+			Summary:  "Prepaid instance destroy",
+			Detail:   fmt.Sprintf("The instance %s is prepaid, executing `terraform destroy` will only cancel the subscription, and the instance will not be immediately destroyed. It will be automatically destroyed after expiration", instanceId),
+		})
+		return diags
+	}
+
 	if notExist || !forceDelete {
 		return nil
 	}
+
+
+
 	tflog.Debug(ctx, "Releasing Instance ...", map[string]interface{}{
 		"instanceId": instanceId,
 	})
