@@ -116,12 +116,12 @@ func resourceZenlayerCloudZecSubnetDelete(ctx context.Context, d *schema.Resourc
 
 	subnetId := d.Id()
 
-	ZecService := ZecService{
+	zecService := ZecService{
 		client: meta.(*connectivity.ZenlayerCloudClient),
 	}
 
 	err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutDelete)-time.Minute, func() *resource.RetryError {
-		errRet := ZecService.DeleteSubnet(ctx, subnetId)
+		errRet := zecService.DeleteSubnet(ctx, subnetId)
 		if errRet != nil {
 			ee, ok := errRet.(*common.ZenlayerCloudSdkError)
 			if !ok {
@@ -187,7 +187,7 @@ func resourceZenlayerCloudZecSubnetUpdate(ctx context.Context, d *schema.Resourc
 
 func resourceZenlayerCloudZecSubnetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 
-	ZecService := ZecService{
+	zecService := ZecService{
 		client: meta.(*connectivity.ZenlayerCloudClient),
 	}
 	request := zec.NewCreateSubnetRequest()
@@ -218,7 +218,7 @@ func resourceZenlayerCloudZecSubnetCreate(ctx context.Context, d *schema.Resourc
 	subnetId := ""
 
 	err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
-		response, err := ZecService.client.WithZecClient().CreateSubnet(request)
+		response, err := zecService.client.WithZecClient().CreateSubnet(request)
 		if err != nil {
 			tflog.Info(ctx, "Fail to create subnet.", map[string]interface{}{
 				"action":  request.GetAction(),

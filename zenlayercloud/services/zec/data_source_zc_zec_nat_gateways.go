@@ -7,7 +7,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	common2 "github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/common"
 	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/connectivity"
-	zec2 "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/zec20240401"
+	zec "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/zec20250901"
 	"regexp"
 	"time"
 )
@@ -24,7 +24,7 @@ func DataSourceZenlayerCloudZecNatGateway() *schema.Resource {
 			},
 			"ids": {
 				Type:        schema.TypeSet,
-				Elem: &schema.Schema{Type: schema.TypeString},
+				Elem:        &schema.Schema{Type: schema.TypeString},
 				Optional:    true,
 				Description: "ids of the NAT gateway to be queried.",
 			},
@@ -32,6 +32,16 @@ func DataSourceZenlayerCloudZecNatGateway() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "A regex string to apply to the NAT gateway list returned.",
+			},
+			"vpc_id": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "ID of the VPC to be queried.",
+			},
+			"security_group_id": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "ID of the security group to be queried.",
 			},
 			"resource_group_id": {
 				Type:        schema.TypeString,
@@ -68,18 +78,39 @@ func DataSourceZenlayerCloudZecNatGateway() *schema.Resource {
 						"vpc_id": {
 							Type:        schema.TypeString,
 							Computed:    true,
-							Description: "ID of the VPC to be associated.",
+							Description: "ID of the VPC.",
 						},
 						"subnet_ids": {
 							Type:        schema.TypeList,
 							Elem:        &schema.Schema{Type: schema.TypeString},
 							Computed:    true,
-							Description: "IDs of the subnets to be associated. if this value not set.",
+							Description: "IDs of the subnets.",
+						},
+						"eip_ids": {
+							Type:        schema.TypeList,
+							Elem:        &schema.Schema{Type: schema.TypeString},
+							Computed:    true,
+							Description: "IDs of the EIP associated.",
+						},
+						"security_group_id": {
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "ID of the security group associated.",
+						},
+						"zbg_id": {
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "ID of border gateway associated.",
 						},
 						"is_all_subnets": {
 							Type:        schema.TypeBool,
 							Computed:    true,
 							Description: "Indicates whether all the subnets of region is assigned to NAT gateway.",
+						},
+						"icmp_reply_enabled": {
+							Type:        schema.TypeBool,
+							Computed:    true,
+							Description: "Indicates whether ICMP reply is enabled.",
 						},
 						"status": {
 							Type:        schema.TypeString,
@@ -125,6 +156,14 @@ func dataSourceZenlayerCloudZecNatGatewayRead(ctx context.Context, d *schema.Res
 		request.ResourceGroupId = v.(string)
 	}
 
+	if v, ok := d.GetOk("security_group_id"); ok {
+		request.SecurityGroupId = v.(string)
+	}
+
+	if v, ok := d.GetOk("vpc_id"); ok {
+		request.VpcId = v.(string)
+	}
+
 	if v, ok := d.GetOk("ids"); ok {
 		ids := v.(*schema.Set).List()
 		if len(ids) > 0 {
@@ -142,7 +181,7 @@ func dataSourceZenlayerCloudZecNatGatewayRead(ctx context.Context, d *schema.Res
 		}
 	}
 
-	var result []*zec2.NatGateway
+	var result []*zec.NatGateway
 
 	err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutRead)-time.Minute, func() *resource.RetryError {
 		var e error
@@ -175,6 +214,11 @@ func dataSourceZenlayerCloudZecNatGatewayRead(ctx context.Context, d *schema.Res
 			"status":              natGateway.Status,
 			"resource_group_id":   natGateway.ResourceGroupId,
 			"resource_group_name": natGateway.ResourceGroupName,
+			"icmp_reply_enabled":  natGateway.IcmpReplyEnabled,
+			"security_group_id":   natGateway.SecurityGroupId,
+			"eip_ids":         natGateway.EipIds,
+			"zbg_id":         natGateway.ZbgId,
+
 		}
 		nats = append(nats, mapping)
 		ids = append(ids, *natGateway.NatGatewayId)
@@ -199,6 +243,8 @@ func dataSourceZenlayerCloudZecNatGatewayRead(ctx context.Context, d *schema.Res
 type ZecNatGatewayFilter struct {
 	Ids             []string
 	RegionId        string
+	SecurityGroupId string
+	VpcId           string
 	Name            string
 	ResourceGroupId string
 }

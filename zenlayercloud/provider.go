@@ -92,6 +92,7 @@ Zenlayer Elastic Compute(ZEC)
 
   Data Source
 	zenlayercloud_zec_vpcs
+	zenlayercloud_zec_vpc_routes
 	zenlayercloud_zec_subnets
 	zenlayercloud_zec_images
 	zenlayercloud_zec_disks
@@ -102,6 +103,8 @@ Zenlayer Elastic Compute(ZEC)
 	zenlayercloud_zec_instances
 	zenlayercloud_zec_vnics
 	zenlayercloud_zec_nat_gateways
+	zenlayercloud_zec_nat_gateway_snats
+	zenlayercloud_zec_nat_gateway_dnats
 	zenlayercloud_zec_border_gateways
 
   Resource
@@ -123,6 +126,9 @@ Zenlayer Elastic Compute(ZEC)
 	zenlayercloud_zec_disk_snapshot
 	zenlayercloud_zec_disk_snapshot_policy
 	zenlayercloud_zec_disk_snapshot_policy_attachment
+	zenlayercloud_zec_nat_gateway
+	zenlayercloud_zec_nat_gateway_snat
+	zenlayercloud_zec_nat_gateway_dnat
 
 Zenlayer Load Balancing(ZLB)
 
@@ -144,6 +150,7 @@ Traffic
 	zenlayercloud_traffic_bandwidth_clusters
 
   Resource
+	zenlayercloud_traffic_bandwidth_cluster
 
 Keypair
   Data Source
@@ -280,6 +287,8 @@ func resourcesMap() map[string]*schema.Resource {
 		"zenlayercloud_zec_border_gateway":                zec.ResourceZenlayerCloudBorderGateway(),
 		"zenlayercloud_zec_border_gateway_association":    zec.ResourceZenlayerCloudBorderGatewayAssociation(),
 		"zenlayercloud_zec_nat_gateway":                   zec.ResourceZenlayerCloudZecVpcNatGateway(),
+		"zenlayercloud_zec_nat_gateway_snat":              zec.ResourceZenlayerCloudZecVpcNatGatewaySnat(),
+		"zenlayercloud_zec_nat_gateway_dnat":              zec.ResourceZenlayerCloudZecVpcNatGatewayDnat(),
 
 		// zenlayer load balancer
 		"zenlayercloud_zlb_instance": zlb.ResourceZenlayerCloudZlbInstance(),
@@ -288,6 +297,9 @@ func resourcesMap() map[string]*schema.Resource {
 
 		// key service
 		"zenlayercloud_key_pair":                  keypair.ResourceZenlayerCloudKeyPair(),
+
+		// bandwidth cluster
+		"zenlayercloud_traffic_bandwidth_cluster": traffic.ResourceZenlayerCloudTrafficBandwidthCluster(),
 
 	}
 }
@@ -317,7 +329,7 @@ func dataSourcesMap() map[string]*schema.Resource {
 		"zenlayercloud_sdn_ports":            dataSourceZenlayerCloudDcPorts(),
 		"zenlayercloud_sdn_private_connects": dataSourceZenlayerCloudSdnPrivateConnects(),
 		//"zenlayercloud_sdn_cloud_routers":    dataSourceZenlayerCloudSdnCloudRouters(),
-		"zenlayercloud_sdn_cloud_regions": dataSourceZenlayerCloudCloudRegions(),
+		"zenlayercloud_sdn_cloud_regions": 		dataSourceZenlayerCloudCloudRegions(),
 
 		// zenlayer global accelerator
 		"zenlayercloud_zga_certificates":       dataSourceZenlayerCloudZgaCertificates(),
@@ -328,6 +340,7 @@ func dataSourcesMap() map[string]*schema.Resource {
 		// zenlayer zec product
 		"zenlayercloud_zec_images":          zec.DataSourceZenlayerCloudZecImages(),
 		"zenlayercloud_zec_vpcs":            zec.DataSourceZenlayerCloudZecVpcs(),
+		"zenlayercloud_zec_vpc_routes": 	zec.DataSourceZenlayerCloudZecVpcRoutes(),
 		"zenlayercloud_zec_subnets":         zec.DataSourceZenlayerCloudZecSubnets(),
 		"zenlayercloud_zec_border_gateways": zec.DataSourceZenlayerCloudBorderGateways(),
 		"zenlayercloud_zec_cidrs": 			 zec.DataSourceZenlayerCloudCidrs(),
@@ -335,7 +348,9 @@ func dataSourcesMap() map[string]*schema.Resource {
 		"zenlayercloud_zec_disks":           zec.DataSourceZenlayerCloudZecDisks(),
 		"zenlayercloud_zec_disk_snapshots":  zec.DataSourceZenlayerCloudZecSnapshots(),
 		"zenlayercloud_zec_disk_snapshot_policies":      zec.DataSourceZenlayerCloudZecAutoSnapshotPolicies(),
-		"zenlayercloud_zec_nat_gateways":    zec.DataSourceZenlayerCloudZecNatGateway(),
+		"zenlayercloud_zec_nat_gateways":    			 zec.DataSourceZenlayerCloudZecNatGateway(),
+		"zenlayercloud_zec_nat_gateway_snats":    		 zec.DataSourceZenlayerCloudZecNatGatewaySnats(),
+		"zenlayercloud_zec_nat_gateway_dnats":    		 zec.DataSourceZenlayerCloudZecNatGatewayDnats(),
 		"zenlayercloud_zec_instances":       zec.DataSourceZenlayerCloudZecInstances(),
 		"zenlayercloud_zec_vnics":           zec.DataSourceZenlayerCloudZecVnics(),
 

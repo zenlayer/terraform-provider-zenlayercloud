@@ -16,7 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/common"
 	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/connectivity"
-	zec "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/zec20240401"
+	zec "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/zec20250901"
 )
 
 func ResourceZenlayerCloudZecElasticIP() *schema.Resource {
@@ -138,37 +138,37 @@ func resourceZenlayerCloudZecElasticIPCreate(ctx context.Context, d *schema.Reso
 	}
 
 	request := zec.NewCreateEipsRequest()
-	request.RegionId = d.Get("region_id").(string)
-	request.Name = d.Get("name").(string)
-	request.InternetChargeType = d.Get("internet_charge_type").(string)
-	request.EipV4Type = d.Get("ip_network_type").(string)
+	request.RegionId = common2.String(d.Get("region_id").(string))
+	request.Name = common2.String(d.Get("name").(string))
+	request.InternetChargeType = common2.String(d.Get("internet_charge_type").(string))
+	request.EipV4Type = common2.String(d.Get("ip_network_type").(string))
 
 	if v, ok := d.GetOk("bandwidth"); ok {
-		request.Bandwidth = v.(int)
+		request.Bandwidth = common2.Integer(v.(int))
 	}
 
 	if v, ok := d.GetOk("flow_package_size"); ok {
-		request.FlowPackage = v.(float64)
+		request.FlowPackage = common2.Float64(v.(float64))
 	}
 
 	if v, ok := d.GetOk("cidr_id"); ok {
-		request.CidrId = v.(string)
+		request.CidrId = common2.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("resource_group_id"); ok {
-		request.ResourceGroupId = v.(string)
+		request.ResourceGroupId = common2.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("bandwidth_cluster_id"); ok {
-		request.ClusterId = v.(string)
+		request.ClusterId = common2.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("peer_region_id"); ok {
-		request.PeerRegionId = v.(string)
+		request.PeerRegionId = common2.String(v.(string))
 	}
 
 	err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
-		response, err := zecService.client.WithZecClient().CreateEips(request)
+		response, err := zecService.client.WithZec2Client().CreateEips(request)
 		if err != nil {
 			return common.RetryError(ctx, err)
 		}
@@ -205,7 +205,7 @@ func resourceZenlayerCloudZecElasticIPRead(ctx context.Context, d *schema.Resour
 			return common.RetryError(ctx, errRet)
 		}
 
-		if eipAddress != nil && ipIsOperating(eipAddress.Status) {
+		if eipAddress != nil && ipIsOperating(*eipAddress.Status) {
 			return resource.RetryableError(fmt.Errorf("waiting for eip %s operation", eipAddress.EipId))
 		}
 		eip = eipAddress
@@ -216,8 +216,8 @@ func resourceZenlayerCloudZecElasticIPRead(ctx context.Context, d *schema.Resour
 		return diag.FromErr(err)
 	}
 
-	if eip == nil || eip.Status == ZecEipStatusCreateFailed ||
-		eip.Status == ZecEipStatusRecycle {
+	if eip == nil || *eip.Status == ZecEipStatusCreateFailed ||
+		*eip.Status == ZecEipStatusRecycle {
 		d.SetId("")
 		tflog.Info(ctx, "zec eip not exist or created failed or recycled", map[string]interface{}{
 			"eipId": eipId,
@@ -262,7 +262,7 @@ func resourceZenlayerCloudZecElasticIPUpdate(ctx context.Context, d *schema.Reso
 		request := zec.NewModifyEipAttributeRequest()
 		request.EipId = common2.String(eipId)
 		request.Name = common2.String(d.Get("name").(string))
-		_, err := zecService.client.WithZecClient().ModifyEipAttribute(request)
+		_, err := zecService.client.WithZec2Client().ModifyEipAttribute(request)
 		if err != nil {
 			return diag.FromErr(err)
 		}
@@ -272,7 +272,7 @@ func resourceZenlayerCloudZecElasticIPUpdate(ctx context.Context, d *schema.Reso
 		request := zec.NewModifyEipBandwidthRequest()
 		request.EipId = common2.String(eipId)
 		request.Bandwidth = common2.Integer(d.Get("bandwidth").(int))
-		_, err := zecService.client.WithZecClient().ModifyEipBandwidth(request)
+		_, err := zecService.client.WithZec2Client().ModifyEipBandwidth(request)
 		if err != nil {
 			return diag.FromErr(err)
 		}
@@ -319,10 +319,10 @@ func resourceZenlayerCloudZecElasticIPDelete(ctx context.Context, d *schema.Reso
 
 	request := zec.NewDeleteEipRequest()
 	eipId := d.Id()
-	request.EipId = eipId
+	request.EipId = &eipId
 
 	err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
-		_, err := zecService.client.WithZecClient().DeleteEip(request)
+		_, err := zecService.client.WithZec2Client().DeleteEip(request)
 		if err != nil {
 			if sdkError, ok := err.(*common2.ZenlayerCloudSdkError); ok {
 				if sdkError.Code == common.ResourceNotFound {
@@ -346,13 +346,13 @@ func resourceZenlayerCloudZecElasticIPDelete(ctx context.Context, d *schema.Reso
 			return nil
 		}
 
-		if eip.Status == ZecEipStatusRecycle {
+		if *eip.Status == ZecEipStatusRecycle {
 			return nil
 		}
-		if eip.Status == ZecEipStatusRecycling {
+		if *eip.Status == ZecEipStatusRecycling {
 			return resource.RetryableError(fmt.Errorf("zec eip (%s) is recycling", eipId))
 		}
-		if eip.Status == ZecEipStatusDeleting {
+		if *eip.Status == ZecEipStatusDeleting {
 			return resource.RetryableError(fmt.Errorf("zec eip (%s) is deleting", eipId))
 		}
 
@@ -372,7 +372,7 @@ func resourceZenlayerCloudZecElasticIPDelete(ctx context.Context, d *schema.Reso
 	})
 
 	err = resource.RetryContext(ctx, d.Timeout(schema.TimeoutDelete)-time.Minute, func() *resource.RetryError {
-		_, err := zecService.client.WithZecClient().DeleteEip(request)
+		_, err := zecService.client.WithZec2Client().DeleteEip(request)
 		if err != nil {
 			if sdkError, ok := err.(*common2.ZenlayerCloudSdkError); ok {
 				if sdkError.Code == common.ResourceNotFound {

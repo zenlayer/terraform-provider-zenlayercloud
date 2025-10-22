@@ -68,6 +68,7 @@ In addition to all arguments above, the following attributes are exported:
 
 * `border_gateways` - An information list of border gateways. Each element contains the following attributes:
    * `advertised_cidrs` - Custom IPv4 CIDR block list.
+   * `advertised_route_ids` - IDs of route which are advertised through Border gateway.
    * `advertised_subnet` - Subnet route advertisement.
    * `asn` - Autonomous System Number.
    * `cloud_router_ids` - Cloud router IDs that border gateway is added into.
@@ -76,6 +77,7 @@ In addition to all arguments above, the following attributes are exported:
    * `name` - Name of the border gateway.
    * `nat_id` - NAT gateway ID.
    * `region_id` - Region ID of the border gateway.
+   * `routing_mode` - Routing mode of border gateway. Valid values: `Regional`, `Global`.
    * `vpc_id` - VPC ID that the border gateway belongs to.
    * `zbg_id` - ID of the border gateway.
 

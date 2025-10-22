@@ -13,7 +13,7 @@ import (
 	common2 "github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/common"
 	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/connectivity"
 	"github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/common"
-	zec "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/zec20240401"
+	zec "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/zec20250901"
 	"time"
 )
 
@@ -27,12 +27,14 @@ func ResourceZenlayerCloudGlobalVpcRoute() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		CustomizeDiff: customdiff.All(
-			sourceIpValidFunc(),
+			sourceIpByPolicyValidFunc(),
+			sourceIpByStaticValidFunc(),
 		),
 		Schema: map[string]*schema.Schema{
 			"vpc_id": {
 				Type:        schema.TypeString,
 				Required:    true,
+				ForceNew:    true,
 				Description: "ID of the VPC.",
 			},
 			"name": {
@@ -44,6 +46,7 @@ func ResourceZenlayerCloudGlobalVpcRoute() *schema.Resource {
 			"destination_cidr_block": {
 				Type:     schema.TypeString,
 				Required: true,
+				ForceNew: true,
 				// TODO IPv6
 				ValidateFunc: common2.ValidateCIDRNetworkAddress,
 				Description:  "Destination address block.",
@@ -58,22 +61,27 @@ func ResourceZenlayerCloudGlobalVpcRoute() *schema.Resource {
 			"route_type": {
 				Type:         schema.TypeString,
 				Required:     true,
+				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice([]string{"RouteTypeStatic", "RouteTypePolicy"}, false),
 				Description:  "Route type. Valid values: `RouteTypeStatic`, `RouteTypePolicy`.",
 			},
 			"source_ip": {
 				Type:        schema.TypeString,
 				Optional:    true,
+				ForceNew:    true,
 				Description: "The source IP matched. Required when the `route_type` is `RouteTypePolicy`.",
 			},
 			"priority": {
 				Type:        schema.TypeInt,
 				Required:    true,
+				ForceNew:    true,
+				ValidateFunc: validation.IntBetween(0, 65535),
 				Description: "Priority of the route entry. Valid value: from `0` to `65535`.",
 			},
 			"next_hop_id": {
 				Type:        schema.TypeString,
 				Required:    true,
+				ForceNew:    true,
 				Description: "ID of next hop instance. Currently only ID of vNIC is valid.",
 			},
 			"create_time": {
@@ -85,17 +93,30 @@ func ResourceZenlayerCloudGlobalVpcRoute() *schema.Resource {
 	}
 }
 
-func sourceIpValidFunc() schema.CustomizeDiffFunc {
+func sourceIpByPolicyValidFunc() schema.CustomizeDiffFunc {
 	return customdiff.IfValue("route_type", func(ctx context.Context, value, meta interface{}) bool {
 		return value == "RouteTypePolicy"
 	}, func(ctx context.Context, diff *schema.ResourceDiff, i interface{}) error {
 		if _, ok := diff.GetOk("source_ip"); !ok {
-			return errors.New("`source_ip` is only required when `route_type` is `RouteTypePolicy`")
+			return errors.New("`source_ip` is required when `route_type` is `RouteTypePolicy`")
 		}
 
 		return nil
 	})
 }
+
+func sourceIpByStaticValidFunc() schema.CustomizeDiffFunc {
+	return customdiff.IfValue("route_type", func(ctx context.Context, value, meta interface{}) bool {
+		return value == "RouteTypeStatic"
+	}, func(ctx context.Context, diff *schema.ResourceDiff, i interface{}) error {
+		if _, ok := diff.GetOk("source_ip"); ok {
+			return errors.New("`source_ip` can't be set when `route_type` is `RouteTypeStatic`")
+		}
+
+		return nil
+	})
+}
+
 
 func resourceZenlayerCloudGlobalVpcRouteDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	defer common2.LogElapsed(ctx, "resource.zenlayercloud_zec_vpc_route.delete")()
@@ -107,7 +128,7 @@ func resourceZenlayerCloudGlobalVpcRouteDelete(ctx context.Context, d *schema.Re
 	}
 
 	err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutDelete)-time.Minute, func() *resource.RetryError {
-		errRet := zecService.DeleteVpcRoute(ctx,  routeId)
+		errRet := zecService.DeleteVpcRoute(ctx, routeId)
 		if errRet != nil {
 			ee, ok := errRet.(*common.ZenlayerCloudSdkError)
 			if !ok {
@@ -141,7 +162,7 @@ func resourceZenlayerCloudGlobalVpcRouteUpdate(ctx context.Context, d *schema.Re
 	if d.HasChanges("name") {
 		err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate)-time.Minute, func() *resource.RetryError {
 
-			err := zecService.ModifyRouteAttribute(ctx,routeId, d.Get("name").(string));
+			err := zecService.ModifyRouteAttribute(ctx, routeId, d.Get("name").(string))
 			if err != nil {
 				return common2.RetryError(ctx, err, common2.InternalServerError, common.NetworkError)
 			}
@@ -163,20 +184,20 @@ func resourceZenlayerCloudGlobalVpcRouteCreate(ctx context.Context, d *schema.Re
 	}
 	request := zec.NewCreateRouteRequest()
 	request.VpcId = common.String(d.Get("vpc_id").(string))
-	request.Name =  common.String(d.Get("name").(string))
-	request.DestinationCidrBlock =  common.String(d.Get("destination_cidr_block").(string))
-	request.IpVersion =  common.String(d.Get("ip_version").(string))
-	request.RouteType =  common.String(d.Get("route_type").(string))
+	request.Name = common.String(d.Get("name").(string))
+	request.DestinationCidrBlock = common.String(d.Get("destination_cidr_block").(string))
+	request.IpVersion = common.String(d.Get("ip_version").(string))
+	request.RouteType = common.String(d.Get("route_type").(string))
 	request.Priority = common.Integer(d.Get("priority").(int))
-	request.NextHopId =  common.String(d.Get("next_hop_id").(string))
+	request.NextHopId = common.String(d.Get("next_hop_id").(string))
 	if v, ok := d.GetOk("source_ip"); ok {
-		request.SourceIp =  common.String(v.(string))
+		request.SourceCidrBlock = common.String(v.(string))
 	}
 
 	routeId := ""
 
 	err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
-		response, err := zecService.client.WithZecClient().CreateRoute(request)
+		response, err := zecService.client.WithZec2Client().CreateRoute(request)
 		if err != nil {
 			tflog.Info(ctx, "Fail to create vpc route.", map[string]interface{}{
 				"action":  request.GetAction(),
@@ -192,11 +213,11 @@ func resourceZenlayerCloudGlobalVpcRouteCreate(ctx context.Context, d *schema.Re
 			"response": common2.ToJsonString(response),
 		})
 
-		if response.Response.RouteId == "" {
+		if response.Response.RouteId == nil {
 			err = fmt.Errorf("routeId id is nil")
 			return resource.NonRetryableError(err)
 		}
-		routeId = response.Response.RouteId
+		routeId = *response.Response.RouteId
 
 		return nil
 	})
@@ -244,7 +265,7 @@ func resourceZenlayerCloudGlobalVpcRouteRead(ctx context.Context, d *schema.Reso
 	_ = d.Set("destination_cidr_block", route.DestinationCidrBlock)
 	_ = d.Set("ip_version", route.IpVersion)
 	_ = d.Set("route_type", route.Type)
-	_ = d.Set("source_ip", route.SourceIp)
+	_ = d.Set("source_ip", route.SourceCidrBlock)
 	_ = d.Set("priority", route.Priority)
 	_ = d.Set("next_hop_id", route.NextHopId)
 	_ = d.Set("create_time", route.CreateTime)

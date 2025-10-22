@@ -1,4 +1,4 @@
-Provides an eip resource associated with resource including vNIC, ZLB.
+Provides an eip resource associated with resource including vNIC, ZLB, NAT Gateway.
 
 Example Usage
 
@@ -83,6 +83,56 @@ resource "zenlayercloud_zec_eip_association" "eip_association" {
   eip_id             = zenlayercloud_zec_eip.eip.id
   associated_id      = zenlayercloud_zlb_instance.zlb.id
   associated_type    = "LB"
+}
+
+```
+
+Bind EIP to NAT Gateway
+```hcl
+variable "region" {
+  default = "asia-east-1"
+}
+
+resource "zenlayercloud_zec_vpc" "vpc" {
+  name = "example"
+  cidr_block = "10.0.0.0/24"
+  enable_ipv6 = true
+}
+
+resource "zenlayercloud_zec_subnet" "subnet" {
+  vpc_id     = zenlayercloud_zec_vpc.foo.id
+  region_id  = var.region
+  name       = "test-subnet"
+  cidr_block = "10.0.0.0/24"
+}
+
+resource "zenlayercloud_zec_security_group" "sg" {
+  name       	= "example-name"
+}
+
+# omit security group rules
+
+resource "zenlayercloud_zec_eip" "eip" {
+  region_id = var.region
+  name = "example"
+  ip_network_type = "BGPLine"
+  internet_charge_type = "ByBandwidth"
+  bandwidth = 10
+}
+
+# NAT gateway
+resource "zenlayercloud_zec_nat_gateway" "nat" {
+  region_id         = var.region_shanghai
+  name              = "test-nat"
+  vpc_id            =  zenlayercloud_zec_vpc.vpc.id
+  security_group_id =  zenlayercloud_zec_security_group.sg.id
+  subnet_ids = [zenlayercloud_zec_subnet.subnet.id]
+}
+
+resource "zenlayercloud_zec_eip_association" "eip_association" {
+  eip_id             = zenlayercloud_zec_eip.eip.id
+  associated_id      = zenlayercloud_zec_nat_gateway.nat.id
+  associated_type    = "NAT"
 }
 
 ```

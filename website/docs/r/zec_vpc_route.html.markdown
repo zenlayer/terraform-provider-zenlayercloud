@@ -54,14 +54,14 @@ resource "zenlayercloud_zec_vpc_route" "example" {
 
 The following arguments are supported:
 
-* `destination_cidr_block` - (Required, String) Destination address block.
+* `destination_cidr_block` - (Required, String, ForceNew) Destination address block.
 * `ip_version` - (Required, String, ForceNew) IP stack type. Valid values: `IPv4`, `IPv6`.
 * `name` - (Required, String) The name of the VPC route. The name should start and end with a number or a letter, containing 2 to 63 characters. Only letters, numbers, - and periods (.) are supported.
-* `next_hop_id` - (Required, String) ID of next hop instance. Currently only ID of vNIC is valid.
-* `priority` - (Required, Int) Priority of the route entry. Valid value: from `0` to `65535`.
-* `route_type` - (Required, String) Route type. Valid values: `RouteTypeStatic`, `RouteTypePolicy`.
-* `vpc_id` - (Required, String) ID of the VPC.
-* `source_ip` - (Optional, String) The source IP matched. Required when the `route_type` is `RouteTypePolicy`.
+* `next_hop_id` - (Required, String, ForceNew) ID of next hop instance. Currently only ID of vNIC is valid.
+* `priority` - (Required, Int, ForceNew) Priority of the route entry. Valid value: from `0` to `65535`.
+* `route_type` - (Required, String, ForceNew) Route type. Valid values: `RouteTypeStatic`, `RouteTypePolicy`.
+* `vpc_id` - (Required, String, ForceNew) ID of the VPC.
+* `source_ip` - (Optional, String, ForceNew) The source IP matched. Required when the `route_type` is `RouteTypePolicy`.
 
 ## Attributes Reference
 

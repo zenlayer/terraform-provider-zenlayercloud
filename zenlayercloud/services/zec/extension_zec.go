@@ -1,10 +1,11 @@
 package zec
 
 const (
-	INVALID_VPC_NOT_FOUND  = "INVALID_VPC_NOT_FOUND"
-	INVALID_DISK_NOT_FOUND = "INVALID_DISK_NOT_FOUND"
-	INVALID_NIC_NOT_FOUND  = "INVALID_NIC_NOT_FOUND"
-	INVALID_VPC_ROUTE_NOT_FOUND  = "INVALID_VPC_ROUTE_NOT_FOUND"
+	INVALID_VPC_NOT_FOUND       = "INVALID_VPC_NOT_FOUND"
+	INVALID_DISK_NOT_FOUND      = "INVALID_DISK_NOT_FOUND"
+	INVALID_NIC_NOT_FOUND       = "INVALID_NIC_NOT_FOUND"
+	INVALID_VPC_ROUTE_NOT_FOUND = "INVALID_VPC_ROUTE_NOT_FOUND"
+	INVALID_NAT_NOT_FOUND = "INVALID_NAT_NOT_FOUND"
 
 	// ZecDiskStatusRecycle Disk Status
 	ZecDiskStatusRecycle   = "RECYCLED"
@@ -16,7 +17,7 @@ const (
 	ZecDiskStatusResizing  = "CHANGING"
 	ZecDiskStatusInUse     = "IN_USE"
 	ZecDiskStatusAvailable = "AVAILABLE"
-	ZecDiskStatusFaileld = "FAILED"
+	ZecDiskStatusFaileld   = "FAILED"
 
 	ZecEipStatusCreating     = "CREATING"
 	ZecEipStatusCreateFailed = "CREATE_FAILED"
@@ -29,8 +30,8 @@ const (
 	ZecInstanceStatusPending      = "PENDING"
 	ZecInstanceStatusDeloying     = "DEPLOYING"
 	ZecInstanceStatusCreateFailed = "CREATE_FAILED"
-	ZecInstanceStatusReseting   = "REBUILDING"
-	ZecInstanceStatusResetFailed   = "REINSTALL_FAILED"
+	ZecInstanceStatusReseting     = "REBUILDING"
+	ZecInstanceStatusResetFailed  = "REINSTALL_FAILED"
 	ZecInstanceStatusStopped      = "STOPPED"
 	ZecInstanceStatusRunning      = "RUNNING"
 	ZecInstanceStatusBooting      = "BOOTING"
@@ -48,17 +49,23 @@ const (
 	ZecVnicStatusCreateFailed = "CREATE_FAILED"
 	ZecVnicStatusUsed         = "USED"
 
-	SnapshotFailed  = "FAILED"
+	SnapshotFailed    = "FAILED"
 	SnapshotCreating  = "CREATING"
-	SnapshotAvailable  = "AVAILABLE"
-	SnapshotDeleting = "DELETING"
+	SnapshotAvailable = "AVAILABLE"
+	SnapshotDeleting  = "DELETING"
 
-	CidrStatusCreating = "CREATING"
+	CidrStatusCreating  = "CREATING"
 	CidrStatusAvailable = "AVAILABLE"
 	CidrStatusRecycling = "RECYCLING"
-	CidrStatusRecycled = "RECYCLED"
-	CidrStatusDeleting = "DELETING"
-	CidrStatusFailed = "FAILED"
+	CidrStatusRecycled  = "RECYCLED"
+	CidrStatusDeleting  = "DELETING"
+	CidrStatusFailed    = "FAILED"
+
+	NatStatusCreating     = "CREATING"
+	NatStatusRunning      = "RUNNING"
+	NatStatusRecycled     = "RECYCLED"
+	NatStatusCreateFailed = "CREATE_FAILED"
+	NatStatusReleasing    = "RELEASING"
 )
 
 var (

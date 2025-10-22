@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/common"
 	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/connectivity"
-	zec "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/zec20240401"
+	zec "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/zec20250901"
 )
 
 func ResourceZenlayerCloudEipAssociation() *schema.Resource {
@@ -118,7 +118,7 @@ func resourceZenlayerCloudEipAssociationCreate(ctx context.Context, d *schema.Re
 	request.BindType = &bindType
 
 	err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
-		_, err := zecService.client.WithZecClient().AssociateEipAddress(request)
+		_, err := zecService.client.WithZec2Client().AssociateEipAddress(request)
 		if err != nil {
 			return common.RetryError(ctx, err)
 		}
@@ -185,7 +185,7 @@ func resourceZenlayerCloudEipAssociationDelete(ctx context.Context, d *schema.Re
 	request.EipIds = []string{eipId}
 
 	err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
-		_, err := zecService.client.WithZecClient().UnassociateEipAddress(request)
+		_, err := zecService.client.WithZec2Client().UnassociateEipAddress(request)
 		if err != nil {
 			return common.RetryError(ctx, err)
 		}

@@ -130,7 +130,7 @@ func resourceZenlayerCloudZecSecurityGroupRuleSetUpdate(ctx context.Context, d *
 func resourceZenlayerCloudZecSecurityGroupRuleSetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	defer common2.LogElapsed(ctx, "resource.zenlayercloud_security_group_rule_set.delete")()
 
-	ZecService := ZecService{
+	zecService := ZecService{
 		client: meta.(*connectivity.ZenlayerCloudClient),
 	}
 
@@ -141,7 +141,7 @@ func resourceZenlayerCloudZecSecurityGroupRuleSetDelete(ctx context.Context, d *
 	request.RuleInfos = []*zec.SecurityGroupRuleInfo{}
 
 	err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutDelete)-time.Minute, func() *resource.RetryError {
-		_, errRet := ZecService.client.WithZec2Client().ConfigureSecurityGroupRules(request)
+		_, errRet := zecService.client.WithZec2Client().ConfigureSecurityGroupRules(request)
 		if errRet != nil {
 			ee, ok := errRet.(*common.ZenlayerCloudSdkError)
 			if !ok {
@@ -237,12 +237,12 @@ func resourceZenlayerCloudZecSecurityGroupRuleSetRead(ctx context.Context, d *sc
 
 	securityGroupId := d.Id()
 
-	ZecService := ZecService{
+	zecService := ZecService{
 		client: meta.(*connectivity.ZenlayerCloudClient),
 	}
 
 	err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutRead)-time.Minute, func() *resource.RetryError {
-		ingress, egress, err := ZecService.DescribeSecurityGroupRules(ctx, securityGroupId)
+		ingress, egress, err := zecService.DescribeSecurityGroupRules(ctx, securityGroupId)
 		if err != nil {
 			return common2.RetryError(ctx, err)
 		}

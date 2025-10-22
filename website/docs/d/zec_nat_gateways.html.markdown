@@ -53,6 +53,8 @@ The following arguments are supported:
 * `region_id` - (Optional, String) Region of the NAT gateway to be queried.
 * `resource_group_id` - (Optional, String) The ID of resource group grouped NAT gateway to be queried.
 * `result_output_file` - (Optional, String) Used to save results.
+* `security_group_id` - (Optional, String) ID of the security group to be queried.
+* `vpc_id` - (Optional, String) ID of the VPC to be queried.
 
 ## Attributes Reference
 
@@ -60,14 +62,18 @@ In addition to all arguments above, the following attributes are exported:
 
 * `nats` - An information list of NAT gateways. Each element contains the following attributes:
    * `create_time` - Create time of the NAT gateway.
+   * `eip_ids` - IDs of the EIP associated.
+   * `icmp_reply_enabled` - Indicates whether ICMP reply is enabled.
    * `is_all_subnets` - Indicates whether all the subnets of region is assigned to NAT gateway.
    * `name` - The name of the NAT gateway.
    * `nat_id` - ID of the NAT gateway.
    * `region_id` - The region that the NAT gateway locates at.
    * `resource_group_id` - The resource group id that the NAT gateway belongs to.
    * `resource_group_name` - The resource group name that the NAT gateway belongs to.
+   * `security_group_id` - ID of the security group associated.
    * `status` - The status of NAT gateway.
-   * `subnet_ids` - IDs of the subnets to be associated. if this value not set.
-   * `vpc_id` - ID of the VPC to be associated.
+   * `subnet_ids` - IDs of the subnets.
+   * `vpc_id` - ID of the VPC.
+   * `zbg_id` - ID of border gateway associated.
 
 

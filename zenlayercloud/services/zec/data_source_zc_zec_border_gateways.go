@@ -7,7 +7,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/common"
 	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/connectivity"
-	zec "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/zec20240401"
+	zec "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/zec20250901"
 	"regexp"
 	"time"
 )
@@ -103,10 +103,21 @@ func DataSourceZenlayerCloudBorderGateways() *schema.Resource {
 							Elem:        &schema.Schema{Type: schema.TypeString},
 							Description: "Custom IPv4 CIDR block list.",
 						},
+						"advertised_route_ids": {
+							Type:        schema.TypeList,
+							Computed:    true,
+							Elem:        &schema.Schema{Type: schema.TypeString},
+							Description: "IDs of route which are advertised through Border gateway.",
+						},
 						"nat_id": {
 							Type:        schema.TypeString,
 							Computed:    true,
 							Description: "NAT gateway ID.",
+						},
+						"routing_mode": {
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "Routing mode of border gateway. Valid values: `Regional`, `Global`.",
 						},
 					},
 				},
@@ -169,25 +180,27 @@ func dataSourceZenlayerCloudBorderGatewaysRead(ctx context.Context, d *schema.Re
 
 	ids := make([]string, 0, len(zbgs))
 	for _, borderGateway := range zbgs {
-		if nameRegex != nil && !nameRegex.MatchString(borderGateway.Name) {
+		if nameRegex != nil && !nameRegex.MatchString(*borderGateway.Name) {
 			continue
 		}
 		borderGatewayMap := map[string]interface{}{
-			"zbg_id":             borderGateway.ZbgId,
-			"name":               borderGateway.Name,
-			"vpc_id":             borderGateway.VpcId,
-			"region_id":          borderGateway.RegionId,
-			"create_time":        borderGateway.CreateTime,
-			"asn":                borderGateway.Asn,
-			"inter_connect_cidr": borderGateway.InterConnectCidr,
-			"cloud_router_ids":   borderGateway.CloudRouterIds,
-			"advertised_subnet":  borderGateway.AdvertisedSubnet,
-			"advertised_cidrs":   borderGateway.AdvertisedCidrs,
-			"nat_id":             borderGateway.NatId,
+			"zbg_id":               borderGateway.ZbgId,
+			"name":                 borderGateway.Name,
+			"vpc_id":               borderGateway.VpcId,
+			"region_id":            borderGateway.RegionId,
+			"create_time":          borderGateway.CreateTime,
+			"asn":                  borderGateway.Asn,
+			"inter_connect_cidr":   borderGateway.InterConnectCidr,
+			"cloud_router_ids":     borderGateway.CloudRouterIds,
+			"advertised_subnet":    borderGateway.AdvertisedSubnet,
+			"advertised_cidrs":     borderGateway.AdvertisedCidrs,
+			"advertised_route_ids": borderGateway.AdvertisedRouteIds,
+			"nat_id":               borderGateway.NatId,
+			"routing_mode":         borderGateway.RoutingMode,
 		}
 
 		borderGatewayList = append(borderGatewayList, borderGatewayMap)
-		ids = append(ids, borderGateway.ZbgId)
+		ids = append(ids, *borderGateway.ZbgId)
 	}
 
 	d.SetId(common.DataResourceIdHash(ids))

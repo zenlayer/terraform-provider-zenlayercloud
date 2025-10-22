@@ -86,7 +86,7 @@ func (s *TrafficService) DescribeBandwidthClusterAreas(ctx context.Context) ([]*
 	return response.Response.Areas, err
 }
 
-func (s TrafficService) DescribeSecurityGroupById(ctx context.Context, bandwidthClusterId string) (bandwidthCluster *traffic.BandwidthClusterInfo, err error) {
+func (s TrafficService) DescribeBandwidthClusterById(ctx context.Context, bandwidthClusterId string) (bandwidthCluster *traffic.BandwidthClusterInfo, err error) {
 	request := traffic.NewDescribeBandwidthClustersRequest()
 	request.BandwidthClusterIds= []string{bandwidthClusterId}
 
@@ -108,27 +108,47 @@ func (s TrafficService) DescribeSecurityGroupById(ctx context.Context, bandwidth
 
 }
 
+func (s *TrafficService) ModifyBandwidthClusterCommitBandwidth(ctx context.Context, bandwidthClusterId string, bandwidthMbps int) error {
+	request := traffic.NewUpdateBandwidthClusterCommitBandwidthRequest()
+	request.BandwidthClusterId = common2.String(bandwidthClusterId)
+	request.CommitBandwidthMbps = &bandwidthMbps
+	response, err := s.client.WithTrafficClient().UpdateBandwidthClusterCommitBandwidth(request)
+	defer common.LogApiRequest(ctx, "UpdateBandwidthClusterCommitBandwidth", request, response, err)
+	return err
+}
+
 func (s *TrafficService) ModifyBandwidthClusterName(ctx context.Context, bandwidthClusterId string, name string) error {
-	//request := traffic.NewUpdateBandwidthClusterCommitBandwidthRequest()
-	//request.BandwidthClusterId = common2.String(bandwidthClusterId)
-	//request.CommitBandwidthMbps = common2.Integer(0) // Assuming name modification doesn't require bandwidth change
-	//
-	//// TODO
-	//// Note: The API doesn't seem to support name modification directly.
-	//// This is a placeholder implementation. You might need to adjust based on actual API capabilities.
-	//
-	//response, err := s.client.WithTrafficClient().Upda(request)
-	//defer common.LogApiRequest(ctx, "UpdateBandwidthClusterCommitBandwidth", request, response, err)
-	//
-	//return err
-	return nil
+	request := traffic. NewModifyBandwidthClusterAttributeRequest()
+	request.BandwidthClusterId = common2.String(bandwidthClusterId)
+	request.Name = &name
+	response, err := s.client.WithTrafficClient().ModifyBandwidthClusterAttribute(request)
+	defer common.LogApiRequest(ctx, "ModifyBandwidthClusterAttribute", request, response, err)
+	return err
+}
+
+func (s TrafficService) DescribeBandwidthClusterResourcesById(ctx context.Context, bandwidthClusterId string) (*traffic.DescribeBandwidthClusterResourcesResponseParams, error) {
+	request := traffic.NewDescribeBandwidthClusterResourcesRequest()
+	request.BandwidthClusterId = &bandwidthClusterId
+	response, err := s.client.WithTrafficClient().DescribeBandwidthClusterResources(request)
+	defer common.LogApiRequest(ctx, "DescribeBandwidthClusterResources", request, response, err)
+
+	return response.Response, err
+}
+
+func (s TrafficService) DeleteBandwidthClusterId(ctx context.Context, bandwidthClusterId string) error {
+	request := traffic.NewDeleteBandwidthClustersRequest()
+	request.BandwidthClusterIds = []string{bandwidthClusterId}
+
+	response, err := s.client.WithTrafficClient().DeleteBandwidthClusters(request)
+	defer common.LogApiRequest(ctx, "DeleteBandwidthClusters", request, response, err)
+	return err
 }
 
 func convertBandwidthClusterRequestFilter(filter *TrafficFilter) *traffic.DescribeBandwidthClustersRequest {
 	request := traffic.NewDescribeBandwidthClustersRequest()
 	request.BandwidthClusterIds = filter.Ids
 	if filter.cityName != "" {
-		request.BandwidthClusterName = common2.String(filter.cityName)
+		request.CityName = common2.String(filter.cityName)
 	}
 	return request
 }

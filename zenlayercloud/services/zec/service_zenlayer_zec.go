@@ -252,11 +252,11 @@ func (s *ZecService) ResizeDisk(ctx context.Context, diskId string, diskSize int
 	return err
 }
 
-func (s *ZecService) DescribeNatGatewayById(ctx context.Context, natGatewayId string) (*zec.NatGateway, error) {
-	request := zec.NewDescribeNatGatewaysRequest()
+func (s *ZecService) DescribeNatGatewayById(ctx context.Context, natGatewayId string) (*zec2.NatGateway, error) {
+	request := zec2.NewDescribeNatGatewaysRequest()
 	request.NatGatewayIds = []string{natGatewayId}
 
-	response, err := s.client.WithZecClient().DescribeNatGateways(request)
+	response, err := s.client.WithZec2Client().DescribeNatGateways(request)
 	defer common.LogApiRequest(ctx, "DescribeNatGateways", request, response, err)
 
 	if err != nil {
@@ -267,13 +267,13 @@ func (s *ZecService) DescribeNatGatewayById(ctx context.Context, natGatewayId st
 	return response.Response.DataSet[0], nil
 }
 
-func (s *ZecService) DescribeNatGateways(ctx context.Context, filter *ZecNatGatewayFilter) (nats []*zec.NatGateway, err error) {
+func (s *ZecService) DescribeNatGateways(ctx context.Context, filter *ZecNatGatewayFilter) (nats []*zec2.NatGateway, err error) {
 	request := convertNatGatewayRequestFilter(filter)
 
 	var limit = 100
 	request.PageSize = common2.Integer(limit)
 	request.PageNum = common2.Integer(1)
-	response, err := s.client.WithZecClient().DescribeNatGateways(request)
+	response, err := s.client.WithZec2Client().DescribeNatGateways(request)
 
 	if err != nil {
 		log.Printf("[CRITAL] Api[%s] fail, request body [%s], error[%s]\n",
@@ -304,7 +304,7 @@ func (s *ZecService) DescribeNatGateways(ctx context.Context, filter *ZecNatGate
 			request.PageNum = common2.Integer(value + 2)
 			request.PageSize = &limit
 
-			response, err := s.client.WithZecClient().DescribeNatGateways(request)
+			response, err := s.client.WithZec2Client().DescribeNatGateways(request)
 			if err != nil {
 				log.Printf("[CRITAL] Api[%s] fail, request body [%s], error[%s]\n",
 					request.GetAction(), common.ToJsonString(request), err.Error())
@@ -324,7 +324,7 @@ func (s *ZecService) DescribeNatGateways(ctx context.Context, filter *ZecNatGate
 
 	log.Printf("[DEBUG] DescribeNatGateways request finished")
 	for _, v := range vpcList {
-		nats = append(nats, v.([]*zec.NatGateway)...)
+		nats = append(nats, v.([]*zec2.NatGateway)...)
 	}
 	log.Printf("[DEBUG] transfer NAT gateways finished")
 	return
@@ -494,13 +494,13 @@ func (s *ZecService) DiskStateRefreshFunc(ctx context.Context, diskId string, fa
 	}
 }
 
-func (s *ZecService) DescribeBoardGateways(filter *BoarderGatewayFilter) (zbgs []*zec.ZbgInfo, err error) {
+func (s *ZecService) DescribeBoardGateways(filter *BoarderGatewayFilter) (zbgs []*zec2.ZbgInfo, err error) {
 	request := convertZbgRequestFilter(filter)
 
 	var limit = 100
-	request.PageSize = limit
-	request.PageNum = 1
-	response, err := s.client.WithZecClient().DescribeBorderGateways(request)
+	request.PageSize = &limit
+	request.PageNum = common2.Integer( 1)
+	response, err := s.client.WithZec2Client().DescribeBorderGateways(request)
 
 	if err != nil {
 		log.Printf("[CRITAL] Api[%s] fail, request body [%s], error[%s]\n",
@@ -512,7 +512,7 @@ func (s *ZecService) DescribeBoardGateways(filter *BoarderGatewayFilter) (zbgs [
 	}
 
 	zbgs = response.Response.DataSet
-	num := int(math.Ceil(float64(response.Response.TotalCount)/float64(limit))) - 1
+	num := int(math.Ceil(float64(*response.Response.TotalCount)/float64(limit))) - 1
 	if num == 0 {
 		return zbgs, nil
 	}
@@ -528,10 +528,10 @@ func (s *ZecService) DescribeBoardGateways(filter *BoarderGatewayFilter) (zbgs [
 		goFunc := func() {
 			request := convertZbgRequestFilter(filter)
 
-			request.PageNum = value + 2
-			request.PageSize = limit
+			request.PageNum = common2.Integer(value + 2)
+			request.PageSize = &limit
 
-			response, err := s.client.WithZecClient().DescribeBorderGateways(request)
+			response, err := s.client.WithZec2Client().DescribeBorderGateways(request)
 			if err != nil {
 				log.Printf("[CRITAL] Api[%s] fail, request body [%s], error[%s]\n",
 					request.GetAction(), common.ToJsonString(request), err.Error())
@@ -551,7 +551,7 @@ func (s *ZecService) DescribeBoardGateways(filter *BoarderGatewayFilter) (zbgs [
 
 	log.Printf("[DEBUG] DescribeBorderGateways request finished")
 	for _, v := range zbgList {
-		zbgs = append(zbgs, v.([]*zec.ZbgInfo)...)
+		zbgs = append(zbgs, v.([]*zec2.ZbgInfo)...)
 	}
 	log.Printf("[DEBUG] transfer border gateways finished")
 	return
@@ -586,11 +586,11 @@ func (s *ZecService) ModifyBorderGateway(ctx context.Context, request *zec.Modif
 	return err
 }
 
-func (s *ZecService) DescribeEipById(ctx context.Context, eipId string) (*zec.EipInfo, error) {
-	request := zec.NewDescribeEipsRequest()
+func (s *ZecService) DescribeEipById(ctx context.Context, eipId string) (*zec2.EipInfo, error) {
+	request := zec2.NewDescribeEipsRequest()
 	request.EipIds = []string{eipId}
 
-	response, err := s.client.WithZecClient().DescribeEips(request)
+	response, err := s.client.WithZec2Client().DescribeEips(request)
 	defer common.LogApiRequest(ctx, "DescribeEips", request, response, err)
 
 	if err != nil {
@@ -957,10 +957,10 @@ func (s *ZecService) DeleteVpcRoute(ctx context.Context, routeId string) error {
 	return err
 }
 
-func (s *ZecService) DescribeVpcRouteById(ctx context.Context, routeId string) (*zec.RouteInfo, error) {
-	request := zec.NewDescribeRoutesRequest()
+func (s *ZecService) DescribeVpcRouteById(ctx context.Context, routeId string) (*zec2.RouteInfo, error) {
+	request := zec2.NewDescribeRoutesRequest()
 	request.RouteIds = []string{routeId}
-	response, err := s.client.WithZecClient().DescribeRoutes(request)
+	response, err := s.client.WithZec2Client().DescribeRoutes(request)
 	defer common.LogApiRequest(ctx, "DescribeRoutes", request, response, err)
 	if err != nil {
 		return nil, err
@@ -1284,6 +1284,153 @@ func (s *ZecService) DescribeCidrsByFilter(ctx context.Context, filter *CidrFilt
 
 }
 
+func (s *ZecService) DeleteNatGateway(ctx context.Context, natGatewayId string) error {
+	request := zec2.NewDeleteNatGatewayRequest()
+	request.NatGatewayId = &natGatewayId
+	response, err := s.client.WithZec2Client().DeleteNatGateway(request)
+	defer common.LogApiRequest(ctx, "DeleteNatGateway", request, response, err)
+	return err
+}
+
+func (s *ZecService) NatStateRefreshFunc(ctx context.Context, natGatewayId string, failStates []string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		object, err := s.DescribeNatGatewayById(ctx, natGatewayId)
+		if err != nil {
+			return nil, "", err
+		}
+
+		if object == nil {
+			// Set this to nil as if we didn't find anything.
+			return nil, "", nil
+		}
+		for _, failState := range failStates {
+			if *object.Status == failState {
+				return object, *object.Status, common.Error("Failed to reach target status. Last status: %s.", object.Status)
+			}
+		}
+
+		return object, *object.Status, nil
+	}
+}
+
+func (s *ZecService) DeleteSnatEntry(ctx context.Context, snatId string) error {
+	request := zec2.NewDeleteSnatEntryRequest()
+	request.SnatEntryId = &snatId
+	response, err := s.client.WithZec2Client().DeleteSnatEntry(request)
+	defer common.LogApiRequest(ctx, "DeleteSnatEntry", request, response, err)
+	return err
+}
+
+func (s *ZecService) DescribeNatGatewayDetailById(ctx context.Context, natGatewayId string) (*zec2.DescribeNatGatewayDetailResponseParams, error) {
+
+	request := zec2.NewDescribeNatGatewayDetailRequest()
+	request.NatGatewayId = &natGatewayId
+
+	response, err := s.client.WithZec2Client().DescribeNatGatewayDetail(request)
+	defer common.LogApiRequest(ctx, "DescribeNatGatewayDetail", request, response, err)
+
+	if err != nil {
+		return nil, err
+	}
+	return response.Response, nil
+}
+
+func (s *ZecService) DeleteDnatEntry(ctx context.Context, dnatId string) error {
+	request := zec2.NewDeleteDnatEntryRequest()
+	request.DnatEntryId = &dnatId
+	response, err := s.client.WithZec2Client().DeleteDnatEntry(request)
+	defer common.LogApiRequest(ctx, "DeleteDnatEntry", request, response, err)
+	return err
+}
+
+func (s *ZecService) DescribeVpcRoutes(ctx context.Context, filter *VpcRouteFilter) (routes []*zec2.RouteInfo, err error) {
+	request := convertVpcRoutesRequestFilter(filter)
+
+	var limit = 100
+	request.PageSize = &limit
+	request.PageNum = common2.Integer(1)
+	response, err := s.client.WithZec2Client().DescribeRoutes(request)
+
+	if err != nil {
+		log.Printf("[CRITAL] Api[%s] fail, request body [%s], error[%s]\n",
+			request.GetAction(), common.ToJsonString(request), err.Error())
+		return
+	}
+	if response == nil || len(response.Response.DataSet) < 1 {
+		return
+	}
+
+	routes = response.Response.DataSet
+	num := int(math.Ceil(float64(*response.Response.TotalCount)/float64(limit))) - 1
+	if num == 0 {
+		return routes, nil
+	}
+	maxConcurrentNum := 50
+	g := common.NewGoRoutine(maxConcurrentNum)
+	wg := sync.WaitGroup{}
+
+	var vpcList = make([]interface{}, num)
+
+	for i := 0; i < num; i++ {
+		wg.Add(1)
+		value := i
+		goFunc := func() {
+			request := convertVpcRoutesRequestFilter(filter)
+
+			request.PageNum = common2.Integer(value + 2)
+			request.PageSize = common2.Integer(limit)
+
+			response, err := s.client.WithZec2Client().DescribeRoutes(request)
+			if err != nil {
+				log.Printf("[CRITAL] Api[%s] fail, request body [%s], error[%s]\n",
+					request.GetAction(), common.ToJsonString(request), err.Error())
+				return
+			}
+			log.Printf("[DEBUG] Api[%s] success, request body [%s], response body [%s]\n",
+				request.GetAction(), common.ToJsonString(request), common.ToJsonString(response))
+
+			vpcList[value] = response.Response.DataSet
+
+			wg.Done()
+			log.Printf("[DEBUG] thread %d finished", value)
+		}
+		g.Run(goFunc)
+	}
+	wg.Wait()
+
+	log.Printf("[DEBUG] DescribeRoutes request finished")
+	for _, v := range vpcList {
+		routes = append(routes, v.([]*zec2.RouteInfo)...)
+	}
+	log.Printf("[DEBUG] transfer VPC routes finished")
+	return
+}
+
+func convertVpcRoutesRequestFilter(filter *VpcRouteFilter) *zec2.DescribeRoutesRequest {
+	request := zec2.NewDescribeRoutesRequest()
+	if len(filter.ids) > 0 {
+		request.RouteIds = filter.ids
+	}
+
+	if filter.vpcId != "" {
+		request.VpcId = &filter.vpcId
+	}
+
+	if filter.routeType != "" {
+		request.RouteType = &filter.routeType
+	}
+
+	if filter.ipVersion != "" {
+		request.IpVersion = &filter.ipVersion
+	}
+
+	if filter.cidrBlock != "" {
+		request.DestinationCidrBlock = &filter.cidrBlock
+	}
+
+	return request
+}
+
 func convertCidrRequestFilter(filter *CidrFilter) *zec2.DescribeCidrsRequest {
 	request := zec2.NewDescribeCidrsRequest()
 	if len(filter.Ids) > 0 {
@@ -1369,11 +1516,15 @@ func convertEipRequestFilter(filter *EipFilter) *zec.DescribeEipsRequest {
 	return request
 }
 
-func convertZbgRequestFilter(filter *BoarderGatewayFilter) *zec.DescribeBorderGatewaysRequest {
-	request := zec.NewDescribeBorderGatewaysRequest()
+func convertZbgRequestFilter(filter *BoarderGatewayFilter) *zec2.DescribeBorderGatewaysRequest {
+	request := zec2.NewDescribeBorderGatewaysRequest()
 	request.ZbgIds = filter.Ids
-	request.RegionId = filter.RegionId
-	request.VpcId = filter.VpcId
+	if filter.RegionId != "" {
+		request.RegionId = &filter.RegionId
+	}
+	if filter.VpcId != "" {
+		request.VpcId =  &filter.VpcId
+	}
 	return request
 }
 
@@ -1430,14 +1581,21 @@ func convertInstanceRequestFilter(filter *ZecInstancesFilter) *zec2.DescribeInst
 	return request
 }
 
-func convertNatGatewayRequestFilter(filter *ZecNatGatewayFilter) *zec.DescribeNatGatewaysRequest {
-	request := zec.NewDescribeNatGatewaysRequest()
+func convertNatGatewayRequestFilter(filter *ZecNatGatewayFilter) *zec2.DescribeNatGatewaysRequest {
+	request := zec2.NewDescribeNatGatewaysRequest()
 	request.RegionId = common2.String(filter.RegionId)
 	request.ResourceGroupId = common2.String(filter.ResourceGroupId)
 	if len(filter.Ids) > 0 {
 		request.NatGatewayIds = filter.Ids
 	}
 	request.Name = common2.String(filter.Name)
+	if filter.SecurityGroupId != "" {
+		request.SecurityGroupId = common2.String(filter.SecurityGroupId)
+	}
+
+	if filter.VpcId != "" {
+		request.VpcId = common2.String(filter.VpcId)
+	}
 	return request
 }
 
