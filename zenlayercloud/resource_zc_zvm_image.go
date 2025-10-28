@@ -6,7 +6,7 @@ Provides a resource to manage image.
 Example Usage
 
 ```hcl
-resource "zenlayercloud_image" "foo" {
+resource "zenlayercloud_zvm_image" "foo" {
   image_name       	= "web-image-centos"
   instance_id    	= "xxxxxx"
   image_description	= "create a image by the web server"
@@ -18,7 +18,7 @@ Import
 Image can be imported, e.g.
 
 ```
-$ terraform import zenlayercloud_image.foo img-xxxxxxx
+$ terraform import zenlayercloud_zvm_image.foo img-xxxxxxx
 ```
 */
 package zenlayercloud
@@ -79,7 +79,7 @@ func resourceZenlayerCloudVmImage() *schema.Resource {
 }
 
 func resourceZenlayerCloudImageDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	defer common2.LogElapsed(ctx, "resource.zenlayercloud_image.delete")()
+	defer common2.LogElapsed(ctx, "resource.zenlayercloud_zvm_image.delete")()
 
 	vmService := VmService{
 		client: meta.(*connectivity.ZenlayerCloudClient),
@@ -127,7 +127,7 @@ func resourceZenlayerCloudImageUpdate(ctx context.Context, d *schema.ResourceDat
 }
 
 func resourceZenlayerCloudImageCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	defer common2.LogElapsed(ctx, "resource.zenlayercloud_image.create")()
+	defer common2.LogElapsed(ctx, "resource.zenlayercloud_zvm_image.create")()
 
 	request := vm.NewCreateImageRequest()
 	request.ImageName = d.Get("image_name").(string)

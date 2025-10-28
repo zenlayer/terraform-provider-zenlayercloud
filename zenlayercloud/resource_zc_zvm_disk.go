@@ -5,7 +5,7 @@ Example Usage
 
 ```hcl
 
-resource "zenlayercloud_disk" "foo" {
+resource "zenlayercloud_zvm_disk" "foo" {
   availability_zone 	 = "SEL-A"
   name  				 = "SEL-20G"
   disk_size				 = 20
@@ -17,7 +17,7 @@ Import
 Disk instance can be imported, e.g.
 
 ```
-$ terraform import zenlayercloud_disk.test disk-id
+$ terraform import zenlayercloud_zvm_disk.test disk-id
 ```
 */
 package zenlayercloud

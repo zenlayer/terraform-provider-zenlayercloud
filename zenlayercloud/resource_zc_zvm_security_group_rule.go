@@ -1,25 +1,25 @@
 /*
 Provides a resource to create security group rule.
 
-~> **NOTE:** Single security rule is hardly ordered, use zenlayercloud_security_group_rule_set instead.
+~> **NOTE:** Single security rule is hardly ordered, use zenlayercloud_zvm_security_group_rule_set instead.
 
 Example Usage
 
 ```hcl
 
-	resource "zenlayercloud_security_group" "foo" {
-	  name        = "example-name"
-	  description = "example purpose"
-	}
+resource "zenlayercloud_zvm_security_group" "foo" {
+  name        = "example-name"
+  description = "example purpose"
+}
 
-	resource "zenlayercloud_security_group_rule" "bar" {
-	  security_group_id = zenlayercloud_security_group.foo.id
-	  direction         = "ingress"
-	  policy            = "accept"
-	  cidr_ip    		= "10.0.0.0/16"
-	  ip_protocol       = "tcp"
-	  port_range        = "80"
-	}
+resource "zenlayercloud_zvm_security_group_rule" "bar" {
+  security_group_id = zenlayercloud_zvm_security_group.foo.id
+  direction         = "ingress"
+  policy            = "accept"
+  cidr_ip    		= "10.0.0.0/16"
+  ip_protocol       = "tcp"
+  port_range        = "80"
+}
 
 ```
 */
@@ -96,7 +96,7 @@ func resourceZenlayerCloudSecurityGroupRule() *schema.Resource {
 }
 
 func resourceZenlayerCloudSecurityGroupRuleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	defer common2.LogElapsed(ctx, "resource.zenlayercloud_security_group_rule.delete")()
+	defer common2.LogElapsed(ctx, "resource.zenlayercloud_zvm_security_group_rule.delete")()
 
 	vmService := VmService{
 		client: meta.(*connectivity.ZenlayerCloudClient),

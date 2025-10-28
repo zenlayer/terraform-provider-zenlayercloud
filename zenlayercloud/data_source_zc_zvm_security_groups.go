@@ -1,13 +1,13 @@
 /*
- Use this data source to query detailed information of security groups.
+Use this data source to query detailed information of security groups.
 
 Example Usage
 
 ```hcl
-data "zenlayercloud_security_groups" "sg1" {
+data "zenlayercloud_zvm_security_groups" "sg1" {
 }
 
-data "zenlayercloud_security_groups" "sg2" {
+data "zenlayercloud_zvm_security_groups" "sg2" {
   name = "example_name"
 }
 ```
@@ -121,7 +121,7 @@ func dataSourceZenlayerCloudSecurityGroups() *schema.Resource {
 }
 
 func dataSourceZenlayerCloudSecurityGroupsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	defer common.LogElapsed(ctx, "data_source.zenlayercloud_security_groups.read")()
+	defer common.LogElapsed(ctx, "data_source.zenlayercloud_zvm_security_groups.read")()
 
 	vmService := VmService{
 		client: meta.(*connectivity.ZenlayerCloudClient),

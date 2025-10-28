@@ -4,10 +4,10 @@ Use this data source to get all vm available zones.
 Example Usage
 
 ```hcl
-data "zenlayercloud_zones" "all" {
+data "zenlayercloud_zvm_zones" "all" {
 }
 
-data "zenlayercloud_zones" "sel" {
+data "zenlayercloud_zvm_zones" "sel" {
 	name_regex = "SEL*"
 }
 ```
@@ -68,7 +68,7 @@ func dataSourceZenlayerCloudZones() *schema.Resource {
 }
 
 func dataSourceZenlayerCloudZonesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	defer common.LogElapsed(ctx, "data_source.zenlayercloud_zones.read")()
+	defer common.LogElapsed(ctx, "data_source.zenlayercloud_zvm_zones.read")()
 
 	vmService := VmService{
 		client: meta.(*connectivity.ZenlayerCloudClient),

@@ -4,7 +4,7 @@ Provides a resource to create a security group attachment
 Example Usage
 
 ```hcl
-resource "zenlayercloud_security_group_attachment" "foo" {
+resource "zenlayercloud_zvm_security_group_attachment" "foo" {
   security_group_id = "12364246"
   instance_id       = "62343412426423623"
 }
@@ -15,7 +15,7 @@ Import
 Security group attachment can be imported using the id, e.g.
 
 ```
-terraform import zenlayercloud_security_group_attachment.security_group_attachment securityGroupId:instanceId
+terraform import zenlayercloud_zvm_security_group_attachment.security_group_attachment securityGroupId:instanceId
 ```
 */
 package zenlayercloud

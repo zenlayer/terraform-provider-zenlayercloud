@@ -9,7 +9,7 @@ variable "availability_zone" {
   default = "SEL-A"
 }
 
-resource "zenlayercloud_subnet" "foo" {
+resource "zenlayercloud_zvm_subnet" "foo" {
   availability_zone	 = var.availability_zone
   name       = "test-subnet"
   cidr_block = "10.0.0.0/24"
@@ -22,7 +22,7 @@ Import
 Subnet instance can be imported, e.g.
 
 ```
-$ terraform import zenlayercloud_subnet.subnet subnet_id
+$ terraform import zenlayercloud_zvm_subnet.subnet subnet_id
 ```
 */
 package zenlayercloud

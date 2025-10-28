@@ -8,20 +8,20 @@ variable "availability_zone" {
   default = "SEL-A"
 }
 
-resource "zenlayercloud_subnet" "foo" {
+resource "zenlayercloud_zvm_subnet" "foo" {
   availability_zone = var.availability_zone
   name       		= "subnet_test"
   cidr_block 		= "10.0.0.0/24"
 }
 
 # filter by subnet id
-data "zenlayercloud_subnets" "id_subnets" {
-  subnet_id = zenlayercloud_subnet.foo.id
+data "zenlayercloud_zvm_subnets" "id_subnets" {
+  subnet_id = zenlayercloud_zvm_subnet.foo.id
 }
 
 # filter by subnet name
-data "zenlayercloud_subnets" "name_subnets" {
-  subnet_name = zenlayercloud_subnet.foo.name
+data "zenlayercloud_zvm_subnets" "name_subnets" {
+  subnet_name = zenlayercloud_zvm_subnet.foo.name
 }
 ```
 */
@@ -113,7 +113,7 @@ func dataSourceZenlayerCloudSubnets() *schema.Resource {
 }
 
 func dataSourceZenlayerCloudSubnetsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	defer common.LogElapsed(ctx, "data_source.zenlayercloud_subnets.read")()
+	defer common.LogElapsed(ctx, "data_source.zenlayercloud_zvm_subnets.read")()
 
 	vmService := VmService{
 		client: meta.(*connectivity.ZenlayerCloudClient),

@@ -4,7 +4,7 @@ Use this data source to query images.
 Example Usage
 
 ```hcl
-data "zenlayercloud_images" "foo" {
+data "zenlayercloud_zvm_images" "foo" {
 	availability_zone = "FRA-A"
     category = "CentOS"
 	image_type = ["PUBLIC_IMAGE"]
@@ -125,7 +125,7 @@ func dataSourceZenlayerCloudVmImages() *schema.Resource {
 }
 
 func dataSourceZenlayerCloudVmImagesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	defer common.LogElapsed(ctx, "data_source.zenlayercloud_images.read")()
+	defer common.LogElapsed(ctx, "data_source.zenlayercloud_zvm_images.read")()
 
 	vmService := VmService{
 		client: meta.(*connectivity.ZenlayerCloudClient),

@@ -4,11 +4,11 @@ Use this data source to query instances type.
 Example Usage
 
 ```hcl
-data "zenlayercloud_instance_types" "foo" {
+data "zenlayercloud_zvm_instance_types" "foo" {
 
 }
 
-data "zenlayercloud_instance_types" "sel1c1g" {
+data "zenlayercloud_zvm_instance_types" "sel1c1g" {
   availability_zone = "SEL-A"
   cpu_count   		= 1
   memory	        = 1
@@ -112,7 +112,7 @@ func dataSourceZenlayerCloudVmInstanceTypes() *schema.Resource {
 }
 
 func dataSourceZenlayerCloudVmInstanceTypesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	defer common.LogElapsed(ctx, "data_source.zenlayercloud_zone_instance_config_infos.read")()
+	defer common.LogElapsed(ctx, "data_source.zenlayercloud_zvm_instance_types.read")()
 
 	vmService := VmService{
 		client: meta.(*connectivity.ZenlayerCloudClient),

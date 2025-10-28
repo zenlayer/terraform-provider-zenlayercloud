@@ -33,7 +33,7 @@ var (
 	hclMatch          = regexp.MustCompile("(?si)([^`]+)?```(hcl)?(.*?)```")
 	bigSymbol         = regexp.MustCompile("([\u007F-\uffff])")
 	productNameRegexp = regexp.MustCompile(`^.*\((.*)\)$`)
-	productV1         = []string{"bmc", "vm", "zga", "sdn"}
+	productV1         = []string{"bmc", "zvm", "zga", "sdn"}
 )
 
 func main() {

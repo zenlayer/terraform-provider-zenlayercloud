@@ -5,7 +5,7 @@ Example Usage
 
 ```hcl
 
-resource "zenlayercloud_disk_attachment" "foo" {
+resource "zenlayercloud_zvm_disk_attachment" "foo" {
   disk_id 	 	= "diskxxxx"
   instance_id  	= "instancexxxx"
 }
@@ -16,7 +16,7 @@ Import
 Disk attachment can be imported, e.g.
 
 ```
-$ terraform import zenlayercloud_disk_attachment.foo disk-id:instance-id
+$ terraform import zenlayercloud_zvm_disk_attachment.foo disk-id:instance-id
 ```
 */
 package zenlayercloud

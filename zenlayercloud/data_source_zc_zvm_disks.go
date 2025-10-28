@@ -4,16 +4,16 @@
 Example Usage
 
 ```hcl
-data "zenlayercloud_disks" "all" {
+data "zenlayercloud_zvm_disks" "all" {
 }
 
 # filter system disk
-data "zenlayercloud_disks" "system_disk" {
+data "zenlayercloud_zvm_disks" "system_disk" {
   disk_type = "SYSTEM"
 }
 
 #filter with name regex
-data "zenlayercloud_disks" "name_disk" {
+data "zenlayercloud_zvm_disks" "name_disk" {
   name_regex = "disk20*"
 }
 ```
@@ -173,7 +173,7 @@ func dataSourceZenlayerCloudDisks() *schema.Resource {
 }
 
 func dataSourceZenlayerCloudDisksRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	defer common2.LogElapsed(ctx, "data_source.zenlayercloud_disks.read")()
+	defer common2.LogElapsed(ctx, "data_source.zenlayercloud_zvm_disks.read")()
 
 	vmService := VmService{
 		client: meta.(*connectivity.ZenlayerCloudClient),
