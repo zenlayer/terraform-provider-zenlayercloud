@@ -16,6 +16,7 @@ const (
 	InternalServerError = "INTERNAL_SERVER_ERROR"
 	ReadTimedOut        = "REQUEST_TIMED_OUT"
 	ResourceNotFound    = "OPERATION_FAILED_RESOURCE_NOT_FOUND"
+	OperationTimeout    = "INVALID_OPERATION_TIMEOUT"
 )
 
 var retryableErrorCode = []string{
