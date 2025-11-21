@@ -172,6 +172,7 @@ func resourceZenlayerCloudPvtdnsRecordUpdate(ctx context.Context, d *schema.Reso
 	if d.HasChange("status") {
 		if v, ok := d.GetOk("status"); ok {
 			request := pvtdns.NewModifyPrivateZoneRecordsStatusRequest()
+			request.ZoneId = &zoneId
 			request.RecordId = &recordId
 			request.Status = common.String(v.(string))
 
