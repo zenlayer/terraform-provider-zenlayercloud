@@ -143,6 +143,17 @@ Zenlayer Load Balancing(ZLB)
 	zenlayercloud_zlb_listener
 	zenlayercloud_zlb_backend
 
+Zenlayer Private DNS(zdns)
+
+  Data Source
+	zenlayercloud_zdns_zones
+	zenlayercloud_zdns_zone_records
+
+  Resource
+	zenlayercloud_zdns_zone
+	zenlayercloud_zdns_zone_record
+	zenlayercloud_zdns_zone_vpc_set_attachment
+
 Traffic
 
   Data Source
@@ -177,6 +188,7 @@ import (
 	"context"
 	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/services/keypair"
 	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/services/traffic"
+	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/services/zdns"
 	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/services/zec"
 	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/services/zlb"
 
@@ -309,6 +321,11 @@ func resourcesMap() map[string]*schema.Resource {
 		// bandwidth cluster
 		"zenlayercloud_traffic_bandwidth_cluster": traffic.ResourceZenlayerCloudTrafficBandwidthCluster(),
 
+		// Private DNS
+		"zenlayercloud_zdns_zone":                    zdns.ResourceZenlayerCloudPvtdnsZone(),
+		"zenlayercloud_zdns_zone_record":             zdns.ResourceZenlayerCloudPvtdnsRecord(),
+		"zenlayercloud_zdns_zone_vpc_set_attachment": zdns.ResourceZenlayerCloudPvtdnsZoneVpcAttachment(),
+
 	}
 }
 
@@ -380,6 +397,10 @@ func dataSourcesMap() map[string]*schema.Resource {
 
 		// key service
 		"zenlayercloud_key_pairs":       keypair.DataSourceZenlayerCloudKeyPairs(),
+
+		// Private DNS
+		"zenlayercloud_zdns_zones":        zdns.DataSourceZenlayerCloudPvtdnsZones(),
+		"zenlayercloud_zdns_zone_records": zdns.DataSourceZenlayerCloudPvtdnsRecords(),
 	}
 }
 

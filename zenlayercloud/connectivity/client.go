@@ -20,6 +20,7 @@ import (
 	traffic "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/traffic20240326"
 	user "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/user20240529"
 	vm "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/vm20230313"
+	zdns "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/zdns20251101"
 	zec "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/zec20240401"
 	zec2 "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/zec20250901"
 	zga "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/zga20230706"
@@ -44,6 +45,7 @@ type ZenlayerCloudClient struct {
 	tfkConn           *traffic.Client
 	usrConn           *user.Client
 	CcsConn           *ccs.Client
+	privateDnsConn    *zdns.Client
 }
 
 func (client *ZenlayerCloudClient) WithSdnClient() *sdn.Client {
@@ -144,6 +146,16 @@ func (client *ZenlayerCloudClient) WithUsrClient() *user.Client {
 	client.usrConn, _ = user.NewClient(config, client.SecretKeyId, client.SecretKeyPassword)
 	client.usrConn.WithRequestClient(ReqClient)
 	return client.usrConn
+}
+
+func (client *ZenlayerCloudClient) WithZDnsClient() *zdns.Client {
+	if client.privateDnsConn != nil {
+		return client.privateDnsConn
+	}
+	config := client.NewConfig()
+	client.privateDnsConn, _ = zdns.NewClient(config, client.SecretKeyId, client.SecretKeyPassword)
+	client.privateDnsConn.WithRequestClient(ReqClient)
+	return client.privateDnsConn
 }
 
 func (client *ZenlayerCloudClient) NewConfig() *common.Config {
