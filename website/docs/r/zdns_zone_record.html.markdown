@@ -1,5 +1,5 @@
 ---
-subcategory: "Zenlayer Private DNS(zdns)"
+subcategory: "Zenlayer Private DNS(ZDNS)"
 layout: "zenlayercloud"
 page_title: "ZenlayerCloud: zenlayercloud_zdns_zone_record"
 sidebar_current: "docs-zenlayercloud-resource-zdns_zone_record"
@@ -42,7 +42,14 @@ resource "zenlayercloud_zdns_zone_record" "foo" {
 The following arguments are supported:
 
 * `record_name` - (Required, String, ForceNew) The name of the record. such as `www`, `@`.
-* `type` - (Required, String, ForceNew) Record type. Valid values: `A`, `AAAA`, `CNAME`, `MX`, `TXT`, `PTR`.
+* `type` - (Required, String, ForceNew) DNS record type. Valid values: 
+	- `A`: Maps a domain name to an IP address 
+	- `AAAA`: Maps a domain name to an IPv6 address 
+	- `CNAME`: Maps a domain name to another domain name 
+	- `MX`: Maps a domain name to a mail server address 
+	- `TXT`: Text information 
+	- `PTR`: Maps an IP address to a domain name for reverse DNS lookup 
+	- `SRV`: Specifies servers providing specific services (format: [priority] [weight] [port] [target address], e.g., 0 5 5060 sipserver.example.com).
 * `value` - (Required, String) The value of the record.
 * `zone_id` - (Required, String, ForceNew) The ID of the private zone.
 * `line` - (Optional, String, ForceNew) The resolver line. Default is `default`. Also valid for specified region, such as `asia-east-1`.

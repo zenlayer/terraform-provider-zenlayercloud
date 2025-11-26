@@ -89,6 +89,11 @@ func DataSourceZenlayerCloudPvtdnsRecords() *schema.Resource {
 							Computed:    true,
 							Description: "Status of the private DNS record.",
 						},
+						"line": {
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "The resolver line.",
+						},
 						"create_time": {
 							Type:        schema.TypeString,
 							Computed:    true,
@@ -157,6 +162,7 @@ func dataSourceZenlayerCloudPvtdnsRecordsRead(ctx context.Context, d *schema.Res
 			"priority":     record.Priority,
 			"status":       record.Status,
 			"create_time":  record.CreateTime,
+			"line":         record.Line,
 		}
 
 		recordList = append(recordList, mapping)
@@ -177,8 +183,8 @@ func dataSourceZenlayerCloudPvtdnsRecordsRead(ctx context.Context, d *schema.Res
 }
 
 type PrivateRecordFilter struct {
-	ZoneId     string
-	RecordIds  []string
-	RecordType string
+	ZoneId      string
+	RecordIds   []string
+	RecordType  string
 	RecordValue string
 }

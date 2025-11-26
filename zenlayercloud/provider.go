@@ -143,7 +143,7 @@ Zenlayer Load Balancing(ZLB)
 	zenlayercloud_zlb_listener
 	zenlayercloud_zlb_backend
 
-Zenlayer Private DNS(zdns)
+Zenlayer Private DNS(ZDNS)
 
   Data Source
 	zenlayercloud_zdns_zones

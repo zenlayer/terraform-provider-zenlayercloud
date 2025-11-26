@@ -1,5 +1,5 @@
 ---
-subcategory: "Zenlayer Private DNS(zdns)"
+subcategory: "Zenlayer Private DNS(ZDNS)"
 layout: "zenlayercloud"
 page_title: "ZenlayerCloud: zenlayercloud_zdns_zone_records"
 sidebar_current: "docs-zenlayercloud-datasource-zdns_zone_records"
@@ -65,6 +65,7 @@ In addition to all arguments above, the following attributes are exported:
 * `records` - An information list of private DNS records. Each element contains the following attributes:
    * `create_time` - Creation time of the private DNS record.
    * `id` - ID of the private DNS record.
+   * `line` - The resolver line.
    * `priority` - Priority of the private DNS record.
    * `record_name` - Name of the private DNS record.
    * `record_type` - Type of the private DNS record.

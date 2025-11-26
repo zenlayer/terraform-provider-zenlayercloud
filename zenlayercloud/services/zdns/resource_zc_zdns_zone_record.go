@@ -41,9 +41,8 @@ func ResourceZenlayerCloudPvtdnsRecord() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice([]string{"A", "AAAA", "CNAME", "MX", "TXT", "PTR"}, false),
-				Description:  "Record type. Valid values: `A`, `AAAA`, `CNAME`, `MX`, `TXT`, `PTR`.",
-			},
+				ValidateFunc: validation.StringInSlice([]string{"A", "AAAA", "CNAME", "MX", "TXT", "PTR", "SRV"}, false),
+				Description: "DNS record type. Valid values: \n\t- `A`: Maps a domain name to an IP address \n\t- `AAAA`: Maps a domain name to an IPv6 address \n\t- `CNAME`: Maps a domain name to another domain name \n\t- `MX`: Maps a domain name to a mail server address \n\t- `TXT`: Text information \n\t- `PTR`: Maps an IP address to a domain name for reverse DNS lookup \n\t- `SRV`: Specifies servers providing specific services (format: [priority] [weight] [port] [target address], e.g., 0 5 5060 sipserver.example.com)."			},
 			"record_name": {
 				Type:        schema.TypeString,
 				Required:    true,
@@ -121,7 +120,7 @@ func weightValidateFunc() schema.CustomizeDiffFunc {
 	}, func(ctx context.Context, diff *schema.ResourceDiff, i interface{}) error {
 		v := diff.Get("type").(string)
 		// v is A or AAAA
-		if v != "A" && v != "AAAA" {
+		if (v != "A" && v != "AAAA") && !diff.GetRawConfig().GetAttr("weight").IsNull() {
 			// 只能在 A, AAAA 才能设置weight
 			return fmt.Errorf("`weight` can only be set when `type` is `A` or `AAAA`")
 		}
@@ -261,7 +260,6 @@ func resourceZenlayerCloudPvtdnsRecordCreate(ctx context.Context, d *schema.Reso
 	if v, ok := d.GetOk("status"); ok {
 		request.Status = common.String(v.(string))
 	}
-
 
 	recordId := ""
 

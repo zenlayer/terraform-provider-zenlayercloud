@@ -23,7 +23,7 @@ resource "zenlayercloud_zec_vpc" "foo" {
 
 2. Bind VPC to DNS Private zone
 ```hcl
-resource "zenlayercloud_zdns_vpc_set_attachment" "foo" {
+resource "zenlayercloud_zdns_zone_vpc_set_attachment" "foo" {
   zone_id = zenlayercloud_zdns_zone.foo.id
   vpc_ids = [zenlayercloud_zec_vpc.foo.id]
 }
@@ -34,5 +34,5 @@ Import
 DNS private zone vpc attachment can be imported, e.g.
 
 ```
-$ terraform import zenlayercloud_zdns_vpc_set_attachment.foo zone-id
+$ terraform import zenlayercloud_zdns_zone_vpc_set_attachment.foo zone-id
 ```

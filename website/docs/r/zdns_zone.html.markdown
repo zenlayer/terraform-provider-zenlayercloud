@@ -1,5 +1,5 @@
 ---
-subcategory: "Zenlayer Private DNS(zdns)"
+subcategory: "Zenlayer Private DNS(ZDNS)"
 layout: "zenlayercloud"
 page_title: "ZenlayerCloud: zenlayercloud_zdns_zone"
 sidebar_current: "docs-zenlayercloud-resource-zdns_zone"
@@ -10,6 +10,8 @@ description: |-
 # zenlayercloud_zdns_zone
 
 Use this resource to create a DNS Private zone
+
+For more information about Zenlayer DNS, see the Zenlayer Documentation on [ZDNS Service](https://docs.console.zenlayer.com/welcome/elastic-compute/overview/zdns-service)
 
 ## Example Usage
 
@@ -28,7 +30,9 @@ resource "zenlayercloud_zdns_zone" "foo" {
 The following arguments are supported:
 
 * `zone_name` - (Required, String, ForceNew) The name of the private zone.
-* `proxy_pattern` - (Optional, String) The recursive DNS proxy. Valid values: `Zone`: Recursive DNS proxy is disabled. `RECURSION`: Recursive DNS proxy is enabled. Default: `ZONE`.
+* `proxy_pattern` - (Optional, String) The recursive DNS proxy setting for subdomains. Valid values: 
+	- `ZONE`: Disable recursive DNS proxy. When resolving non-existent subdomains under this domain, it directly returns NXDOMAIN, indicating the subdomain does not exist. 
+	- `RECURSION`: Enable recursive DNS proxy. When resolving non-existent subdomains under this domain, it queries the recursive module and responds to the resolution request with the final query result. Default: `ZONE`.
 * `remark` - (Optional, String) Remarks.
 * `resource_group_id` - (Optional, String) The resource group id the private zone belongs to, default to Default Resource Group.
 

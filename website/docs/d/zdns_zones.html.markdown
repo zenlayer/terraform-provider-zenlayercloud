@@ -1,5 +1,5 @@
 ---
-subcategory: "Zenlayer Private DNS(zdns)"
+subcategory: "Zenlayer Private DNS(ZDNS)"
 layout: "zenlayercloud"
 page_title: "ZenlayerCloud: zenlayercloud_zdns_zones"
 sidebar_current: "docs-zenlayercloud-datasource-zdns_zones"
