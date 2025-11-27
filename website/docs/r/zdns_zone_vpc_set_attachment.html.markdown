@@ -4,18 +4,18 @@ layout: "zenlayercloud"
 page_title: "ZenlayerCloud: zenlayercloud_zdns_zone_vpc_set_attachment"
 sidebar_current: "docs-zenlayercloud-resource-zdns_zone_vpc_set_attachment"
 description: |-
-  Use this resource to manage a DNS private zone vpc attachment
+  Use this resource to manage DNS private zone with zec VPCs attachment
 ---
 
 # zenlayercloud_zdns_zone_vpc_set_attachment
 
-Use this resource to manage a DNS private zone vpc attachment
+Use this resource to manage DNS private zone with zec VPCs attachment
 
-~> **NOTE:** The current resource is used to manage all the vpc of a DNS private zone.
+~> **NOTE:** The current resource is used to manage all the zec VPCs of a DNS private zone.
 
 ## Example Usage
 
-1. Prepare a DNS Private zone and a VPC
+1. Prepare a DNS Private zone and a zec VPC
 
 ```hcl
 resource "zenlayercloud_zdns_zone" "foo" {
@@ -32,7 +32,7 @@ resource "zenlayercloud_zec_vpc" "foo" {
 }
 ```
 
-2. Bind VPC to DNS Private zone
+2. Bind the VPC to DNS Private zone
 
 ```hcl
 resource "zenlayercloud_zdns_zone_vpc_set_attachment" "foo" {

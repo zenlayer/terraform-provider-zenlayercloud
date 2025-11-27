@@ -38,7 +38,7 @@ func ResourceZenlayerCloudPvtdnsZone() *schema.Resource {
 				Optional:     true,
 				Computed:     true,
 				ValidateFunc: validation.StringInSlice([]string{"ZONE", "RECURSION"}, false),
-				Description: "The recursive DNS proxy setting for subdomains. Valid values: \n\t- `ZONE`: Disable recursive DNS proxy. When resolving non-existent subdomains under this domain, it directly returns NXDOMAIN, indicating the subdomain does not exist. \n\t- `RECURSION`: Enable recursive DNS proxy. When resolving non-existent subdomains under this domain, it queries the recursive module and responds to the resolution request with the final query result. Default: `ZONE`."			},
+				Description: "The recursive DNS proxy setting for subdomains. Default: `ZONE`. Valid values: \n\t- `ZONE`: Disable recursive DNS proxy. When resolving non-existent subdomains under this domain, it directly returns NXDOMAIN, indicating the subdomain does not exist. \n\t- `RECURSION`: Enable recursive DNS proxy. When resolving non-existent subdomains under this domain, it queries the recursive module and responds to the resolution request with the final query result."			},
 			"remark": {
 				Type:        schema.TypeString,
 				Optional:    true,

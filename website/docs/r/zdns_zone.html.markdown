@@ -30,9 +30,9 @@ resource "zenlayercloud_zdns_zone" "foo" {
 The following arguments are supported:
 
 * `zone_name` - (Required, String, ForceNew) The name of the private zone.
-* `proxy_pattern` - (Optional, String) The recursive DNS proxy setting for subdomains. Valid values: 
+* `proxy_pattern` - (Optional, String) The recursive DNS proxy setting for subdomains. Default: `ZONE`. Valid values: 
 	- `ZONE`: Disable recursive DNS proxy. When resolving non-existent subdomains under this domain, it directly returns NXDOMAIN, indicating the subdomain does not exist. 
-	- `RECURSION`: Enable recursive DNS proxy. When resolving non-existent subdomains under this domain, it queries the recursive module and responds to the resolution request with the final query result. Default: `ZONE`.
+	- `RECURSION`: Enable recursive DNS proxy. When resolving non-existent subdomains under this domain, it queries the recursive module and responds to the resolution request with the final query result.
 * `remark` - (Optional, String) Remarks.
 * `resource_group_id` - (Optional, String) The resource group id the private zone belongs to, default to Default Resource Group.
 
