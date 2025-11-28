@@ -1,6 +1,8 @@
 /*
 Use this data source to query information about BMC instance hardware health status.
 
+~> **NOTE:** Different hardware vendors use different starting indices for CPU numbering (some start from 0, others from 1). The attribute names (e.g., cpu0_temp, cpu1_temp, cpu2_temp) retain the original vendor's numbering style.
+
 Example Usage
 
 ```hcl
@@ -85,22 +87,22 @@ func dataSourceZenlayerCloudInstanceHealthStatus() *schema.Resource {
 			"cpu_temp": {
 				Type:        schema.TypeInt,
 				Computed:    true,
-				Description: "Temperature of a single CPU in Supermicro blade servers. The range is from 0 to 100. The unit is Celsius. Note that a value of 0 is generally not retrievable, and a value of 100 signifies an exceptionally high temperature.",
+				Description: "Temperature of a single CPU in specific server models (e.g., Supermicro blade servers). The range is from 0 to 100. The unit is Celsius. Note that a value of 0 is generally not retrievable, and a value of 100 signifies an exceptionally high temperature.",
 			},
 			"cpu0_temp": {
 				Type:        schema.TypeInt,
 				Computed:    true,
-				Description: "CPU0 temperature. The range is from 0 to 100. The unit is Celsius. If the value is empty, it means the temperature is not retrievable.",
+				Description: "CPU temperature at index 0. The range is from 0 to 100. The unit is Celsius. If the value is empty, it means the temperature is not retrievable.",
 			},
 			"cpu1_temp": {
 				Type:        schema.TypeInt,
 				Computed:    true,
-				Description: "CPU1 temperature. The range is from 0 to 100. The unit is Celsius. If the value is empty, it means the temperature is not retrievable.",
+				Description: "CPU temperature at index 1. The range is from 0 to 100. The unit is Celsius. If the value is empty, it means the temperature is not retrievable.",
 			},
 			"cpu2_temp": {
 				Type:        schema.TypeInt,
 				Computed:    true,
-				Description: "CPU2 temperature. The range is from 0 to 100. The unit is Celsius. If the value is empty, it means the temperature is not retrievable.",
+				Description: "CPU temperature at index 2. The range is from 0 to 100. The unit is Celsius. If the value is empty, it means the temperature is not retrievable.",
 			},
 			"inlet_temp": {
 				Type:        schema.TypeInt,

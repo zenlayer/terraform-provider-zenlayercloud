@@ -11,6 +11,8 @@ description: |-
 
 Use this data source to query information about BMC instance hardware health status.
 
+~> **NOTE:** Different hardware vendors use different starting indices for CPU numbering (some start from 0, others from 1). The attribute names (e.g., cpu0_temp, cpu1_temp, cpu2_temp) retain the original vendor's numbering style.
+
 ## Example Usage
 
 ```hcl
@@ -30,11 +32,11 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `cpu0_temp` - CPU0 temperature. The range is from 0 to 100. The unit is Celsius. If the value is empty, it means the temperature is not retrievable.
-* `cpu1_temp` - CPU1 temperature. The range is from 0 to 100. The unit is Celsius. If the value is empty, it means the temperature is not retrievable.
-* `cpu2_temp` - CPU2 temperature. The range is from 0 to 100. The unit is Celsius. If the value is empty, it means the temperature is not retrievable.
+* `cpu0_temp` - CPU temperature at index 0. The range is from 0 to 100. The unit is Celsius. If the value is empty, it means the temperature is not retrievable.
+* `cpu1_temp` - CPU temperature at index 1. The range is from 0 to 100. The unit is Celsius. If the value is empty, it means the temperature is not retrievable.
+* `cpu2_temp` - CPU temperature at index 2. The range is from 0 to 100. The unit is Celsius. If the value is empty, it means the temperature is not retrievable.
 * `cpu_status` - CPU status. OK: Normal; WARNING: Abnormal state; UNKNOWN: State detected failed.
-* `cpu_temp` - Temperature of a single CPU in Supermicro blade servers. The range is from 0 to 100. The unit is Celsius. Note that a value of 0 is generally not retrievable, and a value of 100 signifies an exceptionally high temperature.
+* `cpu_temp` - Temperature of a single CPU in specific server models (e.g., Supermicro blade servers). The range is from 0 to 100. The unit is Celsius. Note that a value of 0 is generally not retrievable, and a value of 100 signifies an exceptionally high temperature.
 * `disk_status` - Disk status. OK: Normal; WARNING: Abnormal state; UNKNOWN: State detected failed.
 * `fan_status` - Fan status. OK: Normal. WARNING: Abnormal state. UNKNOWN: State detected failed.
 * `inlet_temp` - Temperature of the air or environment surrounding the server equipment in a data center or server room.
