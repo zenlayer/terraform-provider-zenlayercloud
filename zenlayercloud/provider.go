@@ -54,6 +54,7 @@ Bare Metal Cloud(BMC)
 	zenlayercloud_bmc_instance_types
     zenlayercloud_bmc_images
 	zenlayercloud_bmc_instances
+	zenlayercloud_bmc_instance_health_status
 	zenlayercloud_bmc_eips
 	zenlayercloud_bmc_vpc_regions
 	zenlayercloud_bmc_vpcs
@@ -332,14 +333,15 @@ func resourcesMap() map[string]*schema.Resource {
 func dataSourcesMap() map[string]*schema.Resource {
 	return map[string]*schema.Resource{
 		// bmc product
-		"zenlayercloud_bmc_zones":          dataSourceZenlayerCloudBmcZones(),
-		"zenlayercloud_bmc_instance_types": dataSourceZenlayerCloudInstanceTypes(),
-		"zenlayercloud_bmc_images":         dataSourceZenlayerCloudImages(),
-		"zenlayercloud_bmc_instances":      dataSourceZenlayerCloudInstances(),
-		"zenlayercloud_bmc_eips":           dataSourceZenlayerCloudEips(),
-		"zenlayercloud_bmc_vpc_regions":    dataSourceZenlayerCloudVpcRegions(),
-		"zenlayercloud_bmc_vpcs":           dataSourceZenlayerCloudVpcs(),
-		"zenlayercloud_bmc_subnets":        dataSourceZenlayerCloudVpcSubnets(),
+		"zenlayercloud_bmc_zones":                  dataSourceZenlayerCloudBmcZones(),
+		"zenlayercloud_bmc_instance_types":         dataSourceZenlayerCloudInstanceTypes(),
+		"zenlayercloud_bmc_images":                 dataSourceZenlayerCloudImages(),
+		"zenlayercloud_bmc_instances":              dataSourceZenlayerCloudInstances(),
+		"zenlayercloud_bmc_instance_health_status": dataSourceZenlayerCloudInstanceHealthStatus(),
+		"zenlayercloud_bmc_eips":                   dataSourceZenlayerCloudEips(),
+		"zenlayercloud_bmc_vpc_regions":            dataSourceZenlayerCloudVpcRegions(),
+		"zenlayercloud_bmc_vpcs":                   dataSourceZenlayerCloudVpcs(),
+		"zenlayercloud_bmc_subnets":                dataSourceZenlayerCloudVpcSubnets(),
 
 		// vm product
 		"zenlayercloud_security_groups": dataSourceZenlayerCloudSecurityGroups(),
