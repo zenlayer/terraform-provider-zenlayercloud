@@ -71,8 +71,8 @@ func ResourceZenlayerCloudZlbListener() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Default:      "FNAT",
-				Description:  "Forwarding mode of the listener. Valid values: `DR`, `FNAT`. Default is `FNAT`.",
-				ValidateFunc: validation.StringInSlice([]string{"DR", "FNAT"}, false),
+				Description:  "Forwarding mode of the listener. Valid values: `DR`(stands for Direct Routing), `FNAT`(stands for Full NAT), `DNAT`(stands for Destination NAT). Default is `FNAT`.",
+				ValidateFunc: validation.StringInSlice([]string{"DR", "FNAT", "DNAT"}, false),
 			},
 			"health_check_enabled": {
 				Type:        schema.TypeBool,

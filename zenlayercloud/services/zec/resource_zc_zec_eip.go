@@ -170,7 +170,7 @@ func resourceZenlayerCloudZecElasticIPCreate(ctx context.Context, d *schema.Reso
 	err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
 		response, err := zecService.client.WithZec2Client().CreateEips(request)
 		if err != nil {
-			return common.RetryError(ctx, err)
+			return common.RetryError(ctx, err, common.OperationTimeout)
 		}
 
 		if len(response.Response.EipIds) == 0 {
