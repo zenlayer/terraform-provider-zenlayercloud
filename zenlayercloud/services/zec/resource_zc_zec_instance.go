@@ -291,6 +291,33 @@ func resourceZenlayerCloudZecInstanceDelete(ctx context.Context, d *schema.Resou
 		return nil
 	})
 
+
+	err = resource.RetryContext(ctx, d.Timeout(schema.TimeoutDelete)-time.Minute, func() *resource.RetryError {
+		instance, errRet := zecService.DescribeInstanceById(ctx, instanceId)
+		if errRet != nil {
+			ee, ok := errRet.(*common.ZenlayerCloudSdkError)
+			if !ok {
+				return common2.RetryError(ctx, errRet)
+			} else if ee.Code == "INVALID_INSTANCE_NOT_FOUND" || ee.Code == common2.ResourceNotFound {
+				notExist = true
+				return nil
+			}
+			return common2.RetryError(ctx, errRet)
+		}
+		if instance== nil {
+			return nil
+		}
+
+		if instanceIsOperating(*instance.Status) {
+			return resource.RetryableError(fmt.Errorf("waiting for instance %s releasing, current status: %s", instance.InstanceId, instance.Status))
+		}
+
+		return resource.NonRetryableError(fmt.Errorf("vm instance status is not recycle, current status %s", instance.Status))
+	})
+
+	if err != nil {
+		return diag.FromErr(err)
+	}
 	return nil
 }
 

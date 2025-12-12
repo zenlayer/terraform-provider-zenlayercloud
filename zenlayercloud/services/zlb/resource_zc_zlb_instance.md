@@ -1,4 +1,6 @@
-Provide a resource to create a ZLB instance.
+Provide a resource to create a Load balancer instance.
+
+~> **NOTE:** When creating a load balancer instance, ensure that there is at least a subnet is IPv4 stack type under the VPC and that there are at least 2 available IP addresses for allocation within the subnet.
 
 Example Usage
 
