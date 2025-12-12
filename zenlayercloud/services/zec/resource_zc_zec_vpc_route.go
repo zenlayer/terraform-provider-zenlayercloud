@@ -72,11 +72,11 @@ func ResourceZenlayerCloudGlobalVpcRoute() *schema.Resource {
 				Description: "The source IP matched. Required when the `route_type` is `RouteTypePolicy`.",
 			},
 			"priority": {
-				Type:        schema.TypeInt,
-				Required:    true,
-				ForceNew:    true,
+				Type:         schema.TypeInt,
+				Required:     true,
+				ForceNew:     true,
 				ValidateFunc: validation.IntBetween(0, 65535),
-				Description: "Priority of the route entry. Valid value: from `0` to `65535`.",
+				Description:  "Priority of the route entry. Valid value: from `0` to `65535`.",
 			},
 			"next_hop_id": {
 				Type:        schema.TypeString,
@@ -116,7 +116,6 @@ func sourceIpByStaticValidFunc() schema.CustomizeDiffFunc {
 		return nil
 	})
 }
-
 
 func resourceZenlayerCloudGlobalVpcRouteDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	defer common2.LogElapsed(ctx, "resource.zenlayercloud_zec_vpc_route.delete")()
@@ -204,7 +203,7 @@ func resourceZenlayerCloudGlobalVpcRouteCreate(ctx context.Context, d *schema.Re
 				"request": common2.ToJsonString(request),
 				"err":     err.Error(),
 			})
-			return common2.RetryError(ctx, err)
+			return common2.RetryError(ctx, err, common2.OperationTimeout)
 		}
 
 		tflog.Info(ctx, "Create global vpc route success", map[string]interface{}{

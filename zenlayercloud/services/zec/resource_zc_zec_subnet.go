@@ -124,13 +124,13 @@ func resourceZenlayerCloudZecSubnetDelete(ctx context.Context, d *schema.Resourc
 		errRet := zecService.DeleteSubnet(ctx, subnetId)
 		if errRet != nil {
 			ee, ok := errRet.(*common.ZenlayerCloudSdkError)
-			if !ok {
-				return common2.RetryError(ctx, errRet, common2.InternalServerError)
+			if ok {
+				if ee.Code == common2.ResourceNotFound {
+					// vpc doesn't exist
+					return nil
+				}
 			}
-			if ee.Code == common2.ResourceNotFound {
-				// vpc doesn't exist
-				return nil
-			}
+			return common2.RetryError(ctx, errRet, common2.InternalServerError)
 		}
 		return nil
 	})

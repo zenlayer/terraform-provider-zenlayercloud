@@ -90,7 +90,7 @@ func resourceZenlayerCloudZecVNicAttachmentCreate(ctx context.Context, d *schema
 	if err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutDelete)-time.Minute, func() *resource.RetryError {
 		_, errRet := zecService.client.WithZec2Client().AttachNetworkInterface(request)
 		if errRet != nil {
-			return common2.RetryError(ctx, errRet)
+			return common2.RetryError(ctx, errRet, common2.OperationTimeout)
 		}
 		return nil
 	}); err != nil {

@@ -130,7 +130,7 @@ func resourceZenlayerCloudZecSecurityGroupCreate(ctx context.Context, d *schema.
 				"request": common2.ToJsonString(request),
 				"err":     err.Error(),
 			})
-			return common2.RetryError(ctx, err)
+			return common2.RetryError(ctx, err, common2.OperationTimeout)
 		}
 
 		tflog.Info(ctx, "Create zec security group success", map[string]interface{}{

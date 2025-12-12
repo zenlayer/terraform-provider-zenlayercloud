@@ -250,7 +250,7 @@ func resourceZenlayerCloudZecVNicCreate(ctx context.Context, d *schema.ResourceD
 				"request": common2.ToJsonString(request),
 				"err":     err.Error(),
 			})
-			return common2.RetryError(ctx, err)
+			return common2.RetryError(ctx, err, common2.OperationTimeout)
 		}
 
 		tflog.Info(ctx, "Create vNIC success", map[string]interface{}{

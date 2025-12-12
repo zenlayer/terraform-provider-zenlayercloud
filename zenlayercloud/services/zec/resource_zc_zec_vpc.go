@@ -103,6 +103,8 @@ func resourceZenlayerCloudGlobalVpcDelete(ctx context.Context, d *schema.Resourc
 		client: meta.(*connectivity.ZenlayerCloudClient),
 	}
 
+
+
 	err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutDelete)-time.Minute, func() *resource.RetryError {
 		errRet := zecService.DeleteVpc(ctx, vpcId)
 		if errRet != nil {
@@ -204,7 +206,7 @@ func resourceZenlayerCloudGlobalVpcCreate(ctx context.Context, d *schema.Resourc
 				"request": common2.ToJsonString(request),
 				"err":     err.Error(),
 			})
-			return common2.RetryError(ctx, err)
+			return common2.RetryError(ctx, err, common2.OperationTimeout)
 		}
 
 		tflog.Info(ctx, "Create global vpc success", map[string]interface{}{

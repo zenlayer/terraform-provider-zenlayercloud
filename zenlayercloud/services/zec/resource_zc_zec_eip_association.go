@@ -120,7 +120,7 @@ func resourceZenlayerCloudEipAssociationCreate(ctx context.Context, d *schema.Re
 	err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
 		_, err := zecService.client.WithZec2Client().AssociateEipAddress(request)
 		if err != nil {
-			return common.RetryError(ctx, err)
+			return common.RetryError(ctx, err, common.OperationTimeout)
 		}
 		return nil
 	})
