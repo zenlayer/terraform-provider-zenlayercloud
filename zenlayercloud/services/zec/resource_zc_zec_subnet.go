@@ -13,6 +13,7 @@ import (
 	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/connectivity"
 	"github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/common"
 	zec "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/zec20240401"
+	zec2 "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/zec20250901"
 	"time"
 )
 
@@ -258,7 +259,7 @@ func resourceZenlayerCloudZecSubnetRead(ctx context.Context, d *schema.ResourceD
 		client: meta.(*connectivity.ZenlayerCloudClient),
 	}
 
-	var subnet *zec.SubnetInfo
+	var subnet *zec2.SubnetInfo
 	var errRet error
 
 	err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutRead)-time.Minute, func() *resource.RetryError {

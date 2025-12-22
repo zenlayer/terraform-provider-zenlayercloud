@@ -81,6 +81,7 @@ In addition to all arguments above, the following attributes are exported:
 * `result` - An information list of subnets. Each element contains the following attributes:
    * `cidr_block` - The IPv4 network segment.
    * `create_time` - Create time of the subnet.
+   * `dhcp_options_set_id` - DHCP options set ID.
    * `id` - ID of the subnet.
    * `ip_stack_type` - Subnet IP stack type. Values: `IPv4`, `IPv6`, `IPv4_IPv6`.
    * `ipv6_cidr_block` - The IPv6 network segment.
