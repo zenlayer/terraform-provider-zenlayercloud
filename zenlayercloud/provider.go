@@ -95,6 +95,7 @@ Zenlayer Elastic Compute(ZEC)
 	zenlayercloud_zec_vpcs
 	zenlayercloud_zec_vpc_routes
 	zenlayercloud_zec_subnets
+	zenlayercloud_zec_dhcp_options_sets
 	zenlayercloud_zec_images
 	zenlayercloud_zec_disks
 	zenlayercloud_zec_disk_snapshots
@@ -115,6 +116,8 @@ Zenlayer Elastic Compute(ZEC)
 	zenlayercloud_zec_vpc_security_group_attachment
 	zenlayercloud_zec_vpc_route
 	zenlayercloud_zec_subnet
+	zenlayercloud_zec_dhcp_options_set
+	zenlayercloud_zec_dhcp_options_set_attachment
 	zenlayercloud_zec_vnic
 	zenlayercloud_zec_vnic_attachment
 	zenlayercloud_zec_vnic_ipv4
@@ -310,6 +313,8 @@ func resourcesMap() map[string]*schema.Resource {
 		"zenlayercloud_zec_nat_gateway":                   zec.ResourceZenlayerCloudZecVpcNatGateway(),
 		"zenlayercloud_zec_nat_gateway_snat":              zec.ResourceZenlayerCloudZecVpcNatGatewaySnat(),
 		"zenlayercloud_zec_nat_gateway_dnat":              zec.ResourceZenlayerCloudZecVpcNatGatewayDnat(),
+		"zenlayercloud_zec_dhcp_options_set":              zec.ResourceZenlayerCloudZecDhcpOptionsSet(),
+		"zenlayercloud_zec_dhcp_options_set_attachment":   zec.ResourceZenlayerCloudZecDhcpOptionsSetAttachment(),
 
 		// zenlayer load balancer
 		"zenlayercloud_zlb_instance": zlb.ResourceZenlayerCloudZlbInstance(),
@@ -386,6 +391,7 @@ func dataSourcesMap() map[string]*schema.Resource {
 		"zenlayercloud_zec_nat_gateway_dnats":    		 zec.DataSourceZenlayerCloudZecNatGatewayDnats(),
 		"zenlayercloud_zec_instances":       zec.DataSourceZenlayerCloudZecInstances(),
 		"zenlayercloud_zec_vnics":           zec.DataSourceZenlayerCloudZecVnics(),
+		"zenlayercloud_zec_dhcp_options_sets": zec.DataSourceZenlayerCloudZecDhcpOptionsSets(),
 
 		// zenlayer load balancer
 		"zenlayercloud_zlb_regions":   zlb.DataSourceZenlayerCloudZlbRegions(),
