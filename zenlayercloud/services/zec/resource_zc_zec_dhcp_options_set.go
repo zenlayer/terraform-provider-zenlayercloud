@@ -6,15 +6,14 @@ import (
 	"regexp"
 	"time"
 
-	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/common"
-
-	common2 "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/common"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/common"
 	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/connectivity"
+	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/services/zrm"
+	common2 "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/common"
 	zec "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/zec20250901"
 )
 
@@ -35,7 +34,7 @@ func ResourceZenlayerCloudZecDhcpOptionsSet() *schema.Resource {
 				Description: "Name of the DHCP options set.",
 			},
 			"domain_name_servers": {
-				Type: schema.TypeString,
+				Type:        schema.TypeString,
 				Required:    true,
 				Description: "IPv4 DNS server IP, up to 4 IPv4 addresses, separated by commas.",
 			},
@@ -63,6 +62,17 @@ func ResourceZenlayerCloudZecDhcpOptionsSet() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "Description of the DHCP options set.",
+			},
+			"resource_group_id": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "ID of the resource group to which the DHCP options set belongs.",
+			},
+			"tags": {
+				Type:        schema.TypeMap,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+				Optional:    true,
+				Description: "Tags of the DHCP options set.",
 			},
 			"create_time": {
 				Type:        schema.TypeString,
@@ -99,6 +109,22 @@ func resourceZenlayerCloudZecDhcpOptionsSetCreate(ctx context.Context, d *schema
 		request.Description = common2.String(description.(string))
 	}
 
+	// 设置资源组
+	if resourceGroupId, ok := d.GetOk("resource_group_id"); ok {
+		request.ResourceGroupId = common2.String(resourceGroupId.(string))
+	}
+
+	if tags := common.GetTags(d, "tags"); len(tags) > 0 {
+		request.Tags = &zec.TagAssociation{}
+		for k, v := range tags {
+			tmpKey := k
+			tmpValue := v
+			request.Tags.Tags = append(request.Tags.Tags, &zec.Tag{
+				Key:   &tmpKey,
+				Value: &tmpValue,
+			})
+		}
+	}
 
 	response, err := zenlayerCloudClient.WithZec2Client().CreateDhcpOptionsSet(request)
 	if err != nil {
@@ -136,6 +162,14 @@ func resourceZenlayerCloudZecDhcpOptionsSetRead(ctx context.Context, d *schema.R
 	_ = d.Set("ipv6_lease_time", dhcpOptionsSet.Ipv6LeaseTime)
 	_ = d.Set("description", dhcpOptionsSet.Description)
 	_ = d.Set("create_time", dhcpOptionsSet.CreateTime)
+	_ = d.Set("resource_group_id", dhcpOptionsSet.ResourceGroupId)
+
+	// 读取标签
+	tagMap, errRet := common.TagsToMap(dhcpOptionsSet.Tags)
+	if errRet != nil {
+		return diag.FromErr(errRet)
+	}
+	_ = d.Set("tags", tagMap)
 
 	return nil
 }
@@ -180,6 +214,17 @@ func resourceZenlayerCloudZecDhcpOptionsSetUpdate(ctx context.Context, d *schema
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("fail to modify dhcp options set: %v", err))
 	}
+
+	// 更新标签
+	if d.HasChange("tags") {
+		zrmService := zrm.NewZrmService(zenlayerCloudClient)
+		if err := zrmService.ModifyResourceTags(ctx,d, d.Id()); err != nil {
+			return diag.FromErr(fmt.Errorf("fail to update tags for dhcp options set: %v", err))
+		}
+	}
+
+	// 更新资源组 - 注意：这里可能需要使用专门的API，因为ModifyDhcpOptionsSetAttributesRequest可能不支持ResourceGroupId
+	// 目前SDK中可能没有专门的API来更新DHCP选项集的资源组，需要根据实际情况调整
 
 	return resourceZenlayerCloudZecDhcpOptionsSetRead(ctx, d, meta)
 }

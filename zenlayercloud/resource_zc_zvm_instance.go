@@ -228,7 +228,6 @@ func resourceZenlayerCloudVmInstance() *schema.Resource {
 			"tags": {
 				Type:        schema.TypeMap,
 				Optional:    true,
-				Elem:        &schema.Schema{Type: schema.TypeString},
 				Description: "Tags of the instance.",
 			},
 		},

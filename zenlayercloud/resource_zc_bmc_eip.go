@@ -116,7 +116,6 @@ func resourceZenlayerCloudEip() *schema.Resource {
 			},
 			"tags": {
 				Type:        schema.TypeMap,
-				Elem:        &schema.Schema{Type: schema.TypeString},
 				Optional:    true,
 				Description: "Tags of the EIP.",
 			},

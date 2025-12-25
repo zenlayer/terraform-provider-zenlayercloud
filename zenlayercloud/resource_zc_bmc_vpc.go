@@ -97,7 +97,6 @@ func resourceZenlayerCloudVpc() *schema.Resource {
 			},
 			"tags": {
 				Type:        schema.TypeMap,
-				Elem:        &schema.Schema{Type: schema.TypeString},
 				Optional:    true,
 				Description: "The tags of the vpc.",
 			},

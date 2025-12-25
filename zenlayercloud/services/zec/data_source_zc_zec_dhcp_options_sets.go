@@ -13,6 +13,7 @@ import (
 
 type DhcpOptionsSetFilter struct {
 	dhcpOptionsSetIds []string
+	resourceGroupId   string
 }
 
 func DataSourceZenlayerCloudZecDhcpOptionsSets() *schema.Resource {
@@ -30,6 +31,11 @@ func DataSourceZenlayerCloudZecDhcpOptionsSets() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.StringIsValidRegExp,
 				Description:  "Regular expression for DHCP options set names.",
+			},
+			"resource_group_id": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "ID of the resource group to filter DHCP options sets.",
 			},
 			"result_output_file": {
 				Type:        schema.TypeString,
@@ -77,6 +83,17 @@ func DataSourceZenlayerCloudZecDhcpOptionsSets() *schema.Resource {
 							Computed:    true,
 							Description: "Description of the DHCP options set.",
 						},
+						"resource_group_id": {
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "ID of the resource group to which the DHCP options set belongs.",
+						},
+						"tags": {
+							Type:        schema.TypeMap,
+							Elem:        &schema.Schema{Type: schema.TypeString},
+							Computed:    true,
+							Description: "Tags of the DHCP options set.",
+						},
 						"create_time": {
 							Type:        schema.TypeString,
 							Computed:    true,
@@ -101,6 +118,11 @@ func dataSourceZenlayerCloudZecDhcpOptionsSetsRead(ctx context.Context, d *schem
 		}
 	}
 
+	// 处理资源组过滤
+	if v, ok := d.GetOk("resource_group_id"); ok {
+		filter.resourceGroupId = v.(string)
+	}
+
 	var nameRegex *regexp.Regexp
 
 	if v, ok := d.GetOk("name_regex"); ok {
@@ -120,6 +142,7 @@ func dataSourceZenlayerCloudZecDhcpOptionsSetsRead(ctx context.Context, d *schem
 		}
 
 		ids = append(ids, *dhcpOptionsSet.DhcpOptionsSetId)
+
 		dhcpOptionsSetMap := map[string]interface{}{
 			"id":                       dhcpOptionsSet.DhcpOptionsSetId,
 			"name":                     dhcpOptionsSet.DhcpOptionsSetName,
@@ -128,8 +151,17 @@ func dataSourceZenlayerCloudZecDhcpOptionsSetsRead(ctx context.Context, d *schem
 			"lease_time":               dhcpOptionsSet.LeaseTime,
 			"ipv6_lease_time":          dhcpOptionsSet.Ipv6LeaseTime,
 			"description":              dhcpOptionsSet.Description,
+			"resource_group_id":        dhcpOptionsSet.ResourceGroupId,
 			"create_time":              dhcpOptionsSet.CreateTime,
 		}
+
+		// Read tags
+		tags, err := common.TagsToMap(dhcpOptionsSet.Tags)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		dhcpOptionsSetMap["tags"] = tags
+
 		dhcpOptionsSets = append(dhcpOptionsSets, dhcpOptionsSetMap)
 	}
 

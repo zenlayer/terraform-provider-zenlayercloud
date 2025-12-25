@@ -115,7 +115,6 @@ func resourceZenlayerCloudVmDisk() *schema.Resource {
 			"tags": {
 				Type:        schema.TypeMap,
 				Optional:    true,
-				Elem:        &schema.Schema{Type: schema.TypeString},
 				Description: "Tags of the disk.",
 			},
 		},
