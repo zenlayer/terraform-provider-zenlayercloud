@@ -54,6 +54,7 @@ Bare Metal Cloud(BMC)
 	zenlayercloud_bmc_instance_types
     zenlayercloud_bmc_images
 	zenlayercloud_bmc_instances
+	zenlayercloud_bmc_instance_health_status
 	zenlayercloud_bmc_eips
 	zenlayercloud_bmc_vpc_regions
 	zenlayercloud_bmc_vpcs
@@ -94,6 +95,7 @@ Zenlayer Elastic Compute(ZEC)
 	zenlayercloud_zec_vpcs
 	zenlayercloud_zec_vpc_routes
 	zenlayercloud_zec_subnets
+	zenlayercloud_zec_dhcp_options_sets
 	zenlayercloud_zec_images
 	zenlayercloud_zec_disks
 	zenlayercloud_zec_disk_snapshots
@@ -114,6 +116,8 @@ Zenlayer Elastic Compute(ZEC)
 	zenlayercloud_zec_vpc_security_group_attachment
 	zenlayercloud_zec_vpc_route
 	zenlayercloud_zec_subnet
+	zenlayercloud_zec_dhcp_options_set
+	zenlayercloud_zec_dhcp_options_set_attachment
 	zenlayercloud_zec_vnic
 	zenlayercloud_zec_vnic_attachment
 	zenlayercloud_zec_vnic_ipv4
@@ -143,16 +147,16 @@ Zenlayer Load Balancing(ZLB)
 	zenlayercloud_zlb_listener
 	zenlayercloud_zlb_backend
 
-Zenlayer Private DNS(pvtdns)
+Zenlayer Private DNS(ZDNS)
 
   Data Source
-	zenlayercloud_pvtdns_zones
-	zenlayercloud_pvtdns_zone_records
+	zenlayercloud_zdns_zones
+	zenlayercloud_zdns_zone_records
 
   Resource
-	zenlayercloud_pvtdns_zone
-	zenlayercloud_pvtdns_zone_record
-	zenlayercloud_pvtdns_zone_vpc_set_attachment
+	zenlayercloud_zdns_zone
+	zenlayercloud_zdns_zone_record
+	zenlayercloud_zdns_zone_vpc_set_attachment
 
 Traffic
 
@@ -187,8 +191,8 @@ package zenlayercloud
 import (
 	"context"
 	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/services/keypair"
-	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/services/pvtdns"
 	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/services/traffic"
+	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/services/zdns"
 	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/services/zec"
 	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/services/zlb"
 
@@ -309,6 +313,8 @@ func resourcesMap() map[string]*schema.Resource {
 		"zenlayercloud_zec_nat_gateway":                   zec.ResourceZenlayerCloudZecVpcNatGateway(),
 		"zenlayercloud_zec_nat_gateway_snat":              zec.ResourceZenlayerCloudZecVpcNatGatewaySnat(),
 		"zenlayercloud_zec_nat_gateway_dnat":              zec.ResourceZenlayerCloudZecVpcNatGatewayDnat(),
+		"zenlayercloud_zec_dhcp_options_set":              zec.ResourceZenlayerCloudZecDhcpOptionsSet(),
+		"zenlayercloud_zec_dhcp_options_set_attachment":   zec.ResourceZenlayerCloudZecDhcpOptionsSetAttachment(),
 
 		// zenlayer load balancer
 		"zenlayercloud_zlb_instance": zlb.ResourceZenlayerCloudZlbInstance(),
@@ -322,9 +328,9 @@ func resourcesMap() map[string]*schema.Resource {
 		"zenlayercloud_traffic_bandwidth_cluster": traffic.ResourceZenlayerCloudTrafficBandwidthCluster(),
 
 		// Private DNS
-		"zenlayercloud_pvtdns_zone":                  pvtdns.ResourceZenlayerCloudPvtdnsZone(),
-		"zenlayercloud_pvtdns_zone_record":            pvtdns.ResourceZenlayerCloudPvtdnsRecord(),
-		"zenlayercloud_pvtdns_zone_vpc_set_attachment":   pvtdns.ResourceZenlayerCloudPvtdnsZoneVpcAttachment(),
+		"zenlayercloud_zdns_zone":                    zdns.ResourceZenlayerCloudPvtdnsZone(),
+		"zenlayercloud_zdns_zone_record":             zdns.ResourceZenlayerCloudPvtdnsRecord(),
+		"zenlayercloud_zdns_zone_vpc_set_attachment": zdns.ResourceZenlayerCloudPvtdnsZoneVpcAttachment(),
 
 	}
 }
@@ -332,14 +338,15 @@ func resourcesMap() map[string]*schema.Resource {
 func dataSourcesMap() map[string]*schema.Resource {
 	return map[string]*schema.Resource{
 		// bmc product
-		"zenlayercloud_bmc_zones":          dataSourceZenlayerCloudBmcZones(),
-		"zenlayercloud_bmc_instance_types": dataSourceZenlayerCloudInstanceTypes(),
-		"zenlayercloud_bmc_images":         dataSourceZenlayerCloudImages(),
-		"zenlayercloud_bmc_instances":      dataSourceZenlayerCloudInstances(),
-		"zenlayercloud_bmc_eips":           dataSourceZenlayerCloudEips(),
-		"zenlayercloud_bmc_vpc_regions":    dataSourceZenlayerCloudVpcRegions(),
-		"zenlayercloud_bmc_vpcs":           dataSourceZenlayerCloudVpcs(),
-		"zenlayercloud_bmc_subnets":        dataSourceZenlayerCloudVpcSubnets(),
+		"zenlayercloud_bmc_zones":                  dataSourceZenlayerCloudBmcZones(),
+		"zenlayercloud_bmc_instance_types":         dataSourceZenlayerCloudInstanceTypes(),
+		"zenlayercloud_bmc_images":                 dataSourceZenlayerCloudImages(),
+		"zenlayercloud_bmc_instances":              dataSourceZenlayerCloudInstances(),
+		"zenlayercloud_bmc_instance_health_status": dataSourceZenlayerCloudInstanceHealthStatus(),
+		"zenlayercloud_bmc_eips":                   dataSourceZenlayerCloudEips(),
+		"zenlayercloud_bmc_vpc_regions":            dataSourceZenlayerCloudVpcRegions(),
+		"zenlayercloud_bmc_vpcs":                   dataSourceZenlayerCloudVpcs(),
+		"zenlayercloud_bmc_subnets":                dataSourceZenlayerCloudVpcSubnets(),
 
 		// vm product
 		"zenlayercloud_security_groups": dataSourceZenlayerCloudSecurityGroups(),
@@ -384,6 +391,7 @@ func dataSourcesMap() map[string]*schema.Resource {
 		"zenlayercloud_zec_nat_gateway_dnats":    		 zec.DataSourceZenlayerCloudZecNatGatewayDnats(),
 		"zenlayercloud_zec_instances":       zec.DataSourceZenlayerCloudZecInstances(),
 		"zenlayercloud_zec_vnics":           zec.DataSourceZenlayerCloudZecVnics(),
+		"zenlayercloud_zec_dhcp_options_sets": zec.DataSourceZenlayerCloudZecDhcpOptionsSets(),
 
 		// zenlayer load balancer
 		"zenlayercloud_zlb_regions":   zlb.DataSourceZenlayerCloudZlbRegions(),
@@ -399,8 +407,8 @@ func dataSourcesMap() map[string]*schema.Resource {
 		"zenlayercloud_key_pairs":       keypair.DataSourceZenlayerCloudKeyPairs(),
 
 		// Private DNS
-		"zenlayercloud_pvtdns_zones":                  pvtdns.DataSourceZenlayerCloudPvtdnsZones(),
-		"zenlayercloud_pvtdns_zone_records":            pvtdns.DataSourceZenlayerCloudPvtdnsRecords(),
+		"zenlayercloud_zdns_zones":        zdns.DataSourceZenlayerCloudPvtdnsZones(),
+		"zenlayercloud_zdns_zone_records": zdns.DataSourceZenlayerCloudPvtdnsRecords(),
 	}
 }
 

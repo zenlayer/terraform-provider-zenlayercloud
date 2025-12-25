@@ -72,6 +72,24 @@ func (s *BmcService) DescribeInstanceById(ctx context.Context, instanceId string
 	return
 }
 
+func (s *BmcService) DescribeInstanceMonitorHealth(ctx context.Context, instanceId string) (healthStatus *bmc.InstanceHealth, err error) {
+	request := bmc.NewDescribeInstancesMonitorHealthRequest()
+	request.InstanceIds = []string{instanceId}
+
+	response, err := s.client.WithBmcClient().DescribeInstancesMonitorHealth(request)
+
+	defer common2.LogApiRequest(ctx, "DescribeInstancesMonitorHealth", request, response, err)
+	if err != nil {
+		return
+	}
+
+	if response.Response == nil || len(response.Response.MonitorHealthList) < 1 {
+		return
+	}
+	healthStatus = response.Response.MonitorHealthList[0]
+	return
+}
+
 func (s *BmcService) InstanceStateRefreshFunc(ctx context.Context, instanceId string, failStates []string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		object, err := s.DescribeInstanceById(ctx, instanceId)

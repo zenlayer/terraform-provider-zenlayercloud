@@ -122,11 +122,11 @@ func (s *ZecService) ModifyVpcAttribute(ctx context.Context, request *zec.Modify
 	return err
 }
 
-func (s *ZecService) DescribeSubnetById(ctx context.Context, subnetId string) (*zec.SubnetInfo, error) {
-	request := zec.NewDescribeSubnetsRequest()
+func (s *ZecService) DescribeSubnetById(ctx context.Context, subnetId string) (*zec2.SubnetInfo, error) {
+	request := zec2.NewDescribeSubnetsRequest()
 	request.SubnetIds = []string{subnetId}
 
-	response, err := s.client.WithZecClient().DescribeSubnets(request)
+	response, err := s.client.WithZec2Client().DescribeSubnets(request)
 	defer common.LogApiRequest(ctx, "DescribeSubnets", request, response, err)
 
 	if err != nil {
@@ -735,13 +735,13 @@ func (s *ZecService) AddSubnetIpv6(ctx context.Context, subnetId string, ipv6Typ
 	return err
 }
 
-func (s *ZecService) DescribeSubnetsByFilter(ctx context.Context, filter *SubnetFilter) (subnets []*zec.SubnetInfo, err error) {
+func (s *ZecService) DescribeSubnetsByFilter(ctx context.Context, filter *SubnetFilter) (subnets []*zec2.SubnetInfo, err error) {
 	request := convertSubnetRequestFilter(filter)
 
 	var limit = 100
-	request.PageSize = limit
-	request.PageNum = 1
-	response, err := s.client.WithZecClient().DescribeSubnets(request)
+	request.PageSize = common2.Integer(limit)
+	request.PageNum = common2.Integer(1)
+	response, err := s.client.WithZec2Client().DescribeSubnets(request)
 
 	if err != nil {
 		log.Printf("[CRITAL] Api[%s] fail, request body [%s], error[%s]\n",
@@ -753,7 +753,7 @@ func (s *ZecService) DescribeSubnetsByFilter(ctx context.Context, filter *Subnet
 	}
 
 	subnets = response.Response.DataSet
-	num := int(math.Ceil(float64(response.Response.TotalCount)/float64(limit))) - 1
+	num := int(math.Ceil(float64(*response.Response.TotalCount)/float64(limit))) - 1
 	if num == 0 {
 		return subnets, nil
 	}
@@ -769,10 +769,10 @@ func (s *ZecService) DescribeSubnetsByFilter(ctx context.Context, filter *Subnet
 		goFunc := func() {
 			request := convertSubnetRequestFilter(filter)
 
-			request.PageNum = value + 2
-			request.PageSize = limit
+			request.PageNum = common2.Integer(value + 2)
+			request.PageSize =  common2.Integer(limit)
 
-			response, err := s.client.WithZecClient().DescribeSubnets(request)
+			response, err := s.client.WithZec2Client().DescribeSubnets(request)
 			if err != nil {
 				log.Printf("[CRITAL] Api[%s] fail, request body [%s], error[%s]\n",
 					request.GetAction(), common.ToJsonString(request), err.Error())
@@ -792,7 +792,7 @@ func (s *ZecService) DescribeSubnetsByFilter(ctx context.Context, filter *Subnet
 
 	log.Printf("[DEBUG] DescribeSubnets request finished")
 	for _, v := range subnetList {
-		subnets = append(subnets, v.([]*zec.SubnetInfo)...)
+		subnets = append(subnets, v.([]*zec2.SubnetInfo)...)
 	}
 	log.Printf("[DEBUG] transfer zec subnets finished")
 	return
@@ -1496,10 +1496,12 @@ func convertImageFilter(filter *ImageFilter) *zec.DescribeImagesRequest {
 
 }
 
-func convertSubnetRequestFilter(filter *SubnetFilter) *zec.DescribeSubnetsRequest {
-	request := zec.NewDescribeSubnetsRequest()
+func convertSubnetRequestFilter(filter *SubnetFilter) *zec2.DescribeSubnetsRequest {
+	request := zec2.NewDescribeSubnetsRequest()
 	request.SubnetIds = filter.ids
-	request.RegionId = filter.RegionId
+	if filter.RegionId!= "" {
+		request.RegionId = common2.String(filter.RegionId)
+	}
 	return request
 }
 
@@ -1638,4 +1640,90 @@ func convertVpcRequestFilter(filter *ZecVpcFilter) *zec.DescribeVpcsRequest {
 		request.ResourceGroupId = *filter.ResourceGroupId
 	}
 	return request
+}
+
+func (s *ZecService) DescribeDhcpOptionsSetsByFilter(ctx context.Context, filter *DhcpOptionsSetFilter) (dhcpOptionsSets []*zec2.DhcpOptionsSet,err error) {
+	request := convertDhcpOptionsSetRequestFilter(filter)
+
+	var limit = 100
+	request.PageSize = common2.Integer(limit)
+	request.PageNum = common2.Integer(1)
+	response, err := s.client.WithZec2Client().DescribeDhcpOptionsSets(request)
+
+	if err != nil {
+		log.Printf("[CRITAL] Api[%s] fail, request body [%s], error[%s]\n",
+			request.GetAction(), common.ToJsonString(request), err.Error())
+		return
+	}
+	if response == nil || len(response.Response.DataSet) < 1 {
+		return
+	}
+
+	dhcpOptionsSets = response.Response.DataSet
+	num := int(math.Ceil(float64(*response.Response.TotalCount)/float64(limit))) - 1
+	if num == 0 {
+		return dhcpOptionsSets, nil
+	}
+	maxConcurrentNum := 50
+	g := common.NewGoRoutine(maxConcurrentNum)
+	wg := sync.WaitGroup{}
+
+	var dhcpOptionsSetList = make([]interface{}, num)
+
+	for i := 0; i < num; i++ {
+		wg.Add(1)
+		value := i
+		goFunc := func() {
+			request := convertDhcpOptionsSetRequestFilter(filter)
+
+			request.PageNum = common2.Integer(value + 2)
+			request.PageSize = common2.Integer(limit)
+
+			response, err := s.client.WithZec2Client().DescribeDhcpOptionsSets(request)
+			if err != nil {
+				log.Printf("[CRITAL] Api[%s] fail, request body [%s], error[%s]\n",
+					request.GetAction(), common.ToJsonString(request), err.Error())
+				return
+			}
+			log.Printf("[DEBUG] Api[%s] success, request body [%s], response body [%s]\n",
+				request.GetAction(), common.ToJsonString(request), common.ToJsonString(response))
+
+			dhcpOptionsSetList[value] = response.Response.DataSet
+
+			wg.Done()
+			log.Printf("[DEBUG] thread %d finished", value)
+		}
+		g.Run(goFunc)
+	}
+	wg.Wait()
+
+	log.Printf("[DEBUG] DescribeDhcpOptionsSets request finished")
+	for _, v := range dhcpOptionsSetList {
+		dhcpOptionsSets = append(dhcpOptionsSets, v.([]*zec2.DhcpOptionsSet)...)
+	}
+	log.Printf("[DEBUG] transfer DHCP Options set finished")
+	return
+}
+
+func convertDhcpOptionsSetRequestFilter(filter *DhcpOptionsSetFilter) *zec2.DescribeDhcpOptionsSetsRequest {
+
+	request := zec2.NewDescribeDhcpOptionsSetsRequest()
+	request.DhcpOptionsSetIds = filter.dhcpOptionsSetIds
+	return request
+}
+
+
+func (s *ZecService) DescribeDhcpOptionsSetById(ctx context.Context, dhcpOptionsSetId string) (*zec2.DhcpOptionsSet, error) {
+	request := zec2.NewDescribeDhcpOptionsSetsRequest()
+	request.DhcpOptionsSetIds = []string{dhcpOptionsSetId}
+
+	response, err := s.client.WithZec2Client().DescribeDhcpOptionsSets(request)
+	defer common.LogApiRequest(ctx, "DescribeDhcpOptionsSets", request, response, err)
+
+	if err != nil {
+		return nil, err
+	} else if len(response.Response.DataSet) == 0 {
+		return nil, nil
+	}
+	return response.Response.DataSet[0], nil
 }

@@ -74,7 +74,7 @@ func resourceZenlayerCloudZecVNicIPv4Update(ctx context.Context, d *schema.Resou
 			request.IpAddresses = common2.ToStringList(removed.List())
 
 			if err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutDelete)-time.Minute, func() *resource.RetryError {
-			_, errRet := zecService.client.WithZec2Client().UnassignNetworkInterfaceIpv4(request)
+				_, errRet := zecService.client.WithZec2Client().UnassignNetworkInterfaceIpv4(request)
 				if errRet != nil {
 					return common2.RetryError(ctx, errRet)
 				}
@@ -90,7 +90,7 @@ func resourceZenlayerCloudZecVNicIPv4Update(ctx context.Context, d *schema.Resou
 			request.NicId = &vnicId
 
 			if err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutDelete)-time.Minute, func() *resource.RetryError {
-			_, errRet := zecService.client.WithZec2Client().BatchAssignNetworkInterfaceIpv4(request)
+				_, errRet := zecService.client.WithZec2Client().BatchAssignNetworkInterfaceIpv4(request)
 				if errRet != nil {
 					return common2.RetryError(ctx, errRet)
 				}
@@ -214,7 +214,7 @@ func resourceZenlayerCloudZecVNicIPv4Create(ctx context.Context, d *schema.Resou
 	if err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutDelete)-time.Minute, func() *resource.RetryError {
 		_, errRet := zecService.client.WithZec2Client().BatchAssignNetworkInterfaceIpv4(request)
 		if errRet != nil {
-			return common2.RetryError(ctx, errRet)
+			return common2.RetryError(ctx, errRet, common2.OperationTimeout)
 		}
 		return nil
 	}); err != nil {

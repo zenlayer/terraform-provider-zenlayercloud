@@ -118,7 +118,7 @@ func resourceZenlayerCloudBorderGatewayCreate(ctx context.Context, d *schema.Res
 				"request": common.ToJsonString(request),
 				"err":     err.Error(),
 			})
-			return common.RetryError(ctx, err)
+			return common.RetryError(ctx, err, common.OperationTimeout)
 		}
 
 		tflog.Info(ctx, "Create subnet success", map[string]interface{}{
