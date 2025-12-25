@@ -29,19 +29,21 @@ func ResourceZenlayerCloudZecDhcpOptionsSet() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"name": {
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "Name of the DHCP options set.",
+			},
 			"domain_name_servers": {
-				Type:         schema.TypeSet,
-				Elem:         &schema.Schema{Type: schema.TypeString},
-				Required:     true,
-				Description:  "IPv4 DNS server IP, up to 4 IPv4 addresses, separated by commas.",
-				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^((\d{1,3}\.){3}\d{1,3})(,((\d{1,3}\.){3}\d{1,3})){0,3}$`), "domainNameServers must be up to 4 IPv4 addresses separated by commas"),
+				Type: schema.TypeString,
+				Required:    true,
+				Description: "IPv4 DNS server IP, up to 4 IPv4 addresses, separated by commas.",
 			},
 			"ipv6_domain_name_servers": {
-				Type:         schema.TypeSet,
-				Elem:         &schema.Schema{Type: schema.TypeString},
-				Optional:     true,
-				Description:  "IPv6 DNS server IP, up to 4 IPv6 addresses.",
-				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^$|^(([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4})(,(([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4})){0,3}$`), "ipv6DomainNameServers must be up to 4 IPv6 addresses separated by commas"),
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "IPv6 DNS server IP, up to 4 IPv6 addresses.",
+				//ValidateFunc: validation.StringMatch(regexp.MustCompile(`^$|^(([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4})(,(([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4})){0,3}$`), "ipv6DomainNameServers must be up to 4 IPv6 addresses separated by commas"),
 			},
 			"lease_time": {
 				Type:         schema.TypeString,
@@ -76,14 +78,13 @@ func resourceZenlayerCloudZecDhcpOptionsSetCreate(ctx context.Context, d *schema
 	zecService := &ZecService{client: zenlayerCloudClient}
 
 	request := zec.NewCreateDhcpOptionsSetRequest()
-	list := d.Get("domain_name_servers").(*schema.Set).List()
-	request.DomainNameServers = common.ToStringList(list)
+	request.DhcpOptionsSetName = common2.String(d.Get("name").(string))
+
+	domainNameServers := d.Get("domain_name_servers").(string)
+	request.DomainNameServers = common2.String(domainNameServers)
 
 	if v, ok := d.GetOk("ipv6_domain_name_servers"); ok {
-		list := v.(*schema.Set).List()
-		if len(list) > 0 {
-			request.Ipv6DomainNameServers = common.ToStringList(list)
-		}
+		request.Ipv6DomainNameServers = common2.String(v.(string))
 	}
 
 	if leaseTime, ok := d.GetOk("lease_time"); ok {
@@ -97,6 +98,7 @@ func resourceZenlayerCloudZecDhcpOptionsSetCreate(ctx context.Context, d *schema
 	if description, ok := d.GetOk("description"); ok {
 		request.Description = common2.String(description.(string))
 	}
+
 
 	response, err := zenlayerCloudClient.WithZec2Client().CreateDhcpOptionsSet(request)
 	if err != nil {
@@ -127,6 +129,7 @@ func resourceZenlayerCloudZecDhcpOptionsSetRead(ctx context.Context, d *schema.R
 		return nil
 	}
 
+	_ = d.Set("name", dhcpOptionsSet.DhcpOptionsSetName)
 	_ = d.Set("domain_name_servers", dhcpOptionsSet.DomainNameServers)
 	_ = d.Set("ipv6_domain_name_servers", dhcpOptionsSet.Ipv6DomainNameServers)
 	_ = d.Set("lease_time", dhcpOptionsSet.LeaseTime)
@@ -144,15 +147,11 @@ func resourceZenlayerCloudZecDhcpOptionsSetUpdate(ctx context.Context, d *schema
 	request.DhcpOptionsSetId = common2.String(d.Id())
 
 	if d.HasChange("domain_name_servers") {
-		list := d.Get("domain_name_servers").(*schema.Set).List()
-		if len(list) > 0 {
-			request.Ipv6DomainNameServers = common.ToStringList(list)
-		}
+		request.DomainNameServers = common2.String(d.Get("domain_name_servers").(string))
 	}
 
 	if d.HasChange("ipv6_domain_name_servers") {
-		list := d.Get("ipv6_domain_name_servers").(*schema.Set).List()
-		request.Ipv6DomainNameServers = common.ToStringList(list)
+		request.Ipv6DomainNameServers = common2.String(d.Get("ipv6_domain_name_servers").(string))
 	}
 
 	if d.HasChange("lease_time") {
@@ -165,6 +164,10 @@ func resourceZenlayerCloudZecDhcpOptionsSetUpdate(ctx context.Context, d *schema
 
 	if d.HasChange("description") {
 		request.Description = common2.String(d.Get("description").(string))
+	}
+
+	if d.HasChange("name") {
+		request.DhcpOptionsSetName = common2.String(d.Get("name").(string))
 	}
 
 	err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutDelete)-time.Minute, func() *resource.RetryError {

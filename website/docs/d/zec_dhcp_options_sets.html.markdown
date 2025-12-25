@@ -57,5 +57,6 @@ In addition to all arguments above, the following attributes are exported:
    * `ipv6_domain_name_servers` - IPv6 DNS server IP.
    * `ipv6_lease_time` - IPv6 lease time.
    * `lease_time` - IPv4 lease time.
+   * `name` - Name of the DHCP options set.
 
 

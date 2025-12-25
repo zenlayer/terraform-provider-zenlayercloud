@@ -47,6 +47,11 @@ func DataSourceZenlayerCloudZecDhcpOptionsSets() *schema.Resource {
 							Computed:    true,
 							Description: "DHCP options set ID.",
 						},
+						"name": {
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "Name of the DHCP options set.",
+						},
 						"domain_name_servers": {
 							Type:        schema.TypeString,
 							Computed:    true,
@@ -110,13 +115,14 @@ func dataSourceZenlayerCloudZecDhcpOptionsSetsRead(ctx context.Context, d *schem
 	ids := make([]string, 0, len(allDhcpOptionsSets))
 	dhcpOptionsSets := make([]map[string]interface{}, 0, len(allDhcpOptionsSets))
 	for _, dhcpOptionsSet := range allDhcpOptionsSets {
-		if nameRegex != nil && !nameRegex.MatchString(*dhcpOptionsSet.DhcpOptionsName) {
+		if nameRegex != nil && !nameRegex.MatchString(*dhcpOptionsSet.DhcpOptionsSetName) {
 			continue
 		}
 
 		ids = append(ids, *dhcpOptionsSet.DhcpOptionsSetId)
 		dhcpOptionsSetMap := map[string]interface{}{
 			"id":                       dhcpOptionsSet.DhcpOptionsSetId,
+			"name":                     dhcpOptionsSet.DhcpOptionsSetName,
 			"domain_name_servers":      dhcpOptionsSet.DomainNameServers,
 			"ipv6_domain_name_servers": dhcpOptionsSet.Ipv6DomainNameServers,
 			"lease_time":               dhcpOptionsSet.LeaseTime,
