@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"hash/crc32"
 	"io/ioutil"
 	"math"
@@ -272,4 +273,14 @@ func QueryAllPaginatedResource[T any](ctx context.Context, queryFunc QueryPagina
 		items = append(items, v.([]T)...)
 	}
 	return items, nil
+}
+
+func GetTags(d *schema.ResourceData, k string) map[string]string {
+	tags := make(map[string]string)
+	if raw, ok := d.GetOk(k); ok {
+		for k, v := range raw.(map[string]interface{}) {
+			tags[k] = v.(string)
+		}
+	}
+	return tags
 }

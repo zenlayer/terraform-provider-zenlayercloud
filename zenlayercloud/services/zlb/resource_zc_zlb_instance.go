@@ -3,6 +3,7 @@ package zlb
 import (
 	"context"
 	"fmt"
+	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/services/zrm"
 	user "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/user20240529"
 	zlb "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/zlb20250401"
 	"time"
@@ -80,6 +81,11 @@ func ResourceZenlayerCloudZlbInstance() *schema.Resource {
 				Description: "Public IPv4 addresses(EIP) of the load balancer instance.",
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
+			"tags": {
+				Type:        schema.TypeMap,
+				Optional:    true,
+				Description: "The available tags within this load balancer instance.",
+			},
 		},
 	}
 }
@@ -101,6 +107,19 @@ func resourceZenlayerCloudZlbInstanceCreate(ctx context.Context, d *schema.Resou
 	//if v, ok := d.GetOk("traffic_package_size"); ok {
 	//	request.TrafficPackageSize = common.Float64(v.(float64))
 	//}
+
+	if tags := common2.GetTags(d, "tags"); len(tags) > 0 {
+		request.Tags = &zlb.TagAssociation{}
+		for k, v := range tags {
+			tmpKey := k
+			tmpValue := v
+			request.Tags.Tags = append(request.Tags.Tags, &zlb.Tag{
+				Key:   &tmpKey,
+				Value: &tmpValue,
+			})
+		}
+	}
+
 	if v, ok := d.GetOk("resource_group_id"); ok {
 		request.ResourceGroupId = common.String(v.(string))
 	}
@@ -194,6 +213,12 @@ func resourceZenlayerCloudZlbInstanceRead(ctx context.Context, d *schema.Resourc
 	_ = d.Set("resource_group_id", zlb.ResourceGroup.ResourceGroupId)
 	_ = d.Set("resource_group_name", zlb.ResourceGroup.ResourceGroupName)
 
+	toMap, errRet := common2.TagsToMap(zlb.Tags)
+	if errRet != nil {
+		return diag.FromErr(errRet)
+	}
+	_ = d.Set("tags", toMap)
+
 	return diags
 }
 
@@ -232,6 +257,14 @@ func resourceZenlayerCloudZlbInstanceUpdate(ctx context.Context, d *schema.Resou
 			return nil
 		})
 
+		if err != nil {
+			return diag.FromErr(err)
+		}
+	}
+
+	if d.HasChange("tags") {
+		zrmService := zrm.NewZrmService(meta.(*connectivity.ZenlayerCloudClient))
+		err := zrmService.ModifyResourceTags(ctx, d, zlbId)
 		if err != nil {
 			return diag.FromErr(err)
 		}

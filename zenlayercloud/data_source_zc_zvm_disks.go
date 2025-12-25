@@ -165,6 +165,12 @@ func dataSourceZenlayerCloudDisks() *schema.Resource {
 							Computed:    true,
 							Description: "Status of disk.",
 						},
+						"tags": {
+							Type:        schema.TypeMap,
+							Computed:    true,
+							Elem:        &schema.Schema{Type: schema.TypeString},
+							Description: "Tags of the disk.",
+						},
 					},
 				},
 			},
@@ -261,6 +267,11 @@ func dataSourceZenlayerCloudDisksRead(ctx context.Context, d *schema.ResourceDat
 			"expired_time":      disk.ExpiredTime,
 			"status":            disk.DiskStatus,
 		}
+		tagMap, errRet := common2.TagsToMap(disk.Tags)
+		if errRet != nil {
+			return diag.FromErr(errRet)
+		}
+		mapping["tags"] = tagMap
 		diskList = append(diskList, mapping)
 		ids = append(ids, disk.DiskId)
 	}

@@ -2,15 +2,16 @@ package zec
 
 import (
 	"context"
+	"regexp"
+	"time"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	common2 "github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/common"
 	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/connectivity"
-	zec2 "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/zec20240401"
-	"regexp"
-	"time"
+	zec2 "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/zec20250901"
 )
 
 func DataSourceZenlayerCloudZecDisks() *schema.Resource {
@@ -123,6 +124,12 @@ func DataSourceZenlayerCloudZecDisks() *schema.Resource {
 							Computed:    true,
 							Description: "The Name of resource group grouped disk to be queried.",
 						},
+						// tags
+						"tags": {
+							Type:        schema.TypeMap,
+							Computed:    true,
+							Description: "The available tags within this disk.",
+						},
 						"create_time": {
 							Type:        schema.TypeString,
 							Computed:    true,
@@ -196,7 +203,7 @@ func dataSourceZenlayerCloudZecDisksRead(ctx context.Context, d *schema.Resource
 	var disks []*zec2.DiskInfo
 	if nameRegex != nil {
 		for _, disk := range result {
-			if disk.DiskName != "" && nameRegex.MatchString(disk.DiskName) {
+			if disk.DiskName != nil && nameRegex.MatchString(*disk.DiskName) {
 				disks = append(disks, disk)
 			}
 		}
@@ -209,22 +216,27 @@ func dataSourceZenlayerCloudZecDisksRead(ctx context.Context, d *schema.Resource
 	ids := make([]string, 0, len(disks))
 	for _, disk := range disks {
 		mapping := map[string]interface{}{
-			"availability_zone":   disk.ZoneId,
-			"id":                  disk.DiskId,
-			"name":                disk.DiskName,
-			"disk_type":           disk.DiskType,
-			"disk_size":           disk.DiskSize,
-			"instance_id":         disk.InstanceId,
-			"instance_name":       disk.InstanceName,
-			"disk_category":       disk.DiskCategory,
-			"create_time":         disk.CreateTime,
-			"status":              disk.DiskStatus,
-			"resource_group_id":   disk.ResourceGroupId,
-			"resource_group_name": disk.ResourceGroupName,
-			"auto_snapshot_policy_id" : disk.AutoSnapshotPolicyId,
+			"availability_zone":       disk.ZoneId,
+			"id":                      disk.DiskId,
+			"name":                    disk.DiskName,
+			"disk_type":               disk.DiskType,
+			"disk_size":               disk.DiskSize,
+			"instance_id":             disk.InstanceId,
+			"instance_name":           disk.InstanceName,
+			"disk_category":           disk.DiskCategory,
+			"create_time":             disk.CreateTime,
+			"status":                  disk.DiskStatus,
+			"resource_group_id":       disk.ResourceGroupId,
+			"resource_group_name":     disk.ResourceGroupName,
+			"auto_snapshot_policy_id": disk.AutoSnapshotPolicyId,
 		}
+		tagMap, errRet := common2.TagsToMap(disk.Tags)
+		if errRet != nil {
+			return diag.FromErr(errRet)
+		}
+		mapping["tags"] = tagMap
 		diskList = append(diskList, mapping)
-		ids = append(ids, disk.DiskId)
+		ids = append(ids, *disk.DiskId)
 	}
 
 	d.SetId(common2.DataResourceIdHash(ids))

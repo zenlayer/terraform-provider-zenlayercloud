@@ -7,7 +7,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/common"
 	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/connectivity"
-	common2 "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/common"
 	pvtdns "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/zdns20251101"
 	"regexp"
 	"time"
@@ -72,23 +71,9 @@ func DataSourceZenlayerCloudPvtdnsZones() *schema.Resource {
 							Description: "Resource group name.",
 						},
 						"tags": {
-							Type:        schema.TypeList,
+							Type:        schema.TypeMap,
 							Computed:    true,
-							Description: "tags.",
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"tag_key": {
-										Type:        schema.TypeString,
-										Computed:    true,
-										Description: "tag key.",
-									},
-									"tag_value": {
-										Type:        schema.TypeString,
-										Computed:    true,
-										Description: "tag value.",
-									},
-								},
-							},
+							Description: "The available tags within this private zone.",
 						},
 						"remark": {
 							Type:        schema.TypeString,
@@ -170,14 +155,11 @@ func dataSourceZenlayerCloudPvtdnsZonesRead(ctx context.Context, d *schema.Resou
 			"proxy_pattern": zone.ProxyPattern,
 		}
 
-		// Handle tags
-		if zone.Tags != nil {
-			tags := make(map[string]string)
-			for _, tag := range zone.Tags.Tags {
-				tags[*tag.Key] = common2.ToString(tag.Value)
-			}
-			mapping["tags"] = tags
+		tagMap, errRet := common.TagsToMap(zone.Tags)
+		if errRet != nil {
+			return diag.FromErr(errRet)
 		}
+		mapping["tags"] = tagMap
 
 		zoneList = append(zoneList, mapping)
 		ids = append(ids, *zone.ZoneId)

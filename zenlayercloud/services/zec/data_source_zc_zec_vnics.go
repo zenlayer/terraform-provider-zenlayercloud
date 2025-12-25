@@ -2,6 +2,8 @@ package zec
 
 import (
 	"context"
+	"regexp"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -9,7 +11,6 @@ import (
 	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/common"
 	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/connectivity"
 	zec "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/zec20250901"
-	"regexp"
 )
 
 func DataSourceZenlayerCloudZecVnics() *schema.Resource {
@@ -152,6 +153,11 @@ func DataSourceZenlayerCloudZecVnics() *schema.Resource {
 							Computed:    true,
 							Description: "ID of the security group.",
 						},
+						"tags": {
+							Type:        schema.TypeMap,
+							Computed:    true,
+							Description: "The available tags within this vNIC.",
+						},
 					},
 				},
 			},
@@ -235,6 +241,13 @@ func dataSourceZenlayerCloudZecVnicsRead(ctx context.Context, d *schema.Resource
 			"stack_type":           nic.NicSubnetType,
 			"security_group_id":    nic.SecurityGroupId,
 		}
+
+		tagMap, errRet := common.TagsToMap(nic.Tags)
+		if errRet != nil {
+			return diag.FromErr(errRet)
+		}
+		mapping["tags"] = tagMap
+
 		nicList = append(nicList, mapping)
 		ids = append(ids, *nic.NicId)
 	}

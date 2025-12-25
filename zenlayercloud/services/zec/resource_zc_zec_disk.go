@@ -3,6 +3,8 @@ package zec
 import (
 	"context"
 	"fmt"
+	"time"
+
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -10,10 +12,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	common2 "github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/common"
 	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/connectivity"
+	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/services/zrm"
 	"github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/common"
 	user "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/user20240529"
-	zec2 "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/zec20240401"
-	"time"
+	zec "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/zec20250901"
 )
 
 func ResourceZenlayerCloudZecDisk() *schema.Resource {
@@ -63,6 +65,11 @@ func ResourceZenlayerCloudZecDisk() *schema.Resource {
 				Computed:    true,
 				Description: "The resource group id the disk belongs to.",
 			},
+			"tags": {
+				Type:        schema.TypeMap,
+				Optional:    true,
+				Description: "The available tags within this disk.",
+			},
 			"force_delete": {
 				Type:        schema.TypeBool,
 				Optional:    true,
@@ -111,12 +118,12 @@ func resourceZenlayerCloudVmDiskDelete(ctx context.Context, d *schema.ResourceDa
 			return nil
 		}
 
-		if disk.DiskStatus == ZecDiskStatusRecycle {
+		if *disk.DiskStatus == ZecDiskStatusRecycle {
 			//in recycling
 			return nil
 		}
 
-		if diskIsOperating(disk.DiskStatus) {
+		if diskIsOperating(*disk.DiskStatus) {
 			return resource.RetryableError(fmt.Errorf("waiting for disk %s recycling, current status: %s", disk.DiskId, disk.DiskStatus))
 		}
 
@@ -165,10 +172,10 @@ func resourceZenlayerCloudVmDiskUpdate(ctx context.Context, d *schema.ResourceDa
 	diskId := d.Id()
 	if d.HasChange("disk_name") {
 		err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate)-time.Minute, func() *resource.RetryError {
-			request := zec2.NewModifyDisksAttributesRequest()
-			request.DiskName = d.Get("disk_name").(string)
+			request := zec.NewModifyDisksAttributesRequest()
+			request.DiskName = common.String(d.Get("disk_name").(string))
 			request.DiskIds = []string{diskId}
-			_, err := zecService.client.WithZecClient().ModifyDisksAttributes(request)
+			_, err := zecService.client.WithZec2Client().ModifyDisksAttributes(request)
 			if err != nil {
 				return common2.RetryError(ctx, err, common2.InternalServerError, common.NetworkError)
 			}
@@ -197,6 +204,13 @@ func resourceZenlayerCloudVmDiskUpdate(ctx context.Context, d *schema.ResourceDa
 		}
 	}
 
+	if d.HasChange("tags") {
+		zrmService := zrm.NewZrmService(meta.(*connectivity.ZenlayerCloudClient))
+		err := zrmService.ModifyResourceTags(ctx, d, diskId)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+	}
 	d.Partial(true)
 	if d.HasChange("disk_size") {
 
@@ -222,20 +236,32 @@ func resourceZenlayerCloudZecDiskCreate(ctx context.Context, d *schema.ResourceD
 		client: meta.(*connectivity.ZenlayerCloudClient),
 	}
 
-	request := zec2.NewCreateDisksRequest()
-	request.DiskName = d.Get("disk_name").(string)
-	request.DiskSize = d.Get("disk_size").(int)
-	request.DiskCategory = d.Get("disk_category").(string)
-	request.ZoneId = d.Get("availability_zone").(string)
+	request := zec.NewCreateDisksRequest()
+	request.DiskName = common.String(d.Get("disk_name").(string))
+	request.DiskSize = common.Integer(d.Get("disk_size").(int))
+	request.DiskCategory = common.String(d.Get("disk_category").(string))
+	request.ZoneId = common.String(d.Get("availability_zone").(string))
+
+	if tags := common2.GetTags(d, "tags"); len(tags) > 0 {
+		request.Tags = &zec.TagAssociation{}
+		for k, v := range tags {
+			tmpKey := k
+			tmpValue := v
+			request.Tags.Tags = append(request.Tags.Tags, &zec.Tag{
+				Key:   &tmpKey,
+				Value: &tmpValue,
+			})
+		}
+	}
 
 	if v, ok := d.GetOk("resource_group_id"); ok {
-		request.ResourceGroupId = v.(string)
+		request.ResourceGroupId = common.String(v.(string))
 	}
 
 	diskId := ""
 
 	err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
-		response, err := meta.(*connectivity.ZenlayerCloudClient).WithZecClient().CreateDisks(request)
+		response, err := meta.(*connectivity.ZenlayerCloudClient).WithZec2Client().CreateDisks(request)
 		if err != nil {
 			tflog.Info(ctx, "Fail to create data disk.", map[string]interface{}{
 				"action":  request.GetAction(),
@@ -278,20 +304,20 @@ func resourceZenlayerCloudVmDiskRead(ctx context.Context, d *schema.ResourceData
 
 	diskId := d.Id()
 
-	vmService := ZecService{
+	zecService := ZecService{
 		client: meta.(*connectivity.ZenlayerCloudClient),
 	}
 
-	var disk *zec2.DiskInfo
+	var disk *zec.DiskInfo
 	var errRet error
 
 	err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutRead)-time.Minute, func() *resource.RetryError {
-		disk, errRet = vmService.DescribeDiskById(ctx, diskId)
+		disk, errRet = zecService.DescribeDiskById(ctx, diskId)
 		if errRet != nil {
 			return common2.RetryError(ctx, errRet)
 		}
 
-		if disk != nil && diskIsOperating(disk.DiskStatus) {
+		if disk != nil && diskIsOperating(*disk.DiskStatus) {
 			return resource.RetryableError(fmt.Errorf("waiting for disk %s operation", disk.DiskId))
 		}
 		return nil
@@ -301,7 +327,7 @@ func resourceZenlayerCloudVmDiskRead(ctx context.Context, d *schema.ResourceData
 		return diag.FromErr(err)
 	}
 
-	if disk == nil || disk.DiskStatus == ZecDiskStatusRecycle {
+	if disk == nil || *disk.DiskStatus == ZecDiskStatusRecycle {
 		d.SetId("")
 		tflog.Info(ctx, "disk not exist or is been recycled", map[string]interface{}{
 			"diskId": diskId,
@@ -314,7 +340,7 @@ func resourceZenlayerCloudVmDiskRead(ctx context.Context, d *schema.ResourceData
 		return diags
 	}
 
-	if disk.DiskStatus == ZecDiskStatusRecycle || disk.DiskStatus == ZecDiskStatusFaileld {
+	if *disk.DiskStatus == ZecDiskStatusRecycle || *disk.DiskStatus == ZecDiskStatusFaileld {
 		d.SetId("")
 		tflog.Info(ctx, "disk not exist or is been recycled", map[string]interface{}{
 			"diskId": diskId,
@@ -335,6 +361,12 @@ func resourceZenlayerCloudVmDiskRead(ctx context.Context, d *schema.ResourceData
 	_ = d.Set("create_time", disk.CreateTime)
 	_ = d.Set("resource_group_id", disk.ResourceGroupId)
 	_ = d.Set("resource_group_name", disk.ResourceGroupName)
+
+	tagMap, errRet := common2.TagsToMap(disk.Tags)
+	if errRet != nil {
+		return diag.FromErr(errRet)
+	}
+	_ = d.Set("tags", tagMap)
 
 	return diags
 

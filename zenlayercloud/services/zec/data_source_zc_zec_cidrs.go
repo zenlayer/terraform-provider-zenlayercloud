@@ -1,15 +1,15 @@
 package zec
 
 import (
-	"context"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/common"
-	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/connectivity"
-	zec "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/zec20250901"
-	"regexp"
-	"time"
+    "context"
+    "github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+    "github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+    "github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+    "github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/common"
+    "github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/connectivity"
+    zec "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/zec20250901"
+    "regexp"
+    "time"
 )
 
 func DataSourceZenlayerCloudCidrs() *schema.Resource {
@@ -106,16 +106,21 @@ func DataSourceZenlayerCloudCidrs() *schema.Resource {
 							Computed:    true,
 							Description: "Creation time of the elastic IP.",
 						},
-						"status": {
-							Type:        schema.TypeString,
-							Computed:    true,
-							Description: "Status of the elastic IP.",
-						},
-					},
-				},
-			},
-		},
-	}
+                        "status": {
+                            Type:        schema.TypeString,
+                            Computed:    true,
+                            Description: "Status of the elastic IP.",
+                        },
+                        "tags": {
+                            Type:        schema.TypeMap,
+                            Computed:    true,
+                            Description: "The available tags within this CIDR block.",
+                        },
+                    },
+                },
+            },
+        },
+    }
 }
 
 func dataSourceZenlayerCloudCidrsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -177,24 +182,30 @@ func dataSourceZenlayerCloudCidrsRead(ctx context.Context, d *schema.ResourceDat
 		if nameRegex != nil && !nameRegex.MatchString(*cidr.Name) {
 			continue
 		}
-		mapping := map[string]interface{}{
-			"id":                  cidr.CidrId,
-			"region_id":           cidr.RegionId,
-			"name":                cidr.Name,
-			"cidr_block_address":  cidr.CidrBlock,
-			"netmask":             cidr.Netmask,
-			"resource_group_id":   cidr.ResourceGroupId,
-			"resource_group_name": cidr.ResourceGroupName,
-			"type":                cidr.Source,
-			"used_ip_num":         cidr.UsedCount,
-			"network_type":        cidr.EipV4Type,
-			"create_time":         cidr.CreateTime,
-			"status":              cidr.Status,
-		}
+        mapping := map[string]interface{}{
+            "id":                  cidr.CidrId,
+            "region_id":           cidr.RegionId,
+            "name":                cidr.Name,
+            "cidr_block_address":  cidr.CidrBlock,
+            "netmask":             cidr.Netmask,
+            "resource_group_id":   cidr.ResourceGroupId,
+            "resource_group_name": cidr.ResourceGroupName,
+            "type":                cidr.Source,
+            "used_ip_num":         cidr.UsedCount,
+            "network_type":        cidr.EipV4Type,
+            "create_time":         cidr.CreateTime,
+            "status":              cidr.Status,
+        }
 
-		cidrList = append(cidrList, mapping)
-		ids = append(ids, *cidr.CidrId)
-	}
+        tagMap, errRet := common.TagsToMap(cidr.Tags)
+        if errRet != nil {
+            return diag.FromErr(errRet)
+        }
+        mapping["tags"] = tagMap
+
+        cidrList = append(cidrList, mapping)
+        ids = append(ids, *cidr.CidrId)
+    }
 
 	d.SetId(common.DataResourceIdHash(ids))
 	_ = d.Set("cidrs", cidrList)

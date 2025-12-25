@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	common2 "github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/common"
 	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/connectivity"
+	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/services/zrm"
 	"github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/common"
 	user "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/user20240529"
 	zec "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/zec20250901"
@@ -84,6 +85,11 @@ func ResourceZenlayerCloudZecInstance() *schema.Resource {
 				Description:   "The key pair id to use for the ZEC instance. Changing `key_id` will cause the ZEC instance reset.",
 				ConflictsWith: []string{"password"},
 				AtLeastOneOf:  []string{"password", "key_id"},
+			},
+			"tags": {
+				Type:        schema.TypeMap,
+				Optional:    true,
+				Description: "The available tags within this ZEC instance.",
 			},
 			//"internet_charge_type": {
 			//	Type:         schema.TypeString,
@@ -570,6 +576,14 @@ func resourceZenlayerCloudZecInstanceUpdate(ctx context.Context, d *schema.Resou
 		}
 	}
 
+	if d.HasChange("tags") {
+		zrmService := zrm.NewZrmService(meta.(*connectivity.ZenlayerCloudClient))
+		err := zrmService.ModifyResourceTags(ctx, d, instanceId)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+	}
+
 	d.Partial(false)
 
 	return resourceZenlayerCloudZecInstanceRead(ctx, d, meta)
@@ -602,6 +616,17 @@ func resourceZenlayerCloudZecInstanceCreate(ctx context.Context, d *schema.Resou
 	}
 	if v, ok := d.GetOk("security_group_id"); ok {
 		request.SecurityGroupId = common.String(v.(string))
+	}
+	if tags := common2.GetTags(d, "tags"); len(tags) > 0 {
+		request.Tags = &zec.TagAssociation{}
+		for k, v := range tags {
+			tmpKey := k
+			tmpValue := v
+			request.Tags.Tags = append(request.Tags.Tags, &zec.Tag{
+				Key:   &tmpKey,
+				Value: &tmpValue,
+			})
+		}
 	}
 	request.SystemDisk = system
 
@@ -771,6 +796,11 @@ func resourceZenlayerCloudZecInstanceRead(ctx context.Context, d *schema.Resourc
 	_ = d.Set("disable_qga_agent", !*instance.EnableAgent)
 	_ = d.Set("enable_ip_forwarding", *instance.EnableIpForward)
 
+	tagMap, errRet := common2.TagsToMap(instance.Tags)
+	if errRet != nil {
+		return diag.FromErr(errRet)
+	}
+	_ = d.Set("tags", tagMap)
 	return diags
 
 }

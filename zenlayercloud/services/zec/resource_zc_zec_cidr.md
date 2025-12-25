@@ -11,6 +11,9 @@ resource "zenlayercloud_zec_cidr" "test" {
   region_id    = var.region
   netmask      = 27
   network_type = "BGPLine"
+  tags = {
+    "group"  = "test"
+  }
 }
 ```
 

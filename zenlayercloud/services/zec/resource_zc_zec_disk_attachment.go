@@ -3,14 +3,15 @@ package zec
 import (
 	"context"
 	"fmt"
+	"time"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	common2 "github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/common"
 	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/connectivity"
 	"github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/common"
-	zec2 "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/zec20240401"
-	"time"
+	zec2 "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/zec20250901"
 )
 
 func ResourceZenlayerCloudZecDiskAttachment() *schema.Resource {
@@ -57,7 +58,7 @@ func resourceZenlayerCloudZecDiskAttachmentDelete(ctx context.Context, d *schema
 	request.InstanceCheckFlag = common.Bool(false)
 
 	if err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutDelete)-time.Minute, func() *resource.RetryError {
-		_, errRet := zecService.client.WithZecClient().DetachDisks(request)
+		_, errRet := zecService.client.WithZec2Client().DetachDisks(request)
 
 		if errRet != nil {
 			return common2.RetryError(ctx, errRet)
@@ -77,11 +78,11 @@ func resourceZenlayerCloudZecDiskAttachmentDelete(ctx context.Context, d *schema
 			d.SetId("")
 		}
 
-		if disk.DiskStatus == ZecDiskStatusAvailable {
+		if common.ToString(disk.DiskStatus) == ZecDiskStatusAvailable {
 			return nil
 		}
 
-		if disk != nil && diskIsOperating(disk.DiskStatus) {
+		if disk != nil && diskIsOperating(common.ToString(disk.DiskStatus)) {
 			return resource.RetryableError(fmt.Errorf("waiting disk %s operation", disk.DiskId))
 		}
 		return nil
@@ -99,11 +100,11 @@ func resourceZenlayerCloudZecDiskAttachmentCreate(ctx context.Context, d *schema
 	instanceId := d.Get("instance_id").(string)
 
 	request := zec2.NewAttachDisksRequest()
-	request.InstanceId = instanceId
+	request.InstanceId = &instanceId
 	request.DiskIds = []string{diskId}
 
 	if err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutDelete)-time.Minute, func() *resource.RetryError {
-		_, errRet := zecService.client.WithZecClient().AttachDisks(request)
+		_, errRet := zecService.client.WithZec2Client().AttachDisks(request)
 		if errRet != nil {
 			return common2.RetryError(ctx, errRet)
 		}
@@ -141,7 +142,7 @@ func resourceZenlayerCloudZecDiskAttachmentRead(ctx context.Context, d *schema.R
 		if disk == nil {
 			d.SetId("")
 		}
-		if disk != nil && diskIsOperating(disk.DiskStatus) {
+		if disk != nil && diskIsOperating(common.ToString(disk.DiskStatus)) {
 			return resource.RetryableError(fmt.Errorf("waiting disk %s operation", disk.DiskId))
 		}
 		return nil
@@ -151,7 +152,7 @@ func resourceZenlayerCloudZecDiskAttachmentRead(ctx context.Context, d *schema.R
 		return diag.FromErr(err)
 	}
 
-	if disk == nil || disk.InstanceId == "" {
+	if disk == nil || common.ToString(disk.InstanceId) == "" {
 		d.SetId("")
 		return nil
 	}
