@@ -110,7 +110,6 @@ func TagsToMap(tags interface{}) (map[string]interface{}, error) {
 	return result, nil
 }
 
-
 func ParseTagChanges(d *schema.ResourceData) (map[string]interface{}, []string) {
 	oraw, nraw := d.GetChange("tags")
 	removedTags := oraw.(map[string]interface{})
@@ -119,7 +118,7 @@ func ParseTagChanges(d *schema.ResourceData) (map[string]interface{}, []string) 
 	removedKeys := make([]string, 0)
 	for key, _ := range removedTags {
 		_, ok := addedTags[key]
-		if !ok  {
+		if !ok {
 			// Delete it!
 			removedKeys = append(removedKeys, key)
 		}
