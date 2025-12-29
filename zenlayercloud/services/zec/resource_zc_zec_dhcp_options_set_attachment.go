@@ -47,7 +47,8 @@ func resourceZenlayerCloudZecDhcpOptionsSetAttachmentCreate(ctx context.Context,
 
 	request := zec.NewAttachDhcpOptionsSetToSubnetRequest()
 	request.DhcpOptionsSetId = common.String(d.Get("dhcp_options_set_id").(string))
-	request.SubnetId = common.String(d.Get("subnet_id").(string))
+	subnetId := d.Get("subnet_id").(string)
+	request.SubnetIds = []string{subnetId}
 
 	err := resource.RetryContext(ctx, 5*time.Minute, func() *resource.RetryError {
 		_, err := zenlayerCloudClient.WithZec2Client().AttachDhcpOptionsSetToSubnet(request)
@@ -61,7 +62,7 @@ func resourceZenlayerCloudZecDhcpOptionsSetAttachmentCreate(ctx context.Context,
 	}
 
 	// The ID will be a combination of subnet_id and dhcp_options_set_id
-	d.SetId(fmt.Sprintf("%s:%s", *request.SubnetId, *request.DhcpOptionsSetId))
+	d.SetId(fmt.Sprintf("%s:%s", subnetId, *request.DhcpOptionsSetId))
 
 	return resourceZenlayerCloudZecDhcpOptionsSetAttachmentRead(ctx, d, meta)
 }
@@ -109,7 +110,7 @@ func resourceZenlayerCloudZecDhcpOptionsSetAttachmentDelete(ctx context.Context,
 	}
 
 	request := zec.NewDetachDhcpOptionsSetFromSubnetRequest()
-	request.SubnetId = common.String(subnetId)
+	request.SubnetIds = []string{subnetId}
 	request.DhcpOptionsSetId = common.String(dhcpOptionsSetId)
 
 	err = resource.RetryContext(ctx, d.Timeout(schema.TimeoutDelete)-time.Minute, func() *resource.RetryError {

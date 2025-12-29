@@ -3,6 +3,7 @@ package zec
 import (
 	"context"
 	"regexp"
+	"strconv"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -13,7 +14,6 @@ import (
 
 type DhcpOptionsSetFilter struct {
 	dhcpOptionsSetIds []string
-	resourceGroupId   string
 }
 
 func DataSourceZenlayerCloudZecDhcpOptionsSets() *schema.Resource {
@@ -31,11 +31,6 @@ func DataSourceZenlayerCloudZecDhcpOptionsSets() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.StringIsValidRegExp,
 				Description:  "Regular expression for DHCP options set names.",
-			},
-			"resource_group_id": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "ID of the resource group to filter DHCP options sets.",
 			},
 			"result_output_file": {
 				Type:        schema.TypeString,
@@ -69,12 +64,12 @@ func DataSourceZenlayerCloudZecDhcpOptionsSets() *schema.Resource {
 							Description: "IPv6 DNS server IP.",
 						},
 						"lease_time": {
-							Type:        schema.TypeString,
+							Type:        schema.TypeInt,
 							Computed:    true,
 							Description: "IPv4 lease time.",
 						},
 						"ipv6_lease_time": {
-							Type:        schema.TypeString,
+							Type:        schema.TypeInt,
 							Computed:    true,
 							Description: "IPv6 lease time.",
 						},
@@ -82,17 +77,6 @@ func DataSourceZenlayerCloudZecDhcpOptionsSets() *schema.Resource {
 							Type:        schema.TypeString,
 							Computed:    true,
 							Description: "Description of the DHCP options set.",
-						},
-						"resource_group_id": {
-							Type:        schema.TypeString,
-							Computed:    true,
-							Description: "ID of the resource group to which the DHCP options set belongs.",
-						},
-						"tags": {
-							Type:        schema.TypeMap,
-							Elem:        &schema.Schema{Type: schema.TypeString},
-							Computed:    true,
-							Description: "Tags of the DHCP options set.",
 						},
 						"create_time": {
 							Type:        schema.TypeString,
@@ -118,11 +102,6 @@ func dataSourceZenlayerCloudZecDhcpOptionsSetsRead(ctx context.Context, d *schem
 		}
 	}
 
-	// 处理资源组过滤
-	if v, ok := d.GetOk("resource_group_id"); ok {
-		filter.resourceGroupId = v.(string)
-	}
-
 	var nameRegex *regexp.Regexp
 
 	if v, ok := d.GetOk("name_regex"); ok {
@@ -142,26 +121,26 @@ func dataSourceZenlayerCloudZecDhcpOptionsSetsRead(ctx context.Context, d *schem
 		}
 
 		ids = append(ids, *dhcpOptionsSet.DhcpOptionsSetId)
-
 		dhcpOptionsSetMap := map[string]interface{}{
 			"id":                       dhcpOptionsSet.DhcpOptionsSetId,
 			"name":                     dhcpOptionsSet.DhcpOptionsSetName,
 			"domain_name_servers":      dhcpOptionsSet.DomainNameServers,
 			"ipv6_domain_name_servers": dhcpOptionsSet.Ipv6DomainNameServers,
-			"lease_time":               dhcpOptionsSet.LeaseTime,
-			"ipv6_lease_time":          dhcpOptionsSet.Ipv6LeaseTime,
+			"lease_time":               0,
+			"ipv6_lease_time":          0,
 			"description":              dhcpOptionsSet.Description,
-			"resource_group_id":        dhcpOptionsSet.ResourceGroupId,
 			"create_time":              dhcpOptionsSet.CreateTime,
 		}
-
-		// Read tags
-		tags, err := common.TagsToMap(dhcpOptionsSet.Tags)
-		if err != nil {
-			return diag.FromErr(err)
+		if dhcpOptionsSet.LeaseTime != nil {
+			if leaseTime, err := strconv.Atoi(*dhcpOptionsSet.LeaseTime); err == nil {
+				dhcpOptionsSetMap["lease_time"] = leaseTime
+			}
 		}
-		dhcpOptionsSetMap["tags"] = tags
-
+		if dhcpOptionsSet.Ipv6LeaseTime != nil {
+			if ipv6LeaseTime, err := strconv.Atoi(*dhcpOptionsSet.Ipv6LeaseTime); err == nil {
+				dhcpOptionsSetMap["ipv6_lease_time"] = ipv6LeaseTime
+			}
+		}
 		dhcpOptionsSets = append(dhcpOptionsSets, dhcpOptionsSetMap)
 	}
 
