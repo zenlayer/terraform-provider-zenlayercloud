@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"regexp"
+	"strconv"
 	"time"
 
 	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/common"
@@ -35,7 +36,7 @@ func ResourceZenlayerCloudZecDhcpOptionsSet() *schema.Resource {
 				Description: "Name of the DHCP options set.",
 			},
 			"domain_name_servers": {
-				Type: schema.TypeString,
+				Type:        schema.TypeString,
 				Required:    true,
 				Description: "IPv4 DNS server IP, up to 4 IPv4 addresses, separated by commas.",
 			},
@@ -46,17 +47,17 @@ func ResourceZenlayerCloudZecDhcpOptionsSet() *schema.Resource {
 				//ValidateFunc: validation.StringMatch(regexp.MustCompile(`^$|^(([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4})(,(([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4})){0,3}$`), "ipv6DomainNameServers must be up to 4 IPv6 addresses separated by commas"),
 			},
 			"lease_time": {
-				Type:         schema.TypeString,
+				Type:         schema.TypeInt,
 				Optional:     true,
-				Default:      "1d",
-				Description:  "IPv4 lease time, default unit is day: d. Value range: 1d~49d, 3650d~7300d, default value: 1d.",
+				Default:      87600,
+				Description:  "IPv4 lease time, default unit is hour. Value range: 24h~1176h, 87600h(3650d)~175200h(7300d), default value: 87600.",
 				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^(1d|(?:[2-9]d|(?:[1-3][0-9]|4[0-9])d))$|^(?:(?:36[5-9][0-9]|[37][0-9]{3}|4[0-9]{3}|5[0-9]{3}|6[0-9]{3}|7[0-2][0-9]{2}|7300)d)$`), "leaseTime must be between 1d~49d or 3650d~7300d"),
 			},
 			"ipv6_lease_time": {
-				Type:         schema.TypeString,
+				Type:         schema.TypeInt,
 				Optional:     true,
-				Default:      "1d",
-				Description:  "IPv6 lease time, default unit is day: d. Value range: 1d~49d, 3650d~7300d, default value: 1d.",
+				RequiredWith: []string{"ipv6_domain_name_servers"},
+				Description:  "IPv6 lease time, default unit is hour. Value range: 24h~1176h, 87600h(3650d)~175200h(7300d).",
 				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^(1d|(?:[2-9]d|(?:[1-3][0-9]|4[0-9])d))$|^(?:(?:36[5-9][0-9]|[37][0-9]{3}|4[0-9]{3}|5[0-9]{3}|6[0-9]{3}|7[0-2][0-9]{2}|7300)d)$`), "ipv6LeaseTime must be between 1d~49d or 3650d~7300d"),
 			},
 			"description": {
@@ -75,7 +76,6 @@ func ResourceZenlayerCloudZecDhcpOptionsSet() *schema.Resource {
 
 func resourceZenlayerCloudZecDhcpOptionsSetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	zenlayerCloudClient := meta.(*connectivity.ZenlayerCloudClient)
-	zecService := &ZecService{client: zenlayerCloudClient}
 
 	request := zec.NewCreateDhcpOptionsSetRequest()
 	request.DhcpOptionsSetName = common2.String(d.Get("name").(string))
@@ -88,28 +88,26 @@ func resourceZenlayerCloudZecDhcpOptionsSetCreate(ctx context.Context, d *schema
 	}
 
 	if leaseTime, ok := d.GetOk("lease_time"); ok {
-		request.LeaseTime = common2.String(leaseTime.(string))
+		request.LeaseTime = common2.String(strconv.Itoa(leaseTime.(int)))
 	}
 
 	if ipv6LeaseTime, ok := d.GetOk("ipv6_lease_time"); ok {
-		request.Ipv6LeaseTime = common2.String(ipv6LeaseTime.(string))
+		request.Ipv6LeaseTime = common2.String(strconv.Itoa(ipv6LeaseTime.(int)))
 	}
 
 	if description, ok := d.GetOk("description"); ok {
 		request.Description = common2.String(description.(string))
 	}
 
-
-	response, err := zenlayerCloudClient.WithZec2Client().CreateDhcpOptionsSet(request)
-	if err != nil {
+	if err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
+		response, err := zenlayerCloudClient.WithZec2Client().CreateDhcpOptionsSet(request)
+		if err != nil {
+			return common.RetryError(ctx, err)
+		}
+		d.SetId(*response.Response.DhcpOptionsSetId)
+		return nil
+	}); err != nil {
 		return diag.FromErr(fmt.Errorf("fail to create dhcp options set: %v", err))
-	}
-
-	d.SetId(*response.Response.DhcpOptionsSetId)
-
-	// Wait for the DHCP options set to be available
-	if _, err = zecService.DescribeDhcpOptionsSetById(ctx, d.Id()); err != nil {
-		return diag.FromErr(err)
 	}
 
 	return resourceZenlayerCloudZecDhcpOptionsSetRead(ctx, d, meta)
@@ -132,8 +130,16 @@ func resourceZenlayerCloudZecDhcpOptionsSetRead(ctx context.Context, d *schema.R
 	_ = d.Set("name", dhcpOptionsSet.DhcpOptionsSetName)
 	_ = d.Set("domain_name_servers", dhcpOptionsSet.DomainNameServers)
 	_ = d.Set("ipv6_domain_name_servers", dhcpOptionsSet.Ipv6DomainNameServers)
-	_ = d.Set("lease_time", dhcpOptionsSet.LeaseTime)
-	_ = d.Set("ipv6_lease_time", dhcpOptionsSet.Ipv6LeaseTime)
+	if dhcpOptionsSet.LeaseTime != nil {
+		if leaseTime, err := strconv.Atoi(*dhcpOptionsSet.LeaseTime); err == nil {
+			_ = d.Set("lease_time", leaseTime)
+		}
+	}
+	if dhcpOptionsSet.Ipv6LeaseTime != nil {
+		if ipv6LeaseTime, err := strconv.Atoi(*dhcpOptionsSet.Ipv6LeaseTime); err == nil {
+			_ = d.Set("ipv6_lease_time", ipv6LeaseTime)
+		}
+	}
 	_ = d.Set("description", dhcpOptionsSet.Description)
 	_ = d.Set("create_time", dhcpOptionsSet.CreateTime)
 
@@ -155,11 +161,16 @@ func resourceZenlayerCloudZecDhcpOptionsSetUpdate(ctx context.Context, d *schema
 	}
 
 	if d.HasChange("lease_time") {
-		request.LeaseTime = common2.String(d.Get("lease_time").(string))
+		request.LeaseTime = common2.String(strconv.Itoa(d.Get("lease_time").(int)))
 	}
 
 	if d.HasChange("ipv6_lease_time") {
-		request.Ipv6LeaseTime = common2.String(d.Get("ipv6_lease_time").(string))
+		if v, ok := d.GetOk("ipv6_lease_time"); ok {
+			request.Ipv6LeaseTime = common2.String(strconv.Itoa(v.(int)))
+		} else {
+			request.Ipv6LeaseTime = common2.String("")
+		}
+
 	}
 
 	if d.HasChange("description") {
