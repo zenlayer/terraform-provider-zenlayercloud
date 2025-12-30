@@ -1718,9 +1718,6 @@ func convertDhcpOptionsSetRequestFilter(filter *DhcpOptionsSetFilter) *zec2.Desc
 
 	request := zec2.NewDescribeDhcpOptionsSetsRequest()
 	request.DhcpOptionsSetIds = filter.dhcpOptionsSetIds
-	if filter.resourceGroupId != "" {
-		request.ResourceGroupId = &filter.resourceGroupId
-	}
 	return request
 }
 
