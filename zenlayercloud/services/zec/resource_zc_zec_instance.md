@@ -51,6 +51,9 @@ resource "zenlayercloud_zec_instance" "instance" {
   key_id = data.zenlayercloud_key_pairs.all.key_pairs.0.key_id
   subnet_id = zenlayercloud_zec_subnet.ipv4.id
   system_disk_size = 20
+  tags = {
+    "testKey" = "testValue"
+  }
 }
 
 ```

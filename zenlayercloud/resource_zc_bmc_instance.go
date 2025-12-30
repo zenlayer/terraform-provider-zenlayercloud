@@ -38,6 +38,9 @@ resource "zenlayercloud_bmc_instance" "web" {
   password             = "Example~123"
   instance_name        = "web"
   subnet_id            =  zenlayercloud_bmc_subnet.default.id
+  tags = {
+    "group"  = "test"
+  }
 }
 ```
 
@@ -54,6 +57,9 @@ package zenlayercloud
 import (
 	"context"
 	"fmt"
+	"strconv"
+	"time"
+
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
@@ -62,10 +68,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	common2 "github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/common"
 	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/connectivity"
+	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/services/zrm"
 	bmc "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/bmc20221120"
 	"github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/common"
-	"strconv"
-	"time"
 )
 
 func resourceZenlayerCloudInstance() *schema.Resource {
@@ -324,6 +329,11 @@ func resourceZenlayerCloudInstance() *schema.Resource {
 				Computed:    true,
 				Description: "Expired time of the instance.",
 			},
+			"tags": {
+				Type:        schema.TypeMap,
+				Optional:    true,
+				Description: "The available tags within this instance.",
+			},
 		},
 	}
 }
@@ -449,7 +459,7 @@ func resourceZenlayerCloudInstanceDelete(ctx context.Context, d *schema.Resource
 			return nil
 		}
 
-		return resource.NonRetryableError(fmt.Errorf("bmc instance status %s is not recycle, current status %s",instance.InstanceId, instance.InstanceStatus))
+		return resource.NonRetryableError(fmt.Errorf("bmc instance status %s is not recycle, current status %s", instance.InstanceId, instance.InstanceStatus))
 	})
 
 	if err != nil {
@@ -468,8 +478,6 @@ func resourceZenlayerCloudInstanceDelete(ctx context.Context, d *schema.Resource
 	if notExist || !forceDelete {
 		return nil
 	}
-
-
 
 	tflog.Debug(ctx, "Releasing Instance ...", map[string]interface{}{
 		"instanceId": instanceId,
@@ -682,6 +690,15 @@ func resourceZenlayerCloudInstanceUpdate(ctx context.Context, d *schema.Resource
 			return diag.FromErr(err)
 		}
 	}
+	// 更新标签
+	if d.HasChange("tags") {
+		zrmService := zrm.NewZrmService(meta.(*connectivity.ZenlayerCloudClient))
+		err := zrmService.ModifyResourceTags(ctx, d, instanceId)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+	}
+
 	d.Partial(false)
 
 	return resourceZenlayerCloudInstanceRead(ctx, d, meta)
@@ -868,6 +885,18 @@ func resourceZenlayerCloudInstanceCreate(ctx context.Context, d *schema.Resource
 		}
 		request.Nic.LanName = v.(string)
 	}
+
+	if tags := common2.GetTags(d, "tags"); len(tags) > 0 {
+		request.Tags = &bmc.TagAssociation{}
+		for k, v := range tags {
+			tmpKey := k
+			tmpValue := v
+			request.Tags.Tags = append(request.Tags.Tags, &bmc.Tag{
+				Key:   &tmpKey,
+				Value: &tmpValue,
+			})
+		}
+	}
 	// partitions
 	if v, ok := d.GetOk("partitions"); ok {
 		partitions := v.([]interface{})
@@ -1051,6 +1080,13 @@ func resourceZenlayerCloudInstanceRead(ctx context.Context, d *schema.ResourceDa
 		}
 		_ = d.Set("raid_config_custom", customRaids)
 	}
+
+	// 设置实例标签
+	tagMap, err := common2.TagsToMap(instance.Tags)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	_ = d.Set("tags", tagMap)
 
 	return diags
 

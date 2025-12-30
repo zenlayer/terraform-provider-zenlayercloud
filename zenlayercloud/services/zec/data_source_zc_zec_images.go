@@ -2,15 +2,16 @@ package zec
 
 import (
 	"context"
+	"regexp"
+	"time"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/common"
 	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/connectivity"
-	zec "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/zec20240401"
-	"regexp"
-	"time"
+	zec "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/zec20250901"
 )
 
 func DataSourceZenlayerCloudZecImages() *schema.Resource {
@@ -104,6 +105,11 @@ func DataSourceZenlayerCloudZecImages() *schema.Resource {
 							Computed:    true,
 							Description: "The description of image.",
 						},
+						"tags": {
+							Type:        schema.TypeMap,
+							Computed:    true,
+							Description: "The available tags within this image.",
+						},
 					},
 				},
 			},
@@ -153,7 +159,7 @@ func dataSourceZenlayerCloudZecImagesRead(ctx context.Context, d *schema.Resourc
 		filter.category = v.(string)
 	}
 
-	var images []*zec.ImageInfo
+	var images []*zec.Image
 
 	err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutRead)-time.Minute, func() *resource.RetryError {
 		var e error
@@ -167,11 +173,11 @@ func dataSourceZenlayerCloudZecImagesRead(ctx context.Context, d *schema.Resourc
 		return diag.FromErr(err)
 	}
 
-	var results []*zec.ImageInfo
+	var results []*zec.Image
 
 	if imageNameRegex != nil {
 		for _, image := range images {
-			if imageNameRegex.MatchString(image.ImageName) {
+			if imageNameRegex.MatchString(*image.ImageName) {
 				results = append(results, image)
 				continue
 			}
@@ -193,8 +199,14 @@ func dataSourceZenlayerCloudZecImagesRead(ctx context.Context, d *schema.Resourc
 			"image_size":        image.ImageSize,
 			"image_description": image.ImageDescription,
 		}
+
+		tagMap, errRet := common.TagsToMap(image.Tags)
+		if errRet != nil {
+			return diag.FromErr(errRet)
+		}
+		mapping["tags"] = tagMap
 		imageList = append(imageList, mapping)
-		ids = append(ids, image.ImageId)
+		ids = append(ids, *image.ImageId)
 	}
 
 	d.SetId(common.DataResourceIdHash(ids))

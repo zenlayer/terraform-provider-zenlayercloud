@@ -3,16 +3,18 @@ package zec
 import (
 	"context"
 	"fmt"
+	"time"
+
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	common2 "github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/common"
 	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/connectivity"
+	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/services/zrm"
 	"github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/common"
 	user "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/user20240529"
 	zec "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/zec20250901"
-	"time"
 )
 
 func ResourceZenlayerCloudZecVpcNatGateway() *schema.Resource {
@@ -69,6 +71,11 @@ func ResourceZenlayerCloudZecVpcNatGateway() *schema.Resource {
 				Optional:    true,
 				Computed:    true,
 				Description: "Indicates whether ICMP replay is enabled. Default is disabled.",
+			},
+			"tags": {
+				Type:        schema.TypeMap,
+				Optional:    true,
+				Description: "The available tags within this NAT gateway.",
 			},
 			"resource_group_id": {
 				Type:        schema.TypeString,
@@ -218,6 +225,14 @@ func resourceZenlayerCloudZecVpcNatGatewayUpdate(ctx context.Context, d *schema.
 		}
 	}
 
+	if d.HasChange("tags") {
+		zrmService := zrm.NewZrmService(meta.(*connectivity.ZenlayerCloudClient))
+		err := zrmService.ModifyResourceTags(ctx, d, natGatewayId)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+	}
+
 	return resourceZenlayerCloudZecVpcNatGatewayRead(ctx, d, meta)
 }
 
@@ -231,6 +246,18 @@ func resourceZenlayerCloudZecVpcNatGatewayCreate(ctx context.Context, d *schema.
 	request.Name = common.String(d.Get("name").(string))
 	request.VpcId = common.String(d.Get("vpc_id").(string))
 	request.SecurityGroupId = common.String(d.Get("security_group_id").(string))
+
+	if tags := common2.GetTags(d, "tags"); len(tags) > 0 {
+		request.Tags = &zec.TagAssociation{}
+		for k, v := range tags {
+			tmpKey := k
+			tmpValue := v
+			request.Tags.Tags = append(request.Tags.Tags, &zec.Tag{
+				Key:   &tmpKey,
+				Value: &tmpValue,
+			})
+		}
+	}
 
 	if v, ok := d.GetOk("subnet_ids"); ok {
 		subnetIds := v.(*schema.Set).List()
@@ -371,6 +398,12 @@ func resourceZenlayerCloudZecVpcNatGatewayRead(ctx context.Context, d *schema.Re
 	_ = d.Set("security_group_id", natGateway.SecurityGroupId)
 	_ = d.Set("create_time", natGateway.CreateTime)
 	_ = d.Set("enable_icmp_reply", natGateway.IcmpReplyEnabled)
+
+	toMap, errRet := common2.TagsToMap(natGateway.Tags)
+	if errRet != nil {
+		return diag.FromErr(errRet)
+	}
+	_ = d.Set("tags", toMap)
 
 	return diags
 }

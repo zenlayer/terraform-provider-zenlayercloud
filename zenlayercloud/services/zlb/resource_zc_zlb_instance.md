@@ -19,6 +19,9 @@ resource "zenlayercloud_zlb_instance" "zlb" {
   region_id = var.region
   vpc_id    = zenlayercloud_zec_vpc.foo.id
   zlb_name  = "example-5"
+  tags = {
+    "test" = "test-value"
+  }
 }
 ```
 

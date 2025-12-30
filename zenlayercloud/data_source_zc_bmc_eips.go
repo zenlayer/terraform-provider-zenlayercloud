@@ -122,6 +122,11 @@ func dataSourceZenlayerCloudEips() *schema.Resource {
 							Computed:    true,
 							Description: "Expired time of the EIP.",
 						},
+						"tags": {
+							Type:        schema.TypeMap,
+							Computed:    true,
+							Description: "Tags of the EIP.",
+						},
 					},
 				},
 			},
@@ -179,6 +184,12 @@ func dataSourceZenlayerCloudEipRead(ctx context.Context, d *schema.ResourceData,
 			"create_time":         eip.CreateTime,
 			"expired_time":        eip.ExpiredTime,
 		}
+		// Read tags
+		tags, err := common2.TagsToMap(eip.Tags)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		mapping["tags"] = tags
 		eipList = append(eipList, mapping)
 		ids = append(ids, eip.InstanceId)
 	}

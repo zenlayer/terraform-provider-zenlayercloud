@@ -3,13 +3,14 @@ package zec
 import (
 	"context"
 	"fmt"
+	"time"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	common2 "github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/common"
 	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/connectivity"
-	zec2 "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/zec20240401"
-	"time"
+	zec2 "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/zec20250901"
 )
 
 func ResourceZenlayerCloudZecVpcSecurityGroupAttachment() *schema.Resource {
@@ -52,11 +53,10 @@ func resourceZenlayerCloudZecVpcSecurityGroupAttachmentDelete(ctx context.Contex
 
 	request := zec2.NewUnAssignSecurityGroupVpcRequest()
 	vpcId := attachment[0]
-	request.VpcId = vpcId
-	request.SecurityGroupId = attachment[1]
+	request.VpcId = &vpcId
 
 	if err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutDelete)-time.Minute, func() *resource.RetryError {
-		_, errRet := vmService.client.WithZecClient().UnAssignSecurityGroupVpc(request)
+		_, errRet := vmService.client.WithZec2Client().UnAssignSecurityGroupVpc(request)
 
 		if errRet != nil {
 			return common2.RetryError(ctx, errRet)
@@ -79,11 +79,11 @@ func resourceZenlayerCloudZecVpcSecurityGroupAttachmentCreate(ctx context.Contex
 	securityGroupId := d.Get("security_group_id").(string)
 
 	request := zec2.NewAssignSecurityGroupVpcRequest()
-	request.VpcId = vpcId
-	request.SecurityGroupId = securityGroupId
+	request.VpcId = &vpcId
+	request.SecurityGroupId = &securityGroupId
 
 	if err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutDelete)-time.Minute, func() *resource.RetryError {
-		_, errRet := zecService.client.WithZecClient().AssignSecurityGroupVpc(request)
+		_, errRet := zecService.client.WithZec2Client().AssignSecurityGroupVpc(request)
 		if errRet != nil {
 			return common2.RetryError(ctx, errRet, common2.OperationTimeout)
 		}
@@ -129,7 +129,7 @@ func resourceZenlayerCloudZecVpcSecurityGroupAttachmentRead(ctx context.Context,
 		return diag.FromErr(err)
 	}
 
-	if vpc == nil || vpc.SecurityGroupId == "" {
+	if vpc == nil || vpc.SecurityGroupId == nil {
 		d.SetId("")
 		return nil
 	}

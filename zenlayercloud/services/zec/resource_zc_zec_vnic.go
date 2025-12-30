@@ -3,6 +3,8 @@ package zec
 import (
 	"context"
 	"fmt"
+	"time"
+
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
@@ -11,10 +13,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	common2 "github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/common"
 	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/connectivity"
+	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/services/zrm"
 	"github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/common"
 	user "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/user20240529"
-	zec2 "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/zec20250901"
-	"time"
+	zec "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/zec20250901"
 )
 
 func ResourceZenlayerCloudZecVNic() *schema.Resource {
@@ -76,6 +78,11 @@ func ResourceZenlayerCloudZecVNic() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "The resource group name the vNIC belongs to, default to Default Resource Group.",
+			},
+			"tags": {
+				Type:        schema.TypeMap,
+				Optional:    true,
+				Description: "The available tags within this vNIC.",
 			},
 			// The IPv6 network billing
 			"ipv6_internet_charge_type": {
@@ -205,13 +212,20 @@ func resourceZenlayerCloudZecVNicUpdate(ctx context.Context, d *schema.ResourceD
 		}
 	}
 
+	if d.HasChange("tags") {
+		zrmService := zrm.NewZrmService(meta.(*connectivity.ZenlayerCloudClient))
+		err := zrmService.ModifyResourceTags(ctx, d, nicId)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+	}
 	return resourceZenlayerCloudZecVNicRead(ctx, d, meta)
 }
 
 func resourceZenlayerCloudZecVNicCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	defer common2.LogElapsed(ctx, "resource.zenlayercloud_zec_vnic.create")()
 
-	request := zec2.NewCreateNetworkInterfaceRequest()
+	request := zec.NewCreateNetworkInterfaceRequest()
 	request.SubnetId = common.String(d.Get("subnet_id").(string))
 	request.Name = common.String(d.Get("name").(string))
 
@@ -231,6 +245,18 @@ func resourceZenlayerCloudZecVNicCreate(ctx context.Context, d *schema.ResourceD
 
 	if v, ok := d.GetOk("resource_group_id"); ok {
 		request.ResourceGroupId = common.String(v.(string))
+	}
+
+	if tags := common2.GetTags(d, "tags"); len(tags) > 0 {
+		request.Tags = &zec.TagAssociation{}
+		for k, v := range tags {
+			tmpKey := k
+			tmpValue := v
+			request.Tags.Tags = append(request.Tags.Tags, &zec.Tag{
+				Key:   &tmpKey,
+				Value: &tmpValue,
+			})
+		}
 	}
 
 	if v, ok := d.GetOk("stack_type"); ok {
@@ -284,7 +310,7 @@ func resourceZenlayerCloudZecVNicRead(ctx context.Context, d *schema.ResourceDat
 		client: meta.(*connectivity.ZenlayerCloudClient),
 	}
 
-	var nic *zec2.NicInfo
+	var nic *zec.NicInfo
 	var errRet error
 
 	err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutRead)-time.Minute, func() *resource.RetryError {
@@ -337,6 +363,12 @@ func resourceZenlayerCloudZecVNicRead(ctx context.Context, d *schema.ResourceDat
 	_ = d.Set("resource_group_name", nic.ResourceGroup.ResourceGroupName)
 	_ = d.Set("create_time", nic.CreateTime)
 	_ = d.Set("security_group_id", nic.SecurityGroupId)
+
+	toMap, errRet := common2.TagsToMap(nic.Tags)
+	if errRet != nil {
+		return diag.FromErr(errRet)
+	}
+	_ = d.Set("tags", toMap)
 	return diags
 
 }

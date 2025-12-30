@@ -3,6 +3,8 @@ package zec
 import (
 	"context"
 	"fmt"
+	"time"
+
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
@@ -11,10 +13,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	common2 "github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/common"
 	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/connectivity"
+	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/services/zrm"
 	"github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/common"
 	user "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/user20240529"
-	zec "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/zec20240401"
-	"time"
+	zec "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/zec20250901"
 )
 
 func ResourceZenlayerCloudGlobalVpc() *schema.Resource {
@@ -56,6 +58,11 @@ func ResourceZenlayerCloudGlobalVpc() *schema.Resource {
 				Optional:    true,
 				Default:     false,
 				Description: "Whether to enable the private IPv6 network segment. Once the ipv6 is enabled, disable it will cause the resource to `ForceNew`.",
+			},
+			"tags": {
+				Type:        schema.TypeMap,
+				Optional:    true,
+				Description: "The available tags within this VPC.",
 			},
 			"ipv6_cidr_block": {
 				Type:        schema.TypeString,
@@ -176,6 +183,14 @@ func resourceZenlayerCloudGlobalVpcUpdate(ctx context.Context, d *schema.Resourc
 		}
 	}
 
+	if d.HasChange("tags") {
+		zrmService := zrm.NewZrmService(meta.(*connectivity.ZenlayerCloudClient))
+		err := zrmService.ModifyResourceTags(ctx, d, vpcId)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+	}
+
 	d.Partial(false)
 	return resourceZenlayerCloudGlobalVpcRead(ctx, d, meta)
 }
@@ -187,19 +202,31 @@ func resourceZenlayerCloudGlobalVpcCreate(ctx context.Context, d *schema.Resourc
 		client: meta.(*connectivity.ZenlayerCloudClient),
 	}
 	request := zec.NewCreateVpcRequest()
-	request.CidrBlock = d.Get("cidr_block").(string)
-	request.Name = d.Get("name").(string)
-	request.Mtu = d.Get("mtu").(int)
-	request.EnablePriIpv6 = d.Get("enable_ipv6").(bool)
+	request.CidrBlock = common.String(d.Get("cidr_block").(string))
+	request.Name = common.String(d.Get("name").(string))
+	request.Mtu = common.Integer(d.Get("mtu").(int))
+	request.EnablePriIpv6 = common.Bool(d.Get("enable_ipv6").(bool))
+
+	if tags := common2.GetTags(d, "tags"); len(tags) > 0 {
+		request.Tags = &zec.TagAssociation{}
+		for k, v := range tags {
+			tmpKey := k
+			tmpValue := v
+			request.Tags.Tags = append(request.Tags.Tags, &zec.Tag{
+				Key:   &tmpKey,
+				Value: &tmpValue,
+			})
+		}
+	}
 
 	if v, ok := d.GetOk("resource_group_id"); ok {
-		request.ResourceGroupId = v.(string)
+		request.ResourceGroupId = common.String(v.(string))
 	}
 
 	vpcId := ""
 
 	err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
-		response, err := zecService.client.WithZecClient().CreateVpc(request)
+		response, err := zecService.client.WithZec2Client().CreateVpc(request)
 		if err != nil {
 			tflog.Info(ctx, "Fail to create global vpc.", map[string]interface{}{
 				"action":  request.GetAction(),
@@ -215,11 +242,11 @@ func resourceZenlayerCloudGlobalVpcCreate(ctx context.Context, d *schema.Resourc
 			"response": common2.ToJsonString(response),
 		})
 
-		if response.Response.VpcId == "" {
+		if response.Response.VpcId == nil {
 			err = fmt.Errorf("vpc id is nil")
 			return resource.NonRetryableError(err)
 		}
-		vpcId = response.Response.VpcId
+		vpcId = *response.Response.VpcId
 
 		return nil
 	})
@@ -270,12 +297,18 @@ func resourceZenlayerCloudGlobalVpcRead(ctx context.Context, d *schema.ResourceD
 	_ = d.Set("name", vpc.Name)
 	_ = d.Set("cidr_block", vpc.CidrBlock)
 	_ = d.Set("ipv6_cidr_block", vpc.Ipv6CidrBlock)
-	_ = d.Set("enable_ipv6", vpc.Ipv6CidrBlock != "")
+	_ = d.Set("enable_ipv6", common.ToString(vpc.Ipv6CidrBlock) != "")
 	_ = d.Set("mtu", vpc.Mtu)
 	_ = d.Set("is_default", vpc.IsDefault)
 	_ = d.Set("resource_group_id", *vpc.ResourceGroup.ResourceGroupId)
 	_ = d.Set("resource_group_name", *vpc.ResourceGroup.ResourceGroupName)
 	_ = d.Set("create_time", vpc.CreateTime)
+
+	toMap, errRet := common2.TagsToMap(vpc.Tags)
+	if errRet != nil {
+		return diag.FromErr(errRet)
+	}
+	_ = d.Set("tags", toMap)
 
 	return diags
 

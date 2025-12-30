@@ -10,6 +10,9 @@ resource "zenlayercloud_zec_vpc" "foo" {
   cidr_block = "10.0.0.0/24"
   enable_ipv6 = true
   mtu = 1300
+  tags = {
+    "group"  = "test"
+  }
 }
 
 ```

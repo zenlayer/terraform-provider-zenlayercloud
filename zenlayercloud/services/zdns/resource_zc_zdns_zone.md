@@ -11,6 +11,9 @@ resource "zenlayercloud_zdns_zone" "foo" {
 	zone_name = "example.com"
 	remark = "test"
 	proxy_pattern = "RECURSION"
+    tags = {
+      "test" = "test"
+    }
 }
 ```
 

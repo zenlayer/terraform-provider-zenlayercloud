@@ -11,6 +11,9 @@ data "zenlayercloud_bmc_vpc_regions" "default_region" {
 resource "zenlayercloud_bmc_vpc" "foo" {
   region 	 = data.zenlayercloud_bmc_vpc_regions.default_region.regions.0.id
   cidr_block = "10.0.0.0/26"
+  tags = {
+    "group"  = "test"
+  }
 }
 ```
 
@@ -27,6 +30,8 @@ package zenlayercloud
 import (
 	"context"
 	"fmt"
+	"time"
+
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -34,9 +39,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	common2 "github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/common"
 	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/connectivity"
+	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/services/zrm"
 	bmc "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/bmc20221120"
 	"github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/common"
-	"time"
 )
 
 func resourceZenlayerCloudVpc() *schema.Resource {
@@ -89,6 +94,11 @@ func resourceZenlayerCloudVpc() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "Create time of the vpc.",
+			},
+			"tags": {
+				Type:        schema.TypeMap,
+				Optional:    true,
+				Description: "The tags of the vpc.",
 			},
 		},
 	}
@@ -193,6 +203,15 @@ func resourceZenlayerCloudVpcUpdate(ctx context.Context, d *schema.ResourceData,
 		}
 	}
 
+	// Update tags if changed
+	if d.HasChange("tags") {
+		zrmService := zrm.NewZrmService(meta.(*connectivity.ZenlayerCloudClient))
+		err := zrmService.ModifyResourceTags(ctx, d, vpcId)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+	}
+
 	d.Partial(false)
 	return resourceZenlayerCloudVpcRead(ctx, d, meta)
 }
@@ -208,6 +227,18 @@ func resourceZenlayerCloudVpcCreate(ctx context.Context, d *schema.ResourceData,
 	request.VpcName = d.Get("name").(string)
 	if v, ok := d.GetOk("resource_group_id"); ok {
 		request.ResourceGroupId = v.(string)
+	}
+
+	if tags := common2.GetTags(d, "tags"); len(tags) > 0 {
+		request.Tags = &bmc.TagAssociation{}
+		for k, v := range tags {
+			tmpKey := k
+			tmpValue := v
+			request.Tags.Tags = append(request.Tags.Tags, &bmc.Tag{
+				Key:   &tmpKey,
+				Value: &tmpValue,
+			})
+		}
 	}
 
 	vpcId := ""
@@ -308,6 +339,13 @@ func resourceZenlayerCloudVpcRead(ctx context.Context, d *schema.ResourceData, m
 	_ = d.Set("resource_group_id", vpc.ResourceGroupId)
 	_ = d.Set("resource_group_name", vpc.ResourceGroupName)
 	_ = d.Set("create_time", vpc.CreateTime)
+
+	// Read tags
+	tagMap, err := common2.TagsToMap(vpc.Tags)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	_ = d.Set("tags", tagMap)
 
 	return diags
 

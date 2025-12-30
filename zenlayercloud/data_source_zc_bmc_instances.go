@@ -15,13 +15,14 @@ package zenlayercloud
 
 import (
 	"context"
+	"strconv"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	common2 "github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/common"
 	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/connectivity"
 	bmc "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/bmc20221120"
 	"github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/common"
-	"strconv"
 )
 
 func dataSourceZenlayerCloudInstances() *schema.Resource {
@@ -273,6 +274,11 @@ func dataSourceZenlayerCloudInstances() *schema.Resource {
 							Computed:    true,
 							Description: "Expired time of the instance.",
 						},
+						"tags": {
+							Type:        schema.TypeMap,
+							Computed:    true,
+							Description: "The available tags within this instance.",
+						},
 					},
 				},
 			},
@@ -353,6 +359,13 @@ func dataSourceZenlayerCloudInstancesRead(ctx context.Context, d *schema.Resourc
 			"public_ipv4_addresses":      instance.PublicIpAddresses,
 			"key_id":                     instance.KeyId,
 		}
+
+		// 处理 tags
+		tagMap, errRet := common2.TagsToMap(instance.Tags)
+		if errRet != nil {
+			return diag.FromErr(errRet)
+		}
+		mapping["tags"] = tagMap
 		if instance.InstanceChargeType == BmcChargeTypePrepaid {
 			mapping["instance_charge_prepaid_period"] = instance.Period
 		}

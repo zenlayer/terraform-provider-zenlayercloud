@@ -3,6 +3,7 @@ package zec
 import (
 	"context"
 	"regexp"
+	"strconv"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -63,12 +64,12 @@ func DataSourceZenlayerCloudZecDhcpOptionsSets() *schema.Resource {
 							Description: "IPv6 DNS server IP.",
 						},
 						"lease_time": {
-							Type:        schema.TypeString,
+							Type:        schema.TypeInt,
 							Computed:    true,
 							Description: "IPv4 lease time.",
 						},
 						"ipv6_lease_time": {
-							Type:        schema.TypeString,
+							Type:        schema.TypeInt,
 							Computed:    true,
 							Description: "IPv6 lease time.",
 						},
@@ -125,10 +126,20 @@ func dataSourceZenlayerCloudZecDhcpOptionsSetsRead(ctx context.Context, d *schem
 			"name":                     dhcpOptionsSet.DhcpOptionsSetName,
 			"domain_name_servers":      dhcpOptionsSet.DomainNameServers,
 			"ipv6_domain_name_servers": dhcpOptionsSet.Ipv6DomainNameServers,
-			"lease_time":               dhcpOptionsSet.LeaseTime,
-			"ipv6_lease_time":          dhcpOptionsSet.Ipv6LeaseTime,
+			"lease_time":               0,
+			"ipv6_lease_time":          0,
 			"description":              dhcpOptionsSet.Description,
 			"create_time":              dhcpOptionsSet.CreateTime,
+		}
+		if dhcpOptionsSet.LeaseTime != nil {
+			if leaseTime, err := strconv.Atoi(*dhcpOptionsSet.LeaseTime); err == nil {
+				dhcpOptionsSetMap["lease_time"] = leaseTime
+			}
+		}
+		if dhcpOptionsSet.Ipv6LeaseTime != nil {
+			if ipv6LeaseTime, err := strconv.Atoi(*dhcpOptionsSet.Ipv6LeaseTime); err == nil {
+				dhcpOptionsSetMap["ipv6_lease_time"] = ipv6LeaseTime
+			}
 		}
 		dhcpOptionsSets = append(dhcpOptionsSets, dhcpOptionsSetMap)
 	}
