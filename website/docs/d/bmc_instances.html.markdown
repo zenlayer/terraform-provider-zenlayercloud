@@ -70,6 +70,7 @@ In addition to all arguments above, the following attributes are exported:
    * `raid_config_type` - Simple config for instance raid. Modifying will cause the instance reset.
    * `resource_group_id` - The ID of resource group that the instance belongs to.
    * `resource_group_name` - The name of resource group that the instance belongs to.
+   * `tags` - The available tags within this instance.
    * `traffic_package_size` - Traffic package size.
 
 

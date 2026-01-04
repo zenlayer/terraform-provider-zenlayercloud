@@ -30,6 +30,9 @@ resource "zenlayercloud_zlb_instance" "zlb" {
   region_id = var.region
   vpc_id    = zenlayercloud_zec_vpc.foo.id
   zlb_name  = "example-5"
+  tags = {
+    "test" = "test-value"
+  }
 }
 ```
 
@@ -40,6 +43,7 @@ The following arguments are supported:
 * `region_id` - (Required, String, ForceNew) The ID of region that the load balancer instance locates at.
 * `vpc_id` - (Required, String, ForceNew) The ID of VPC that the load balancer instance belongs to.
 * `resource_group_id` - (Optional, String) The resource group id the load balancer belongs to, default to Default Resource Group.
+* `tags` - (Optional, Map) The available tags within this load balancer instance.
 * `zlb_name` - (Optional, String) The name of the load balancer instance.
 
 ## Attributes Reference

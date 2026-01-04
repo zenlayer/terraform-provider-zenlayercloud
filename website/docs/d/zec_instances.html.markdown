@@ -102,5 +102,6 @@ In addition to all arguments above, the following attributes are exported:
    * `system_disk_category` - Category of the system disk.
    * `system_disk_id` - ID of the system disk.
    * `system_disk_size` - Size of the system disk.
+   * `tags` - The available tags within this ZEC instance.
 
 

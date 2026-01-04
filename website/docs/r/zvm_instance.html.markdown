@@ -47,6 +47,9 @@ resource "zenlayercloud_zvm_instance" "web" {
   instance_name        = "web"
   subnet_id            = zenlayercloud_zvm_subnet.default.id
   system_disk_size     = 100
+  tags = {
+    "group" = "web"
+  }
 }
 ```
 
@@ -68,6 +71,7 @@ The following arguments are supported:
 * `password` - (Optional, String) Password for the instance. The max length of password is 16.
 * `resource_group_id` - (Optional, String) The resource group id the instance belongs to, default to Default Resource Group.
 * `subnet_id` - (Optional, String, ForceNew) The ID of a VPC subnet. If you want to create instances in a VPC network, this parameter must be set.
+* `tags` - (Optional, Map) Tags of the instance.
 * `traffic_package_size` - (Optional, Float64) Traffic package size. Only valid when the charge type of instance is `ByTrafficPackage` and the instance charge type is `PREPAID`.
 
 ## Attributes Reference
@@ -76,7 +80,7 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - ID of the resource.
 * `create_time` - Create time of the instance.
-* `expired_time` - Expired time of the instance.
+* `expired_time` - Expire time of the instance.
 * `image_name` - The image name to use for the instance.
 * `instance_status` - Current status of the instance.
 * `private_ip_addresses` - Private Ip addresses of the instance.

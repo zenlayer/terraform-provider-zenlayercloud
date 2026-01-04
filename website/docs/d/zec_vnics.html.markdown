@@ -101,6 +101,7 @@ In addition to all arguments above, the following attributes are exported:
    * `security_group_id` - ID of the security group.
    * `stack_type` - The stack type of the subnet. Valid values: `IPv4`, `IPv6`, `IPv4_IPv6`.
    * `subnet_id` - ID of the subnet.
+   * `tags` - The available tags within this vNIC.
    * `vpc_id` - ID of the global VPC.
 
 

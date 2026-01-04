@@ -26,6 +26,9 @@ resource "zenlayercloud_zec_eip" "eip" {
   ip_network_type      = "BGPLine"
   internet_charge_type = "ByBandwidth"
   bandwidth            = 10
+  tags = {
+    "group" = "test"
+  }
 }
 ```
 
@@ -43,6 +46,7 @@ The following arguments are supported:
 * `ip_network_type` - (Optional, String, ForceNew) Network types of public IPv4. Valid values: `CN2Line`, `LocalLine`, `ChinaTelecom`, `ChinaUnicom`, `ChinaMobile`, `Cogent`.
 * `peer_region_id` - (Optional, String, ForceNew) Remote region ID.
 * `resource_group_id` - (Optional, String) Resource group ID.
+* `tags` - (Optional, Map) The available tags within this elastic IP.
 
 ## Attributes Reference
 

@@ -47,6 +47,9 @@ resource "zenlayercloud_bmc_instance" "web" {
   password             = "Example~123"
   instance_name        = "web"
   subnet_id            = zenlayercloud_bmc_subnet.default.id
+  tags = {
+    "group" = "test"
+  }
 }
 ```
 
@@ -75,6 +78,7 @@ The following arguments are supported:
 * `resource_group_id` - (Optional, String) The resource group id the instance belongs to, default to Default Resource Group.
 * `ssh_keys` - (Optional, Set: [`String`], **Deprecated**) please use 'key_id' instead. The ssh keys to use for the instance. The max number of ssh keys is 5. Modifying will cause the instance reset.
 * `subnet_id` - (Optional, String) The ID of a VPC subnet. If you want to create instances in a VPC network, this parameter must be set.
+* `tags` - (Optional, Map) The available tags within this instance.
 * `traffic_package_size` - (Optional, Float64) Traffic package size. Only valid when the charge type of instance is `ByTrafficPackage` and the instance charge type is `PREPAID`.
 * `user_data` - (Optional, String) A string of the user data to be injected into this instance. If `reinstall` is set to `true`, updates to this field will trigger the instance reset instead of recreated.
 

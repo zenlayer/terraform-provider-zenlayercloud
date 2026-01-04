@@ -61,6 +61,9 @@ resource "zenlayercloud_zec_instance" "instance" {
   key_id            = data.zenlayercloud_key_pairs.all.key_pairs.0.key_id
   subnet_id         = zenlayercloud_zec_subnet.ipv4.id
   system_disk_size  = 20
+  tags = {
+    "testKey" = "testValue"
+  }
 }
 ```
 
@@ -83,6 +86,7 @@ The following arguments are supported:
 * `running_flag` - (Optional, Bool) Set instance to running or stop. Default value is true, the instance will shutdown when this flag is false.
 * `security_group_id` - (Optional, String) The ID of a security group for primary vNIC of instance. If absent, the security group under VPC will be used.
 * `system_disk_category` - (Optional, String, ForceNew) Category of the system disk. Valid values: `Standard NVMe SSD`, `Basic NVMe SSD`, Default is `Standard NVMe SSD`.
+* `tags` - (Optional, Map) The available tags within this ZEC instance.
 * `time_zone` - (Optional, String) Time zone of instance. such as `America/Los_Angeles`. Default is `Asia/Shanghai`. Changing `time_zone` will cause the ZEC instance reset.
 
 ## Attributes Reference

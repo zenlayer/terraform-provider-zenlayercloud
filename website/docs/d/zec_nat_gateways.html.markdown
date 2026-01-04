@@ -73,6 +73,7 @@ In addition to all arguments above, the following attributes are exported:
    * `security_group_id` - ID of the security group associated.
    * `status` - The status of NAT gateway.
    * `subnet_ids` - IDs of the subnets.
+   * `tags` - The available tags within this NAT gateway.
    * `vpc_id` - ID of the VPC.
    * `zbg_id` - ID of border gateway associated.
 

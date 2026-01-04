@@ -48,5 +48,6 @@ In addition to all arguments above, the following attributes are exported:
    * `image_type` - Type of the image. With value: `PUBLIC_IMAGE` and `CUSTOM_IMAGE`.
    * `image_version` - The version of image, such as 'Server 20.04 LTS'.
    * `os_type` - Type of the image, `windows` or `linux`.
+   * `tags` - The available tags within this image.
 
 

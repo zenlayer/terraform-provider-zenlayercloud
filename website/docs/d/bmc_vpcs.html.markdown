@@ -48,6 +48,7 @@ In addition to all arguments above, the following attributes are exported:
    * `region` - The region where the VPC located.
    * `resource_group_id` - The ID of resource group grouped VPC to be queried.
    * `resource_group_name` - The Name of resource group grouped VPC to be queried.
+   * `tags` - Tags of the VPC.
    * `vpc_id` - ID of the VPC.
    * `vpc_status` - status of the VPC.
 

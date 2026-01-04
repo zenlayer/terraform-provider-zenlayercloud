@@ -61,5 +61,6 @@ In addition to all arguments above, the following attributes are exported:
    * `period` - The period cycle of the disk. Unit: month.
    * `portable` - Whether the disk is deleted with instance or not, true means not delete with instance, false otherwise.
    * `status` - Status of disk.
+   * `tags` - Tags of the disk.
 
 

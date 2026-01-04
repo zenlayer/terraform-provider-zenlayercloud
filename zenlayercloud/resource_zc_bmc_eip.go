@@ -1,7 +1,7 @@
 /*
 Provides an EIP resource.
 
-# Example Usage
+Example Usage
 
 ```hcl
 
@@ -18,7 +18,7 @@ Provides an EIP resource.
 
 ```
 
-# Import
+Import
 
 EIP can be imported using the id, e.g.
 

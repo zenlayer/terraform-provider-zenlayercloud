@@ -21,6 +21,9 @@ resource "zenlayercloud_zec_vpc" "foo" {
   cidr_block  = "10.0.0.0/24"
   enable_ipv6 = true
   mtu         = 1300
+  tags = {
+    "group" = "test"
+  }
 }
 ```
 
@@ -33,6 +36,7 @@ The following arguments are supported:
 * `mtu` - (Optional, Int, ForceNew) The maximum transmission unit. This value cannot be changed.
 * `name` - (Optional, String) The name of the global VPC.
 * `resource_group_id` - (Optional, String) The resource group id the global VPC belongs to, default to ID of Default Resource Group.
+* `tags` - (Optional, Map) The available tags within this VPC.
 
 ## Attributes Reference
 
