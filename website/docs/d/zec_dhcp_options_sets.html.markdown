@@ -43,6 +43,7 @@ The following arguments are supported:
 
 * `ids` - (Optional, Set: [`String`]) List of DHCP options set IDs.
 * `name_regex` - (Optional, String) Regular expression for DHCP options set names.
+* `resource_group_id` - (Optional, String) ID of the resource group to filter DHCP options sets.
 * `result_output_file` - (Optional, String) Output file path.
 
 ## Attributes Reference
@@ -58,5 +59,7 @@ In addition to all arguments above, the following attributes are exported:
    * `ipv6_lease_time` - IPv6 lease time.
    * `lease_time` - IPv4 lease time.
    * `name` - Name of the DHCP options set.
+   * `resource_group_id` - ID of the resource group to which the DHCP options set belongs.
+   * `tags` - Tags of the DHCP options set.
 
 

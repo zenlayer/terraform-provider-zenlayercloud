@@ -10,6 +10,9 @@ resource "zenlayercloud_zec_dhcp_options_set" "example" {
   lease_time = 24
   ipv6_lease_time = 24
   description = "example dhcp options set"
+  tags = {
+    "test" = ""
+  }
 }
 ```
 
