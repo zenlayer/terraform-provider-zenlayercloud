@@ -3,7 +3,6 @@ package zec
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"strconv"
 	"time"
 
@@ -14,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/connectivity"
 	zec "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/zec20250901"
 )
@@ -49,16 +47,16 @@ func ResourceZenlayerCloudZecDhcpOptionsSet() *schema.Resource {
 			"lease_time": {
 				Type:         schema.TypeInt,
 				Optional:     true,
-				Default:      87600,
-				Description:  "IPv4 lease time, default unit is hour. Value range: 24h~1176h, 87600h(3650d)~175200h(7300d), default value: 87600.",
-				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^(1d|(?:[2-9]d|(?:[1-3][0-9]|4[0-9])d))$|^(?:(?:36[5-9][0-9]|[37][0-9]{3}|4[0-9]{3}|5[0-9]{3}|6[0-9]{3}|7[0-2][0-9]{2}|7300)d)$`), "leaseTime must be between 1d~49d or 3650d~7300d"),
+				Default:      24,
+				Description:  "IPv4 lease time, default unit is hour. Value range: 24h~1176h, 87600h(3650d)~175200h(7300d), default value: 24.",
+				//ValidateFunc: validation.StringMatch(regexp.MustCompile(`^(1d|(?:[2-9]d|(?:[1-3][0-9]|4[0-9])d))$|^(?:(?:36[5-9][0-9]|[37][0-9]{3}|4[0-9]{3}|5[0-9]{3}|6[0-9]{3}|7[0-2][0-9]{2}|7300)d)$`), "leaseTime must be between 1d~49d or 3650d~7300d"),
 			},
 			"ipv6_lease_time": {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				RequiredWith: []string{"ipv6_domain_name_servers"},
 				Description:  "IPv6 lease time, default unit is hour. Value range: 24h~1176h, 87600h(3650d)~175200h(7300d).",
-				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^(1d|(?:[2-9]d|(?:[1-3][0-9]|4[0-9])d))$|^(?:(?:36[5-9][0-9]|[37][0-9]{3}|4[0-9]{3}|5[0-9]{3}|6[0-9]{3}|7[0-2][0-9]{2}|7300)d)$`), "ipv6LeaseTime must be between 1d~49d or 3650d~7300d"),
+				//ValidateFunc: validation.StringMatch(regexp.MustCompile(`^(1d|(?:[2-9]d|(?:[1-3][0-9]|4[0-9])d))$|^(?:(?:36[5-9][0-9]|[37][0-9]{3}|4[0-9]{3}|5[0-9]{3}|6[0-9]{3}|7[0-2][0-9]{2}|7300)d)$`), "ipv6LeaseTime must be between 1d~49d or 3650d~7300d"),
 			},
 			"description": {
 				Type:        schema.TypeString,
