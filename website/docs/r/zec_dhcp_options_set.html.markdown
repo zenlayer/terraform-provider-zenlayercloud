@@ -35,8 +35,8 @@ The following arguments are supported:
 * `name` - (Required, String) Name of the DHCP options set.
 * `description` - (Optional, String) Description of the DHCP options set.
 * `ipv6_domain_name_servers` - (Optional, String) IPv6 DNS server IP, up to 4 IPv6 addresses.
-* `ipv6_lease_time` - (Optional, Int) IPv6 lease time, default unit is hour. Value range: 24h~1176h, 87600h(3650d)~175200h(7300d).
-* `lease_time` - (Optional, Int) IPv4 lease time, default unit is hour. Value range: 24h~1176h, 87600h(3650d)~175200h(7300d), default value: 24.
+* `ipv6_lease_time` - (Optional, Int) IPv6 lease time, measured in hour. Value range: 24h~1176h, 87600h(3650d)~175200h(7300d). default value: 24.
+* `lease_time` - (Optional, Int) IPv4 lease time, measured in hour. Value range: 24h~1176h, 87600h(3650d)~175200h(7300d), default value: 24.
 * `resource_group_id` - (Optional, String) ID of the resource group to which the DHCP options set belongs.
 * `tags` - (Optional, Map) Tags of the DHCP options set.
 
