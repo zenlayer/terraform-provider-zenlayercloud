@@ -8,7 +8,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/common"
 	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/connectivity"
-	zec "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/zec20240401"
+	common2 "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/common"
+	zec "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/zec20250901"
 	"regexp"
 	"time"
 )
@@ -185,6 +186,12 @@ func DataSourceZenlayerCloudEips() *schema.Resource {
 							Computed:    true,
 							Description: "Status of the elastic IP.",
 						},
+						// tags
+						"tags": {
+							Type:        schema.TypeMap,
+							Computed:    true,
+							Description: "The available tags within this elastic IP.",
+						},
 					},
 				},
 			},
@@ -275,7 +282,7 @@ func dataSourceZenlayerCloudEipsRead(ctx context.Context, d *schema.ResourceData
 	eipList := make([]map[string]interface{}, 0)
 
 	for _, eip := range eips {
-		if nameRegex != nil && !nameRegex.MatchString(eip.Name) {
+		if nameRegex != nil && !nameRegex.MatchString(common2.ToString(eip.Name)) {
 			continue
 		}
 		mapping := map[string]interface{}{
@@ -307,8 +314,13 @@ func dataSourceZenlayerCloudEipsRead(ctx context.Context, d *schema.ResourceData
 			mapping["public_ip_address"] = eip.PublicIpAddresses[0]
 		}
 
+		tagMap, errRet := common.TagsToMap(eip.Tags)
+		if errRet != nil {
+			return diag.FromErr(errRet)
+		}
+		mapping["tags"] = tagMap
 		eipList = append(eipList, mapping)
-		ids = append(ids, eip.EipId)
+		ids = append(ids, *eip.EipId)
 	}
 
 	d.SetId(common.DataResourceIdHash(ids))

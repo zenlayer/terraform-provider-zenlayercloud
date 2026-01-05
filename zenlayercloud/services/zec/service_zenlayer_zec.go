@@ -602,13 +602,13 @@ func (s *ZecService) DescribeEipById(ctx context.Context, eipId string) (*zec2.E
 	return response.Response.DataSet[0], nil
 }
 
-func (s *ZecService) DescribeEipsByFilter(ctx context.Context, filter *EipFilter) (eips []*zec.EipInfo, err error) {
+func (s *ZecService) DescribeEipsByFilter(ctx context.Context, filter *EipFilter) (eips []*zec2.EipInfo, err error) {
 	request := convertEipRequestFilter(filter)
 
 	var limit = 100
-	request.PageSize = limit
-	request.PageNum = 1
-	response, err := s.client.WithZecClient().DescribeEips(request)
+	request.PageSize = &limit
+	request.PageNum =  common2.Integer(1)
+	response, err := s.client.WithZec2Client().DescribeEips(request)
 
 	if err != nil {
 		log.Printf("[CRITAL] Api[%s] fail, request body [%s], error[%s]\n",
@@ -620,7 +620,7 @@ func (s *ZecService) DescribeEipsByFilter(ctx context.Context, filter *EipFilter
 	}
 
 	eips = response.Response.DataSet
-	num := int(math.Ceil(float64(response.Response.TotalCount)/float64(limit))) - 1
+	num := int(math.Ceil(float64(*response.Response.TotalCount)/float64(limit))) - 1
 	if num == 0 {
 		return eips, nil
 	}
@@ -636,10 +636,10 @@ func (s *ZecService) DescribeEipsByFilter(ctx context.Context, filter *EipFilter
 		goFunc := func() {
 			request := convertEipRequestFilter(filter)
 
-			request.PageNum = value + 2
-			request.PageSize = limit
+			request.PageNum = common2.Integer(value + 2)
+			request.PageSize = &limit
 
-			response, err := s.client.WithZecClient().DescribeEips(request)
+			response, err := s.client.WithZec2Client().DescribeEips(request)
 			if err != nil {
 				log.Printf("[CRITAL] Api[%s] fail, request body [%s], error[%s]\n",
 					request.GetAction(), common.ToJsonString(request), err.Error())
@@ -659,7 +659,7 @@ func (s *ZecService) DescribeEipsByFilter(ctx context.Context, filter *EipFilter
 
 	log.Printf("[DEBUG] DescribeEips request finished")
 	for _, v := range vpcList {
-		eips = append(eips, v.([]*zec.EipInfo)...)
+		eips = append(eips, v.([]*zec2.EipInfo)...)
 	}
 	log.Printf("[DEBUG] transfer elastic ip instances finished")
 	return
@@ -1514,13 +1514,20 @@ func convertSubnetRequestFilter(filter *SubnetFilter) *zec2.DescribeSubnetsReque
 	return request
 }
 
-func convertEipRequestFilter(filter *EipFilter) *zec.DescribeEipsRequest {
-	request := zec.NewDescribeEipsRequest()
+func convertEipRequestFilter(filter *EipFilter) *zec2.DescribeEipsRequest {
+	request := zec2.NewDescribeEipsRequest()
 	request.EipIds = filter.Ids
-	request.RegionId = filter.RegionId
+	if filter.RegionId != "" {
+		request.RegionId = common2.String(filter.RegionId)
+	}
 	request.IpAddresses = filter.IpAddress
-	request.Status = filter.Status
-	request.ResourceGroupId = filter.ResourceGroupId
+	if filter.Status != "" {
+		request.Status = common2.String(filter.Status)
+	}
+
+	if filter.ResourceGroupId != "" {
+		request.ResourceGroupId = common2.String(filter.ResourceGroupId)
+	}
 	request.PrivateIpAddress = &filter.PrivateIpAddress
 	request.CidrIds = filter.CidrIds
 	request.AssociatedId = &filter.AssociatedId
