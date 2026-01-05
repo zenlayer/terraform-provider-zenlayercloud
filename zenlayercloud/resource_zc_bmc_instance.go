@@ -339,7 +339,7 @@ func resourceZenlayerCloudInstance() *schema.Resource {
 			},
 			"gateway_mode": {
 				Type:         schema.TypeString,
-				ValidateFunc: validation.StringInSlice([]string{"Enabled, Disabled"}, false),
+				ValidateFunc: validation.StringInSlice([]string{"Enabled", "Disabled"}, false),
 				Optional:     true,
 				ForceNew:     true,
 				Description:  "Whether to enable Gateway Mode. Valid values: `Enabled`, `Disabled`. Enables the host-bound IPs to act as a gateway for downstream traffic. Only elastic IPs are supported. Additional configuration on the host is required; when disabled, standard routing mode applies.Note: Gateway mode is not supported by default. Please contact Console Support if you need to enable this feature.",
