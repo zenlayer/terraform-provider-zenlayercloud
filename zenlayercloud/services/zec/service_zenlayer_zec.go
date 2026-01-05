@@ -607,7 +607,7 @@ func (s *ZecService) DescribeEipsByFilter(ctx context.Context, filter *EipFilter
 
 	var limit = 100
 	request.PageSize = &limit
-	request.PageNum =  common2.Integer(1)
+	request.PageNum = common2.Integer(1)
 	response, err := s.client.WithZec2Client().DescribeEips(request)
 
 	if err != nil {
@@ -771,7 +771,7 @@ func (s *ZecService) DescribeSubnetsByFilter(ctx context.Context, filter *Subnet
 			request := convertSubnetRequestFilter(filter)
 
 			request.PageNum = common2.Integer(value + 2)
-			request.PageSize =  common2.Integer(limit)
+			request.PageSize = common2.Integer(limit)
 
 			response, err := s.client.WithZec2Client().DescribeSubnets(request)
 			if err != nil {
@@ -1508,7 +1508,7 @@ func convertImageFilter(filter *ImageFilter) *zec2.DescribeImagesRequest {
 func convertSubnetRequestFilter(filter *SubnetFilter) *zec2.DescribeSubnetsRequest {
 	request := zec2.NewDescribeSubnetsRequest()
 	request.SubnetIds = filter.ids
-	if filter.RegionId!= "" {
+	if filter.RegionId != "" {
 		request.RegionId = common2.String(filter.RegionId)
 	}
 	return request
@@ -1658,7 +1658,7 @@ func convertVpcRequestFilter(filter *ZecVpcFilter) *zec2.DescribeVpcsRequest {
 	return request
 }
 
-func (s *ZecService) DescribeDhcpOptionsSetsByFilter(ctx context.Context, filter *DhcpOptionsSetFilter) (dhcpOptionsSets []*zec2.DhcpOptionsSet,err error) {
+func (s *ZecService) DescribeDhcpOptionsSetsByFilter(ctx context.Context, filter *DhcpOptionsSetFilter) (dhcpOptionsSets []*zec2.DhcpOptionsSet, err error) {
 	request := convertDhcpOptionsSetRequestFilter(filter)
 
 	var limit = 100
@@ -1725,9 +1725,11 @@ func convertDhcpOptionsSetRequestFilter(filter *DhcpOptionsSetFilter) *zec2.Desc
 
 	request := zec2.NewDescribeDhcpOptionsSetsRequest()
 	request.DhcpOptionsSetIds = filter.dhcpOptionsSetIds
+	if filter.resourceGroupId != "" {
+		request.ResourceGroupId = common2.String(filter.resourceGroupId)
+	}
 	return request
 }
-
 
 func (s *ZecService) DescribeDhcpOptionsSetById(ctx context.Context, dhcpOptionsSetId string) (*zec2.DhcpOptionsSet, error) {
 	request := zec2.NewDescribeDhcpOptionsSetsRequest()
