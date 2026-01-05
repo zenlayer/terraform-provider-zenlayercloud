@@ -603,6 +603,8 @@ func resourceZenlayerCloudVmInstanceCreate(ctx context.Context, d *schema.Resour
 		request.KeyId = v.(string)
 	}
 
+
+
 	request.InternetChargeType = d.Get("internet_charge_type").(string)
 	if request.InternetChargeType == VmInternetChargeTypeTrafficPackage && request.InstanceChargeType == VmChargeTypePrepaid {
 		if v, ok := d.GetOk("traffic_package_size"); ok {

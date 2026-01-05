@@ -27,6 +27,7 @@ data "zenlayercloud_bmc_instance_types" "default" {
 }
 
 # Get a centos image which also supported to install on given instance type
+
 data "zenlayercloud_bmc_images" "default" {
   catalog          = "centos"
   instance_type_id = data.zenlayercloud_bmc_instance_types.default.instance_types.0.id
@@ -39,6 +40,7 @@ resource "zenlayercloud_bmc_subnet" "default" {
 }
 
 # Create a web server
+
 resource "zenlayercloud_bmc_instance" "web" {
   availability_zone    = data.zenlayercloud_bmc_zones.default.zones.0.id
   image_id             = data.zenlayercloud_bmc_images.default.images.0.image_id
@@ -61,6 +63,7 @@ The following arguments are supported:
 * `instance_type_id` - (Required, String, ForceNew) The type of the instance.
 * `internet_charge_type` - (Required, String, ForceNew) Internet charge type of the instance, Valid values are `ByBandwidth`, `ByTrafficPackage`, `ByInstanceBandwidth95` and `ByClusterBandwidth95`. This value currently not support to change.
 * `force_delete` - (Optional, Bool) Indicate whether to force delete the instance. Default is `false`. If set true, the instance will be permanently deleted instead of being moved into the recycle bin.
+* `gateway_mode` - (Optional, String, ForceNew) Whether to enable Gateway Mode. Valid values: `Enabled`, `Disabled`. Enables the host-bound IPs to act as a gateway for downstream traffic. Only elastic IPs are supported. Additional configuration on the host is required; when disabled, standard routing mode applies.Note: Gateway mode is not supported by default. Please contact Console Support if you need to enable this feature.
 * `hostname` - (Optional, String) The hostname of the instance. The name should be a combination of 2 to 64 characters comprised of letters (case insensitive), numbers, hyphens (-) and Period (.), and the name must be start with letter. The default value is `Terraform-Instance`. Modifying will cause the instance reset.
 * `image_id` - (Optional, String) The image to use for the instance. Changing `image_id` will cause the instance reset.
 * `instance_charge_prepaid_period` - (Optional, Int) The tenancy (time unit is month) of the prepaid instance, NOTE: it only works when instance_charge_type is set to `PREPAID`.
