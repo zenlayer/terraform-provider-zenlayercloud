@@ -69,5 +69,6 @@ In addition to all arguments above, the following attributes are exported:
    * `resource_group_id` - The ID of resource group.
    * `resource_group_name` - The name of resource group.
    * `retention_days` - Retention days of the auto snapshot policy.
+   * `tags` - The available tags within this auto snapshot policy.
 
 
