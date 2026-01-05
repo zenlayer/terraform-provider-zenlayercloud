@@ -1056,8 +1056,10 @@ func resourceZenlayerCloudInstanceRead(ctx context.Context, d *schema.ResourceDa
 	_ = d.Set("instance_status", instance.InstanceStatus)
 	_ = d.Set("create_time", instance.CreateTime)
 	_ = d.Set("expired_time", instance.ExpiredTime)
-	if instance.EnableGatewayMode != nil {
-		_ = d.Set("gateway_mode", common.ToBool(instance.EnableGatewayMode) == true)
+	if common.ToBool(instance.EnableGatewayMode) {
+		_ = d.Set("gateway_mode", "Enabled")
+	} else {
+		_ = d.Set("gateway_mode", "Disabled")
 	}
 
 	if instance.InternetChargeType == BmcInternetChargeTypeTrafficPackage {
