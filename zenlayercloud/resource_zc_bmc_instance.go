@@ -5,7 +5,7 @@ Provides a BMC instance resource.
 
 ~> **NOTE:** At present, 'PREPAID' instance cannot be deleted. Executing terraform destroy will only cancel the subscription, and the instance will not be immediately destroyed. It will be automatically destroyed after expiration.
 
-Example Usage
+# Example Usage
 
 ```hcl
 
@@ -13,38 +13,41 @@ data "zenlayercloud_bmc_zones" "default" {
 
 }
 
-data "zenlayercloud_bmc_instance_types" "default" {
-  availability_zone = data.zenlayercloud_bmc_zones.default.zones.0.id
-}
+	data "zenlayercloud_bmc_instance_types" "default" {
+	  availability_zone = data.zenlayercloud_bmc_zones.default.zones.0.id
+	}
 
 # Get a centos image which also supported to install on given instance type
-data "zenlayercloud_bmc_images" "default" {
-  catalog          = "centos"
-  instance_type_id = data.zenlayercloud_bmc_instance_types.default.instance_types.0.id
-}
 
-resource "zenlayercloud_bmc_subnet" "default" {
-  availability_zone = data.zenlayercloud_bmc_zones.default.zones.0.id
-  name              = "test-subnet"
-  cidr_block        = "10.0.10.0/24"
-}
+	data "zenlayercloud_bmc_images" "default" {
+	  catalog          = "centos"
+	  instance_type_id = data.zenlayercloud_bmc_instance_types.default.instance_types.0.id
+	}
+
+	resource "zenlayercloud_bmc_subnet" "default" {
+	  availability_zone = data.zenlayercloud_bmc_zones.default.zones.0.id
+	  name              = "test-subnet"
+	  cidr_block        = "10.0.10.0/24"
+	}
 
 # Create a web server
-resource "zenlayercloud_bmc_instance" "web" {
-  availability_zone    = data.zenlayercloud_bmc_zones.default.zones.0.id
-  image_id             = data.zenlayercloud_bmc_images.default.images.0.image_id
-  internet_charge_type = "ByBandwidth"
-  instance_type_id     = data.zenlayercloud_bmc_instance_types.default.instance_types.0.id
-  password             = "Example~123"
-  instance_name        = "web"
-  subnet_id            =  zenlayercloud_bmc_subnet.default.id
-  tags = {
-    "group"  = "test"
-  }
-}
+
+	resource "zenlayercloud_bmc_instance" "web" {
+	  availability_zone    = data.zenlayercloud_bmc_zones.default.zones.0.id
+	  image_id             = data.zenlayercloud_bmc_images.default.images.0.image_id
+	  internet_charge_type = "ByBandwidth"
+	  instance_type_id     = data.zenlayercloud_bmc_instance_types.default.instance_types.0.id
+	  password             = "Example~123"
+	  instance_name        = "web"
+	  subnet_id            =  zenlayercloud_bmc_subnet.default.id
+	  tags = {
+		"group"  = "test"
+	  }
+	}
+
 ```
 
-Import
+# Import
 
 BMC instance can be imported using the id, e.g.
 
@@ -333,6 +336,13 @@ func resourceZenlayerCloudInstance() *schema.Resource {
 				Type:        schema.TypeMap,
 				Optional:    true,
 				Description: "The available tags within this instance.",
+			},
+			"gateway_mode": {
+				Type:         schema.TypeString,
+				ValidateFunc: validation.StringInSlice([]string{"Enabled, Disabled"}, false),
+				Optional:     true,
+				ForceNew:     true,
+				Description:  "Whether to enable Gateway Mode. Valid values: `Enabled`, `Disabled`. Enables the host-bound IPs to act as a gateway for downstream traffic. Only elastic IPs are supported. Additional configuration on the host is required; when disabled, standard routing mode applies.Note: Gateway mode is not supported by default. Please contact Console Support if you need to enable this feature.",
 			},
 		},
 	}
@@ -917,6 +927,10 @@ func resourceZenlayerCloudInstanceCreate(ctx context.Context, d *schema.Resource
 		}
 	}
 
+	if v, ok := d.GetOk("gateway_mode"); ok {
+		request.EnableGatewayMode = common.Bool(v.(string) == "Enabled")
+	}
+
 	instanceId := ""
 
 	err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
@@ -1042,6 +1056,11 @@ func resourceZenlayerCloudInstanceRead(ctx context.Context, d *schema.ResourceDa
 	_ = d.Set("instance_status", instance.InstanceStatus)
 	_ = d.Set("create_time", instance.CreateTime)
 	_ = d.Set("expired_time", instance.ExpiredTime)
+	if common.ToBool(instance.EnableGatewayMode) {
+		_ = d.Set("gateway_mode", "Enabled")
+	} else {
+		_ = d.Set("gateway_mode", "Disabled")
+	}
 
 	if instance.InternetChargeType == BmcInternetChargeTypeTrafficPackage {
 		_ = d.Set("traffic_package_size", *instance.TrafficPackageSize)
