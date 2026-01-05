@@ -104,14 +104,13 @@ func resourceZenlayerCloudZecDhcpOptionsSetAttachmentDelete(ctx context.Context,
 	zenlayerCloudClient := meta.(*connectivity.ZenlayerCloudClient)
 
 	// Parse the ID to get subnet_id and dhcp_options_set_id
-	subnetId, dhcpOptionsSetId, err := parseDhcpOptionsSetAttachmentId(d.Id())
+	subnetId, _, err := parseDhcpOptionsSetAttachmentId(d.Id())
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
 	request := zec.NewDetachDhcpOptionsSetFromSubnetRequest()
 	request.SubnetIds = []string{subnetId}
-	request.DhcpOptionsSetId = common.String(dhcpOptionsSetId)
 
 	err = resource.RetryContext(ctx, d.Timeout(schema.TimeoutDelete)-time.Minute, func() *resource.RetryError {
 		_, errRet := zenlayerCloudClient.WithZec2Client().DetachDhcpOptionsSetFromSubnet(request)

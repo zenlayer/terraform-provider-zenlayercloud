@@ -279,6 +279,11 @@ func dataSourceZenlayerCloudInstances() *schema.Resource {
 							Computed:    true,
 							Description: "The available tags within this instance.",
 						},
+						"gateway_mode": {
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "Whether to enable Gateway Mode. Valid values: `Enabled`, `Disabled`. Enables the host-bound IPs to act as a gateway for downstream traffic. Only elastic IPs are supported. Additional configuration on the host is required; when disabled, standard routing mode applies.Note: Gateway mode is not supported by default. Please contact Console Support if you need to enable this feature.",
+						},
 					},
 				},
 			},
@@ -358,6 +363,11 @@ func dataSourceZenlayerCloudInstancesRead(ctx context.Context, d *schema.Resourc
 			"private_ipv4_addresses":     instance.PrivateIpAddresses,
 			"public_ipv4_addresses":      instance.PublicIpAddresses,
 			"key_id":                     instance.KeyId,
+		}
+		if common.ToBool(instance.EnableGatewayMode) {
+			mapping["gateway_mode"] = true
+		} else {
+			mapping["gateway_mode"] = false
 		}
 
 		// 处理 tags

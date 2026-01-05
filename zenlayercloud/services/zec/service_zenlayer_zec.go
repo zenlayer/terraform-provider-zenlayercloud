@@ -1095,13 +1095,13 @@ func (s *ZecService) SnapshotStateRefreshFunc(ctx context.Context, snapshotId st
 	}
 }
 
-func (s *ZecService) DescribeAutoSnapshotPolicies(ctx context.Context, filter *ZecAutoSnapshotPolicyFilter) (policies []*zec.AutoSnapshotPolicy, err error) {
+func (s *ZecService) DescribeAutoSnapshotPolicies(ctx context.Context, filter *ZecAutoSnapshotPolicyFilter) (policies []*zec2.AutoSnapshotPolicy, err error) {
 
 	request := convertSnapshotPolicyFilter(filter)
 	var limit = 100
 	request.PageSize = &limit
 	request.PageNum = common2.Integer(1)
-	response, err := s.client.WithZecClient().DescribeAutoSnapshotPolicies(request)
+	response, err := s.client.WithZec2Client().DescribeAutoSnapshotPolicies(request)
 
 	if err != nil {
 		log.Printf("[CRITAL] Api[%s] fail, request body [%s], error[%s]\n",
@@ -1132,7 +1132,7 @@ func (s *ZecService) DescribeAutoSnapshotPolicies(ctx context.Context, filter *Z
 			request.PageNum = common2.Integer(value + 2)
 			request.PageSize = &limit
 
-			response, err := s.client.WithZecClient().DescribeAutoSnapshotPolicies(request)
+			response, err := s.client.WithZec2Client().DescribeAutoSnapshotPolicies(request)
 			if err != nil {
 				log.Printf("[CRITAL] Api[%s] fail, request body [%s], error[%s]\n",
 					request.GetAction(), common.ToJsonString(request), err.Error())
@@ -1152,7 +1152,7 @@ func (s *ZecService) DescribeAutoSnapshotPolicies(ctx context.Context, filter *Z
 
 	log.Printf("[DEBUG] DescribeAutoSnapshotPolicies request finished")
 	for _, v := range imageSetList {
-		policies = append(policies, v.([]*zec.AutoSnapshotPolicy)...)
+		policies = append(policies, v.([]*zec2.AutoSnapshotPolicy)...)
 	}
 	log.Printf("[DEBUG] transfer snapshot policies finished")
 	return
@@ -1447,9 +1447,9 @@ func convertCidrRequestFilter(filter *CidrFilter) *zec2.DescribeCidrsRequest {
 	return request
 }
 
-func convertSnapshotPolicyFilter(filter *ZecAutoSnapshotPolicyFilter) *zec.DescribeAutoSnapshotPoliciesRequest {
+func convertSnapshotPolicyFilter(filter *ZecAutoSnapshotPolicyFilter) *zec2.DescribeAutoSnapshotPoliciesRequest {
 
-	request := zec.NewDescribeAutoSnapshotPoliciesRequest()
+	request := zec2.NewDescribeAutoSnapshotPoliciesRequest()
 	if len(filter.AutoSnapshotPolicyIds) > 0 {
 		request.AutoSnapshotPolicyIds = filter.AutoSnapshotPolicyIds
 	}
