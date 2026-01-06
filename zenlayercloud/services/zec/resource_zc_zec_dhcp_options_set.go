@@ -50,7 +50,6 @@ func ResourceZenlayerCloudZecDhcpOptionsSet() *schema.Resource {
 			"lease_time": {
 				Type:        schema.TypeInt,
 				Optional:    true,
-				Default:     24,
 				Computed:    true,
 				Description: "IPv4 lease time, measured in hour. Value range: 24h~1176h, 87600h(3650d)~175200h(7300d), default value: 24.",
 				//ValidateFunc: validation.StringMatch(regexp.MustCompile(`^(1d|(?:[2-9]d|(?:[1-3][0-9]|4[0-9])d))$|^(?:(?:36[5-9][0-9]|[37][0-9]{3}|4[0-9]{3}|5[0-9]{3}|6[0-9]{3}|7[0-2][0-9]{2}|7300)d)$`), "leaseTime must be between 1d~49d or 3650d~7300d"),
@@ -58,7 +57,6 @@ func ResourceZenlayerCloudZecDhcpOptionsSet() *schema.Resource {
 			"ipv6_lease_time": {
 				Type:        schema.TypeInt,
 				Optional:    true,
-				Default:     24,
 				Computed:    true,
 				Description: "IPv6 lease time, measured in hour. Value range: 24h~1176h, 87600h(3650d)~175200h(7300d). default value: 24.",
 				//ValidateFunc: validation.StringMatch(regexp.MustCompile(`^(1d|(?:[2-9]d|(?:[1-3][0-9]|4[0-9])d))$|^(?:(?:36[5-9][0-9]|[37][0-9]{3}|4[0-9]{3}|5[0-9]{3}|6[0-9]{3}|7[0-2][0-9]{2}|7300)d)$`), "ipv6LeaseTime must be between 1d~49d or 3650d~7300d"),
