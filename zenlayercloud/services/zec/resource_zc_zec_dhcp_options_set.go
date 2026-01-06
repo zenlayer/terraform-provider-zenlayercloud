@@ -64,6 +64,7 @@ func ResourceZenlayerCloudZecDhcpOptionsSet() *schema.Resource {
 			"resource_group_id": {
 				Type:        schema.TypeString,
 				Optional:    true,
+				Computed:    true,
 				Description: "ID of the resource group to which the DHCP options set belongs.",
 			},
 			"tags": {
