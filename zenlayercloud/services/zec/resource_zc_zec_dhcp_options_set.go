@@ -43,7 +43,6 @@ func ResourceZenlayerCloudZecDhcpOptionsSet() *schema.Resource {
 			"ipv6_domain_name_servers": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Computed:    true,
 				Description: "IPv6 DNS server IP, up to 4 IPv6 addresses.",
 				//ValidateFunc: validation.StringMatch(regexp.MustCompile(`^$|^(([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4})(,(([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4})){0,3}$`), "ipv6DomainNameServers must be up to 4 IPv6 addresses separated by commas"),
 			},
@@ -76,7 +75,6 @@ func ResourceZenlayerCloudZecDhcpOptionsSet() *schema.Resource {
 			"description": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Computed:    true,
 				Description: "Description of the DHCP options set.",
 			},
 			"create_time": {
