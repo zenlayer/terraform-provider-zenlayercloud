@@ -43,6 +43,7 @@ func ResourceZenlayerCloudZecDhcpOptionsSet() *schema.Resource {
 			"ipv6_domain_name_servers": {
 				Type:        schema.TypeString,
 				Optional:    true,
+				Computed:    true,
 				Description: "IPv6 DNS server IP, up to 4 IPv6 addresses.",
 				//ValidateFunc: validation.StringMatch(regexp.MustCompile(`^$|^(([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4})(,(([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4})){0,3}$`), "ipv6DomainNameServers must be up to 4 IPv6 addresses separated by commas"),
 			},
@@ -50,14 +51,16 @@ func ResourceZenlayerCloudZecDhcpOptionsSet() *schema.Resource {
 				Type:        schema.TypeInt,
 				Optional:    true,
 				Default:     24,
-				Description: "IPv4 lease time, default unit is hour. Value range: 24h~1176h, 87600h(3650d)~175200h(7300d), default value: 24.",
+				Computed:    true,
+				Description: "IPv4 lease time, measured in hour. Value range: 24h~1176h, 87600h(3650d)~175200h(7300d), default value: 24.",
 				//ValidateFunc: validation.StringMatch(regexp.MustCompile(`^(1d|(?:[2-9]d|(?:[1-3][0-9]|4[0-9])d))$|^(?:(?:36[5-9][0-9]|[37][0-9]{3}|4[0-9]{3}|5[0-9]{3}|6[0-9]{3}|7[0-2][0-9]{2}|7300)d)$`), "leaseTime must be between 1d~49d or 3650d~7300d"),
 			},
 			"ipv6_lease_time": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				RequiredWith: []string{"ipv6_domain_name_servers"},
-				Description:  "IPv6 lease time, default unit is hour. Value range: 24h~1176h, 87600h(3650d)~175200h(7300d).",
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Default:     24,
+				Computed:    true,
+				Description: "IPv6 lease time, measured in hour. Value range: 24h~1176h, 87600h(3650d)~175200h(7300d). default value: 24.",
 				//ValidateFunc: validation.StringMatch(regexp.MustCompile(`^(1d|(?:[2-9]d|(?:[1-3][0-9]|4[0-9])d))$|^(?:(?:36[5-9][0-9]|[37][0-9]{3}|4[0-9]{3}|5[0-9]{3}|6[0-9]{3}|7[0-2][0-9]{2}|7300)d)$`), "ipv6LeaseTime must be between 1d~49d or 3650d~7300d"),
 			},
 			"resource_group_id": {
@@ -71,10 +74,10 @@ func ResourceZenlayerCloudZecDhcpOptionsSet() *schema.Resource {
 				Optional:    true,
 				Description: "Tags of the DHCP options set.",
 			},
-
 			"description": {
 				Type:        schema.TypeString,
 				Optional:    true,
+				Computed:    true,
 				Description: "Description of the DHCP options set.",
 			},
 			"create_time": {
