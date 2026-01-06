@@ -53,6 +53,7 @@ func ResourceZenlayerCloudZecSnapshotPolicy() *schema.Resource {
 			"retention_days": {
 				Type:         schema.TypeInt,
 				Optional:     true,
+				Computed:     true,
 				ValidateFunc: validation.Any(validation.IntBetween(1, 65535), validation.IntInSlice([]int{-1})),
 				Description:  "The retention days of the auto snapshot policy. Valid values: `1` to `65535` or `-1` for no expired. Default is `-1`.",
 			},
@@ -178,7 +179,6 @@ func resourceZenlayerCloudZecSnapshotPolicyUpdate(ctx context.Context, d *schema
 			return diag.FromErr(err)
 		}
 	}
-
 
 	if d.HasChange("tags") {
 		zrmService := zrm.NewZrmService(meta.(*connectivity.ZenlayerCloudClient))
