@@ -12,6 +12,9 @@ resource "zenlayercloud_zec_disk" "test" {
   disk_name         = "Disk-20G"
   disk_size         = 60
   disk_category     = "Standard NVMe SSD"
+  tags = {
+    "group"  = "test"
+  }
 }
 ```
 

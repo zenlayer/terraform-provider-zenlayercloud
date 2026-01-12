@@ -79,6 +79,7 @@ In addition to all arguments above, the following attributes are exported:
    * `resource_group_id` - The ID of resource group grouped load balancer instance to be queried.
    * `resource_group_name` - The name of resource group that the load balancer instance belongs to.
    * `status` - Current status of the load balancer instance.
+   * `tags` - The available tags within this load balancer instance.
    * `vpc_id` - VPC ID to which the load balance belongs.
    * `zlb_id` - ID of the load balancer instances.
    * `zlb_name` - The name of the load balancer instance.

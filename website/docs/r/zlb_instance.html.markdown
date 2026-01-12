@@ -4,12 +4,14 @@ layout: "zenlayercloud"
 page_title: "ZenlayerCloud: zenlayercloud_zlb_instance"
 sidebar_current: "docs-zenlayercloud-resource-zlb_instance"
 description: |-
-  Provide a resource to create a ZLB instance.
+  Provide a resource to create a Load balancer instance.
 ---
 
 # zenlayercloud_zlb_instance
 
-Provide a resource to create a ZLB instance.
+Provide a resource to create a Load balancer instance.
+
+~> **NOTE:** When creating a load balancer instance, ensure that there is at least a subnet is IPv4 stack type under the VPC and that there are at least 2 available IP addresses for allocation within the subnet.
 
 ## Example Usage
 
@@ -28,6 +30,9 @@ resource "zenlayercloud_zlb_instance" "zlb" {
   region_id = var.region
   vpc_id    = zenlayercloud_zec_vpc.foo.id
   zlb_name  = "example-5"
+  tags = {
+    "test" = "test-value"
+  }
 }
 ```
 
@@ -38,6 +43,7 @@ The following arguments are supported:
 * `region_id` - (Required, String, ForceNew) The ID of region that the load balancer instance locates at.
 * `vpc_id` - (Required, String, ForceNew) The ID of VPC that the load balancer instance belongs to.
 * `resource_group_id` - (Optional, String) The resource group id the load balancer belongs to, default to Default Resource Group.
+* `tags` - (Optional, Map) The available tags within this load balancer instance.
 * `zlb_name` - (Optional, String) The name of the load balancer instance.
 
 ## Attributes Reference

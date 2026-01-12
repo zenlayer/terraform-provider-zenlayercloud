@@ -21,6 +21,9 @@ resource "zenlayercloud_zec_subnet" "ipv4" {
   region_id  = var.region
   name       = "test-subnet"
   cidr_block = "10.0.0.0/24"
+  tags = {
+    "group"  = "test"
+  }
 }
 
 ```

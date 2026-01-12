@@ -75,8 +75,8 @@ func ResourceZenlayerCloudGlobalVpcRoute() *schema.Resource {
 				Type:         schema.TypeInt,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.IntBetween(0, 65535),
-				Description:  "Priority of the route entry. Valid value: from `0` to `65535`.",
+				ValidateFunc: validation.IntBetween(0, 65534),
+				Description:  "Priority of the route entry. Valid value: from `0` to `65534`.",
 			},
 			"next_hop_id": {
 				Type:        schema.TypeString,

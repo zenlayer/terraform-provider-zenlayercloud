@@ -21,6 +21,9 @@ data "zenlayercloud_bmc_vpc_regions" "default_region" {
 resource "zenlayercloud_bmc_vpc" "foo" {
   region     = data.zenlayercloud_bmc_vpc_regions.default_region.regions.0.id
   cidr_block = "10.0.0.0/26"
+  tags = {
+    "group" = "test"
+  }
 }
 ```
 
@@ -32,6 +35,7 @@ The following arguments are supported:
 * `region` - (Required, String, ForceNew) The ID of region that the vpc locates at.
 * `name` - (Optional, String) The name of the vpc.
 * `resource_group_id` - (Optional, String) The resource group id the vpc belongs to, default to ID of Default Resource Group.
+* `tags` - (Optional, Map) The tags of the vpc.
 
 ## Attributes Reference
 

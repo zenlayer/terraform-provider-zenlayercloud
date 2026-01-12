@@ -2,14 +2,15 @@ package zec
 
 import (
 	"context"
+	"time"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	common2 "github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/common"
 	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/connectivity"
 	"github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/common"
-	zec2 "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/zec20240401"
-	"time"
+	zec2 "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/zec20250901"
 )
 
 func ResourceZenlayerCloudZecSnapshotPolicyAttachment() *schema.Resource {
@@ -50,7 +51,7 @@ func resourceZenlayerCloudZecSnapshotPolicyAttachmentCreate(ctx context.Context,
 	request.DiskIds = []string{diskId}
 
 	err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutCreate)-time.Minute, func() *resource.RetryError {
-		_, err := zecService.client.WithZecClient().ApplyAutoSnapshotPolicy(request)
+		_, err := zecService.client.WithZec2Client().ApplyAutoSnapshotPolicy(request)
 		if err != nil {
 			return common2.RetryError(ctx, err, common2.InternalServerError, common.NetworkError)
 		}
@@ -132,7 +133,7 @@ func resourceZenlayerCloudZecSnapshotPolicyAttachmentDelete(ctx context.Context,
 	request.DiskIds = []string{diskId}
 
 	err = resource.RetryContext(ctx, d.Timeout(schema.TimeoutDelete)-time.Minute, func() *resource.RetryError {
-		_, err := zecService.client.WithZecClient().CancelAutoSnapshotPolicy(request)
+		_, err := zecService.client.WithZec2Client().CancelAutoSnapshotPolicy(request)
 		if err != nil {
 			ee, ok := err.(*common.ZenlayerCloudSdkError)
 			if !ok {

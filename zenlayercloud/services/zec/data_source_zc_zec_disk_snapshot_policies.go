@@ -7,7 +7,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	common2 "github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/common"
 	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/connectivity"
-	zec "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/zec20240401"
+	zec "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/zec20250901"
 	"regexp"
 	"time"
 )
@@ -108,6 +108,12 @@ func DataSourceZenlayerCloudZecAutoSnapshotPolicies() *schema.Resource {
 							Elem:        &schema.Schema{Type: schema.TypeString},
 							Description: "List of disk IDs associated with this auto snapshot policy.",
 						},
+						// tags
+						"tags": {
+							Type:        schema.TypeMap,
+							Computed:    true,
+							Description: "The available tags within this auto snapshot policy.",
+						},
 					},
 				},
 			},
@@ -183,6 +189,12 @@ func dataSourceZenlayerCloudZecAutoSnapshotPoliciesRead(ctx context.Context, d *
 			"resource_group_name": policy.ResourceGroup.ResourceGroupName,
 			"disk_ids":         policy.DiskIdSet,
 		}
+
+		tagMap, errRet := common2.TagsToMap(policy.Tags)
+		if errRet != nil {
+			return diag.FromErr(errRet)
+		}
+		mapping["tags"] = tagMap
 		policyList = append(policyList, mapping)
 		ids = append(ids, *policy.AutoSnapshotPolicyId)
 	}

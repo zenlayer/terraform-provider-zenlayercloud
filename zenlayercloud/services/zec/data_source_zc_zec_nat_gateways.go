@@ -2,14 +2,15 @@ package zec
 
 import (
 	"context"
+	"regexp"
+	"time"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	common2 "github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/common"
 	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/connectivity"
 	zec "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/zec20250901"
-	"regexp"
-	"time"
 )
 
 func DataSourceZenlayerCloudZecNatGateway() *schema.Resource {
@@ -111,6 +112,11 @@ func DataSourceZenlayerCloudZecNatGateway() *schema.Resource {
 							Type:        schema.TypeBool,
 							Computed:    true,
 							Description: "Indicates whether ICMP reply is enabled.",
+						},
+						"tags": {
+							Type:        schema.TypeMap,
+							Computed:    true,
+							Description: "The available tags within this NAT gateway.",
 						},
 						"status": {
 							Type:        schema.TypeString,
@@ -216,10 +222,15 @@ func dataSourceZenlayerCloudZecNatGatewayRead(ctx context.Context, d *schema.Res
 			"resource_group_name": natGateway.ResourceGroupName,
 			"icmp_reply_enabled":  natGateway.IcmpReplyEnabled,
 			"security_group_id":   natGateway.SecurityGroupId,
-			"eip_ids":         natGateway.EipIds,
-			"zbg_id":         natGateway.ZbgId,
-
+			"eip_ids":             natGateway.EipIds,
+			"zbg_id":              natGateway.ZbgId,
 		}
+
+		tagMap, errRet := common2.TagsToMap(natGateway.Tags)
+		if errRet != nil {
+			return diag.FromErr(errRet)
+		}
+		mapping["tags"] = tagMap
 		nats = append(nats, mapping)
 		ids = append(ids, *natGateway.NatGatewayId)
 	}

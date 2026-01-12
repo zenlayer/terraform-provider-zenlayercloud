@@ -102,6 +102,11 @@ func DataSourceZenlayerCloudZlbInstances() *schema.Resource {
 							Computed:    true,
 							Description: "Current status of the load balancer instance.",
 						},
+						"tags": {
+							Type:        schema.TypeMap,
+							Computed:    true,
+							Description: "The available tags within this load balancer instance.",
+						},
 						"create_time": {
 							Type:        schema.TypeString,
 							Computed:    true,
@@ -165,25 +170,31 @@ func dataSourceZenlayerCloudZlbInstancesRead(ctx context.Context, d *schema.Reso
 	}
 	zlbList := make([]map[string]interface{}, 0, len(zlbs))
 	ids := make([]string, 0, len(zlbs))
-	for _, zlb := range zlbs {
-		if nameRegex != nil && !nameRegex.MatchString(*zlb.LoadBalancerName) {
+	for _, balancer := range zlbs {
+		if nameRegex != nil && !nameRegex.MatchString(*balancer.LoadBalancerName) {
 			continue
 		}
 		mapping := map[string]interface{}{
-			"zlb_id":               zlb.LoadBalancerId,
-			"zlb_name":             zlb.LoadBalancerName,
-			"region_id":            zlb.RegionId,
-			"vpc_id":               zlb.VpcId,
-			"resource_group_id":    zlb.ResourceGroup.ResourceGroupId,
-			"resource_group_name":  zlb.ResourceGroup.ResourceGroupName,
-			"private_ip_addresses": zlb.PrivateIpAddress,
-			"public_ip_addresses":  zlb.PublicIpAddress,
-			"status":               zlb.Status,
-			"create_time":          zlb.CreateTime,
+			"zlb_id":               balancer.LoadBalancerId,
+			"zlb_name":             balancer.LoadBalancerName,
+			"region_id":            balancer.RegionId,
+			"vpc_id":               balancer.VpcId,
+			"resource_group_id":    balancer.ResourceGroup.ResourceGroupId,
+			"resource_group_name":  balancer.ResourceGroup.ResourceGroupName,
+			"private_ip_addresses": balancer.PrivateIpAddress,
+			"public_ip_addresses":  balancer.PublicIpAddress,
+			"status":               balancer.Status,
+			"create_time":          balancer.CreateTime,
 		}
 
+		tagMap, errRet := common2.TagsToMap(balancer.Tags)
+		if errRet != nil {
+			return diag.FromErr(errRet)
+		}
+		mapping["tags"] = tagMap
+
 		zlbList = append(zlbList, mapping)
-		ids = append(ids, *zlb.LoadBalancerId)
+		ids = append(ids, *balancer.LoadBalancerId)
 	}
 
 	d.SetId(common2.DataResourceIdHash(ids))

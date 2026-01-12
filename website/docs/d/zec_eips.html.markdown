@@ -101,5 +101,6 @@ In addition to all arguments above, the following attributes are exported:
    * `resource_group_id` - Resource group ID.
    * `resource_group_name` - The Name of resource group.
    * `status` - Status of the elastic IP.
+   * `tags` - The available tags within this elastic IP.
 
 

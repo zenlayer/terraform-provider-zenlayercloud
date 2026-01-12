@@ -15,13 +15,14 @@ package zenlayercloud
 
 import (
 	"context"
+	"strconv"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	common2 "github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/common"
 	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/connectivity"
 	bmc "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/bmc20221120"
 	"github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/common"
-	"strconv"
 )
 
 func dataSourceZenlayerCloudInstances() *schema.Resource {
@@ -273,6 +274,16 @@ func dataSourceZenlayerCloudInstances() *schema.Resource {
 							Computed:    true,
 							Description: "Expired time of the instance.",
 						},
+						"tags": {
+							Type:        schema.TypeMap,
+							Computed:    true,
+							Description: "The available tags within this instance.",
+						},
+						"gateway_mode": {
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "Whether to enable Gateway Mode. Valid values: `Enabled`, `Disabled`. Enables the host-bound IPs to act as a gateway for downstream traffic. Only elastic IPs are supported. Additional configuration on the host is required; when disabled, standard routing mode applies.Note: Gateway mode is not supported by default. Please contact Console Support if you need to enable this feature.",
+						},
 					},
 				},
 			},
@@ -353,6 +364,18 @@ func dataSourceZenlayerCloudInstancesRead(ctx context.Context, d *schema.Resourc
 			"public_ipv4_addresses":      instance.PublicIpAddresses,
 			"key_id":                     instance.KeyId,
 		}
+		if common.ToBool(instance.EnableGatewayMode) {
+			mapping["gateway_mode"] = true
+		} else {
+			mapping["gateway_mode"] = false
+		}
+
+		// 处理 tags
+		tagMap, errRet := common2.TagsToMap(instance.Tags)
+		if errRet != nil {
+			return diag.FromErr(errRet)
+		}
+		mapping["tags"] = tagMap
 		if instance.InstanceChargeType == BmcChargeTypePrepaid {
 			mapping["instance_charge_prepaid_period"] = instance.Period
 		}

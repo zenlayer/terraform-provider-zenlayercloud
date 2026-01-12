@@ -38,6 +38,9 @@ resource "zenlayercloud_zvm_instance" "web" {
   instance_name        = "web"
   subnet_id            = zenlayercloud_zvm_subnet.default.id
   system_disk_size     = 100
+  tags = {
+    "group"  = "web"
+  }
 }
 ```
 
@@ -54,6 +57,8 @@ package zenlayercloud
 import (
 	"context"
 	"fmt"
+	"time"
+
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
@@ -62,9 +67,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	common2 "github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/common"
 	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/connectivity"
+	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/services/zrm"
 	"github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/common"
 	vm "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/vm20230313"
-	"time"
 )
 
 func resourceZenlayerCloudVmInstance() *schema.Resource {
@@ -218,7 +223,12 @@ func resourceZenlayerCloudVmInstance() *schema.Resource {
 			"expired_time": {
 				Type:        schema.TypeString,
 				Computed:    true,
-				Description: "Expired time of the instance.",
+				Description: "Expire time of the instance.",
+			},
+			"tags": {
+				Type:        schema.TypeMap,
+				Optional:    true,
+				Description: "Tags of the instance.",
 			},
 		},
 	}
@@ -494,6 +504,16 @@ func resourceZenlayerCloudVmInstanceUpdate(ctx context.Context, d *schema.Resour
 			return diag.FromErr(err)
 		}
 	}
+
+	// Handle tags change
+	if d.HasChange("tags") {
+		zrmService := zrm.NewZrmService(meta.(*connectivity.ZenlayerCloudClient))
+		err := zrmService.ModifyResourceTags(ctx, d, instanceId)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+	}
+
 	d.Partial(false)
 
 	return resourceZenlayerCloudVmInstanceRead(ctx, d, meta)
@@ -583,6 +603,8 @@ func resourceZenlayerCloudVmInstanceCreate(ctx context.Context, d *schema.Resour
 		request.KeyId = v.(string)
 	}
 
+
+
 	request.InternetChargeType = d.Get("internet_charge_type").(string)
 	if request.InternetChargeType == VmInternetChargeTypeTrafficPackage && request.InstanceChargeType == VmChargeTypePrepaid {
 		if v, ok := d.GetOk("traffic_package_size"); ok {
@@ -607,6 +629,19 @@ func resourceZenlayerCloudVmInstanceCreate(ctx context.Context, d *schema.Resour
 	if v, ok := d.GetOk("system_disk_size"); ok {
 		request.SystemDisk = &vm.SystemDisk{}
 		request.SystemDisk.DiskSize = v.(int)
+	}
+
+	// Set tags
+	if tags := common2.GetTags(d, "tags"); len(tags) > 0 {
+		request.Tags = &vm.TagAssociation{}
+		for k, v := range tags {
+			tmpKey := k
+			tmpValue := v
+			request.Tags.Tags = append(request.Tags.Tags, &vm.Tag{
+				Key:   &tmpKey,
+				Value: &tmpValue,
+			})
+		}
 	}
 
 	instanceId := ""
@@ -733,6 +768,13 @@ func resourceZenlayerCloudVmInstanceRead(ctx context.Context, d *schema.Resource
 	}
 	_ = d.Set("create_time", instance.CreateTime)
 	_ = d.Set("expired_time", instance.ExpiredTime)
+
+	// Set tags
+	tags, err := common2.TagsToMap(instance.Tags)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	_ = d.Set("tags", tags)
 
 	return diags
 

@@ -55,6 +55,9 @@ resource "zenlayercloud_zec_nat_gateway" "foo" {
   vpc_id            = zenlayercloud_zec_vpc.vpc.id
   security_group_id = zenlayercloud_zec_security_group.sg.id
   subnet_ids        = [zenlayercloud_zec_subnet.subnet.id]
+  tags = {
+    "group" = "test"
+  }
 }
 ```
 
@@ -71,6 +74,7 @@ The following arguments are supported:
 * `name` - (Optional, String) The name of the NAT gateway, the default value is 'Terraform-Subnet'.
 * `resource_group_id` - (Optional, String) The resource group id the NAT gateway belongs to, default to ID of Default Resource Group.
 * `subnet_ids` - (Optional, Set: [`String`]) IDs of the subnets to be associated. The subnets must belong to the specified VPC.
+* `tags` - (Optional, Map) The available tags within this NAT gateway.
 
 ## Attributes Reference
 

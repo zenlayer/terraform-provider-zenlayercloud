@@ -3,18 +3,20 @@ package zec
 import (
 	"context"
 	"fmt"
+	"time"
+
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	common2 "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/common"
 	user "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/user20240529"
-	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/common"
 	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/connectivity"
+	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/services/zrm"
 	zec "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/zec20250901"
 )
 
@@ -38,17 +40,18 @@ func ResourceZenlayerCloudZecCidr() *schema.Resource {
 				Description: "The region ID that the public CIDR block locates at.",
 			},
 			"name": {
-				Type:        schema.TypeString,
-				Optional:    true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
 				ValidateFunc: validation.StringLenBetween(2, 63),
-				Description: "Name of the public CIDR block.The name should start and end with a number or a letter, containing 2 to 63 characters. Only letters, numbers, -, slash(/) and periods (.) are supported.",
+				Description:  "Name of the public CIDR block.The name should start and end with a number or a letter, containing 2 to 63 characters. Only letters, numbers, -, slash(/) and periods (.) are supported.",
 			},
 			"network_type": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ForceNew:      true,
-				ValidateFunc:  validation.StringInSlice([]string{"BGPLine", "CN2Line", "LocalLine", "ChinaTelecom", "ChinaUnicom", "ChinaMobile", "Cogent"}, false),
-				Description:   "Network types of public CIDR block. Valid values: `BGPLine`, `CN2Line`, `LocalLine`, `ChinaTelecom`, `ChinaUnicom`, `ChinaMobile`, `Cogent`.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice([]string{"BGPLine", "CN2Line", "LocalLine", "ChinaTelecom", "ChinaUnicom", "ChinaMobile", "Cogent"}, false),
+				Description:  "Network types of public CIDR block. Valid values: `BGPLine`, `CN2Line`, `LocalLine`, `ChinaTelecom`, `ChinaUnicom`, `ChinaMobile`, `Cogent`.",
 			},
 			"netmask": {
 				Type:         schema.TypeInt,
@@ -67,6 +70,11 @@ func ResourceZenlayerCloudZecCidr() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "The Name of resource group.",
+			},
+			"tags": {
+				Type:        schema.TypeMap,
+				Optional:    true,
+				Description: "The available tags within this CIDR block.",
 			},
 			"cidr_block_address": {
 				Type:        schema.TypeString,
@@ -107,6 +115,18 @@ func resourceZenlayerCloudZecCidrCreate(ctx context.Context, d *schema.ResourceD
 
 	if v, ok := d.GetOk("resource_group_id"); ok {
 		request.ResourceGroupId = common2.String(v.(string))
+	}
+
+	if tags := common.GetTags(d, "tags"); len(tags) > 0 {
+		request.Tags = &zec.TagAssociation{}
+		for k, v := range tags {
+			tmpKey := k
+			tmpValue := v
+			request.Tags.Tags = append(request.Tags.Tags, &zec.Tag{
+				Key:   &tmpKey,
+				Value: &tmpValue,
+			})
+		}
 	}
 
 	err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
@@ -190,6 +210,12 @@ func resourceZenlayerCloudZecCidrRead(ctx context.Context, d *schema.ResourceDat
 	_ = d.Set("netmask", cidrInfo.Netmask)
 	_ = d.Set("create_time", cidrInfo.CreateTime)
 
+	toMap, errRet := common.TagsToMap(cidrInfo.Tags)
+	if errRet != nil {
+		return diag.FromErr(errRet)
+	}
+	_ = d.Set("tags", toMap)
+
 	return nil
 }
 
@@ -226,6 +252,7 @@ func resourceZenlayerCloudZecCidrUpdate(ctx context.Context, d *schema.ResourceD
 			if err != nil {
 				return common.RetryError(ctx, err, common.InternalServerError, common2.NetworkError)
 			}
+
 			return nil
 		})
 		if err != nil {
@@ -233,6 +260,13 @@ func resourceZenlayerCloudZecCidrUpdate(ctx context.Context, d *schema.ResourceD
 		}
 	}
 
+	if d.HasChange("tags") {
+		zrmService := zrm.NewZrmService(meta.(*connectivity.ZenlayerCloudClient))
+		err := zrmService.ModifyResourceTags(ctx, d, cidrId)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+	}
 	d.Partial(false)
 
 	return resourceZenlayerCloudZecCidrRead(ctx, d, meta)

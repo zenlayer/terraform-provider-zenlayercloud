@@ -9,11 +9,14 @@ variable "region" {
 }
 
 resource "zenlayercloud_zec_eip" "eip" {
-	region_id = var.region
-	name = "example"
-	ip_network_type = "BGPLine"
-	internet_charge_type = "ByBandwidth"
-	bandwidth = 10
+  region_id            = var.region
+  name                 = "example"
+  ip_network_type      = "BGPLine"
+  internet_charge_type = "ByBandwidth"
+  bandwidth            = 10
+  tags = {
+    "group"  = "test"
+  }
 }
 ```
 

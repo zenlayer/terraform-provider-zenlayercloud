@@ -2,14 +2,15 @@ package zec
 
 import (
 	"context"
+	"time"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	common2 "github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/common"
 	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/connectivity"
 	"github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/common"
-	zec "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/zec20240401"
-	"time"
+	zec "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/zec20250901"
 )
 
 func DataSourceZenlayerCloudZecVpcs() *schema.Resource {
@@ -100,6 +101,11 @@ func DataSourceZenlayerCloudZecVpcs() *schema.Resource {
 							Computed:    true,
 							Description: "Creation time of the VPC.",
 						},
+						"tags": {
+							Type:        schema.TypeMap,
+							Computed:    true,
+							Description: "The available tags within this VPC.",
+						},
 					},
 				},
 			},
@@ -155,14 +161,20 @@ func dataSourceZenlayerCloudZecGlobalVpcsRead(ctx context.Context, d *schema.Res
 			"cidr_block":          vpc.CidrBlock,
 			"ipv6_cidr_block":     vpc.Ipv6CidrBlock,
 			"is_default":          vpc.IsDefault,
-			"enable_ipv6":         vpc.Ipv6CidrBlock != "",
+			"enable_ipv6":         common.ToString(vpc.Ipv6CidrBlock) != "",
 			"resource_group_id":   vpc.ResourceGroup.ResourceGroupId,
 			"resource_group_name": vpc.ResourceGroup.ResourceGroupName,
 			"security_group_id":   vpc.SecurityGroupId,
 			"create_time":         vpc.CreateTime,
 		}
+
+		tagMap, errRet := common2.TagsToMap(vpc.Tags)
+		if errRet != nil {
+			return diag.FromErr(errRet)
+		}
+		mapping["tags"] = tagMap
 		vpcList = append(vpcList, mapping)
-		ids = append(ids, vpc.VpcId)
+		ids = append(ids, *vpc.VpcId)
 	}
 
 	d.SetId(common2.DataResourceIdHash(ids))

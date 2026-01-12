@@ -181,6 +181,11 @@ func DataSourceZenlayerCloudZecInstances() *schema.Resource {
 								},
 							},
 						},
+						"tags": {
+							Type:        schema.TypeMap,
+							Computed:    true,
+							Description: "The available tags within this ZEC instance.",
+						},
 						"instance_status": {
 							Type:        schema.TypeString,
 							Computed:    true,
@@ -297,6 +302,12 @@ func dataSourceZenlayerCloudZecInstancesRead(ctx context.Context, d *schema.Reso
 
 			dataDisks = append(dataDisks, dataDisk)
 		}
+
+		tagMap, errRet := common2.TagsToMap(instance.Tags)
+		if errRet != nil {
+			return diag.FromErr(errRet)
+		}
+		mapping["tags"] = tagMap
 
 		mapping["data_disks"] = dataDisks
 

@@ -91,5 +91,6 @@ In addition to all arguments above, the following attributes are exported:
    * `resource_group_id` - The ID of resource group grouped disk to be queried.
    * `resource_group_name` - The Name of resource group grouped disk to be queried.
    * `status` - Status of disk.
+   * `tags` - The available tags within this disk.
 
 

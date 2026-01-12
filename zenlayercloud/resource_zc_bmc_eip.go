@@ -4,13 +4,18 @@ Provides an EIP resource.
 Example Usage
 
 ```hcl
-variable "availability_zone" {
-  default = "SEL-A"
-}
 
-resource "zenlayercloud_bmc_eip" "foo" {
-  availability_zone = var.availability_zone
-}
+	variable "availability_zone" {
+	  default = "SEL-A"
+	}
+
+	resource "zenlayercloud_bmc_eip" "foo" {
+	  availability_zone = var.availability_zone
+	  tags = {
+	    "group"  = "test"
+	  }
+	}
+
 ```
 
 Import
@@ -30,13 +35,15 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	common2 "github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/common"
+	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/services/zrm"
+
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/connectivity"
 	bmc "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/bmc20221120"
 	"github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/common"
-	"time"
 )
 
 func resourceZenlayerCloudEip() *schema.Resource {
@@ -106,6 +113,11 @@ func resourceZenlayerCloudEip() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "Expired time of the EIP.",
+			},
+			"tags": {
+				Type:        schema.TypeMap,
+				Optional:    true,
+				Description: "Tags of the EIP.",
 			},
 		},
 	}
@@ -206,6 +218,16 @@ func resourceZenlayerCloudEipUpdate(ctx context.Context, d *schema.ResourceData,
 		}
 	}
 
+	// Update tags if changed
+
+	if d.HasChange("tags") {
+		zrmService := zrm.NewZrmService(meta.(*connectivity.ZenlayerCloudClient))
+		err := zrmService.ModifyResourceTags(ctx, d, eipId)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+	}
+
 	return resourceZenlayerCloudEipRead(ctx, d, meta)
 }
 
@@ -236,6 +258,17 @@ func resourceZenlayerCloudEipCreate(ctx context.Context, d *schema.ResourceData,
 		request.ResourceGroupId = v.(string)
 	}
 
+	if tags := common2.GetTags(d, "tags"); len(tags) > 0 {
+		request.Tags = &bmc.TagAssociation{}
+		for k, v := range tags {
+			tmpKey := k
+			tmpValue := v
+			request.Tags.Tags = append(request.Tags.Tags, &bmc.Tag{
+				Key:   &tmpKey,
+				Value: &tmpValue,
+			})
+		}
+	}
 	eipId := ""
 
 	err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
@@ -246,7 +279,7 @@ func resourceZenlayerCloudEipCreate(ctx context.Context, d *schema.ResourceData,
 				"request": common2.ToJsonString(request),
 				"err":     err.Error(),
 			})
-			return common2.RetryError(ctx, err)
+			return common2.RetryError(ctx, err, common2.OperationTimeout)
 		}
 
 		tflog.Info(ctx, "Create EIP success", map[string]interface{}{
@@ -337,8 +370,14 @@ func resourceZenlayerCloudEipRead(ctx context.Context, d *schema.ResourceData, m
 	_ = d.Set("create_time", eipAddress.CreateTime)
 	_ = d.Set("expired_time", eipAddress.ExpiredTime)
 
-	return diags
+	// Read tags
+	tagMap, err := common2.TagsToMap(eipAddress.Tags)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	_ = d.Set("tags", tagMap)
 
+	return diags
 }
 
 func ipIsOperating(status string) bool {

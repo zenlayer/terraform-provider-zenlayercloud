@@ -44,6 +44,7 @@ In addition to all arguments above, the following attributes are exported:
    * `availability_zone` - The ID of zone that the bmc instance locates at.
    * `create_time` - Create time of the instance.
    * `expired_time` - Expired time of the instance.
+   * `gateway_mode` - Whether to enable Gateway Mode. Valid values: `Enabled`, `Disabled`. Enables the host-bound IPs to act as a gateway for downstream traffic. Only elastic IPs are supported. Additional configuration on the host is required; when disabled, standard routing mode applies.Note: Gateway mode is not supported by default. Please contact Console Support if you need to enable this feature.
    * `hostname` - The hostname of the instance.
    * `image_id` - The ID of image to use for the instance.
    * `image_name` - The image name to use for the instance.
@@ -70,6 +71,7 @@ In addition to all arguments above, the following attributes are exported:
    * `raid_config_type` - Simple config for instance raid. Modifying will cause the instance reset.
    * `resource_group_id` - The ID of resource group that the instance belongs to.
    * `resource_group_name` - The name of resource group that the instance belongs to.
+   * `tags` - The available tags within this instance.
    * `traffic_package_size` - Traffic package size.
 
 

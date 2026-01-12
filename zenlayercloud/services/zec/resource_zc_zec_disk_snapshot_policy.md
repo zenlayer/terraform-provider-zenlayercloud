@@ -9,6 +9,9 @@ resource "zenlayercloud_zec_disk_snapshot_policy" "example" {
   repeat_week_days = [1]
   hours            = [12]
   retention_days   = 7
+  tags = {
+    "group"  = "test"
+  }
 }
 ```
 

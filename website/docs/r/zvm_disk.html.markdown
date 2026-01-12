@@ -18,6 +18,9 @@ resource "zenlayercloud_zvm_disk" "foo" {
   availability_zone = "SEL-A"
   name              = "SEL-20G"
   disk_size         = 20
+  tags = {
+    "group" = "test"
+  }
 }
 ```
 
@@ -32,6 +35,7 @@ The following arguments are supported:
 * `force_delete` - (Optional, Bool) Indicate whether to force delete the data disk. Default is `false`. If set true, the disk will be permanently deleted instead of being moved into the recycle bin.
 * `name` - (Optional, String) The name of the disk.
 * `resource_group_id` - (Optional, String) The resource group id the disk belongs to.
+* `tags` - (Optional, Map) Tags of the disk.
 
 ## Attributes Reference
 

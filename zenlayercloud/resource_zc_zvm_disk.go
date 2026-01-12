@@ -9,6 +9,9 @@ resource "zenlayercloud_zvm_disk" "foo" {
   availability_zone 	 = "SEL-A"
   name  				 = "SEL-20G"
   disk_size				 = 20
+  tags = {
+    "group"  = "test"
+  }
 }
 ```
 
@@ -25,6 +28,8 @@ package zenlayercloud
 import (
 	"context"
 	"fmt"
+	"time"
+
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -32,9 +37,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	common2 "github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/common"
 	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/connectivity"
+	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/services/zrm"
 	"github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/common"
 	vm "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/vm20230313"
-	"time"
 )
 
 func resourceZenlayerCloudVmDisk() *schema.Resource {
@@ -106,6 +111,11 @@ func resourceZenlayerCloudVmDisk() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "Expire time of the disk.",
+			},
+			"tags": {
+				Type:        schema.TypeMap,
+				Optional:    true,
+				Description: "Tags of the disk.",
 			},
 		},
 	}
@@ -224,6 +234,15 @@ func resourceZenlayerCloudVmDiskUpdate(ctx context.Context, d *schema.ResourceDa
 		}
 	}
 
+	// Handle tags change
+	if d.HasChange("tags") {
+		zrmService := zrm.NewZrmService(meta.(*connectivity.ZenlayerCloudClient))
+		err := zrmService.ModifyResourceTags(ctx, d, diskId)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+	}
+
 	return resourceZenlayerCloudVmDiskRead(ctx, d, meta)
 }
 
@@ -247,6 +266,19 @@ func resourceZenlayerCloudVmDiskCreate(ctx context.Context, d *schema.ResourceDa
 
 	if v, ok := d.GetOk("resource_group_id"); ok {
 		request.ResourceGroupId = v.(string)
+	}
+
+	// Handle tags
+	if tags := common2.GetTags(d, "tags"); len(tags) > 0 {
+		request.Tags = &vm.TagAssociation{}
+		for k, v := range tags {
+			tmpKey := k
+			tmpValue := v
+			request.Tags.Tags = append(request.Tags.Tags, &vm.Tag{
+				Key:   &tmpKey,
+				Value: &tmpValue,
+			})
+		}
 	}
 
 	if request.ChargeType == "PREPAID" {
@@ -349,6 +381,17 @@ func resourceZenlayerCloudVmDiskRead(ctx context.Context, d *schema.ResourceData
 	_ = d.Set("create_time", disk.CreateTime)
 	_ = d.Set("expired_time", disk.ExpiredTime)
 	_ = d.Set("charge_prepaid_period", disk.Period)
+
+	// Handle tags
+	tags, err := common2.TagsToMap(disk.Tags)
+	if err != nil {
+		tflog.Error(ctx, "Failed to parse tags", map[string]interface{}{
+			"diskId": diskId,
+			"err":    err.Error(),
+		})
+	} else {
+		_ = d.Set("tags", tags)
+	}
 
 	return diags
 

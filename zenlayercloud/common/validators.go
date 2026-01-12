@@ -28,7 +28,7 @@ func validateSizeEqual(size int) schema.SchemaValidateFunc {
 
 		length := len(value)
 		if length != size {
-			errors = append(errors, fmt.Errorf("expected length of %s to be %d, got %s", k, size, length))
+			errors = append(errors, fmt.Errorf("expected length of %s to be %d, got %d", k, size, length))
 		}
 		return warnings, errors
 	}
@@ -40,7 +40,7 @@ func validateSizeAtLeast(size int) schema.SchemaValidateFunc {
 
 		length := len(value)
 		if length < size {
-			errors = append(errors, fmt.Errorf("expected length of %s to be greather or equal than %d, got %s", k, size, length))
+			errors = append(errors, fmt.Errorf("expected length of %s to be greather or equal than %d, got %d", k, size, length))
 		}
 		return warnings, errors
 	}

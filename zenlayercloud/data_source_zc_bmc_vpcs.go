@@ -21,6 +21,8 @@ package zenlayercloud
 
 import (
 	"context"
+	"time"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -28,7 +30,6 @@ import (
 	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/connectivity"
 	bmc "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/bmc20221120"
 	"github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/common"
-	"time"
 )
 
 func dataSourceZenlayerCloudVpcs() *schema.Resource {
@@ -117,6 +118,11 @@ func dataSourceZenlayerCloudVpcs() *schema.Resource {
 							Computed:    true,
 							Description: "status of the VPC.",
 						},
+						"tags": {
+							Type:        schema.TypeMap,
+							Computed:    true,
+							Description: "Tags of the VPC.",
+						},
 					},
 				},
 			},
@@ -176,6 +182,12 @@ func dataSourceZenlayerCloudVpcsRead(ctx context.Context, d *schema.ResourceData
 			"create_time":         vpc.CreateTime,
 			"vpc_status":          vpc.VpcStatus,
 		}
+		// Read tags
+		tags, err := common2.TagsToMap(vpc.Tags)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		mapping["tags"] = tags
 		vpcList = append(vpcList, mapping)
 		ids = append(ids, vpc.VpcId)
 	}

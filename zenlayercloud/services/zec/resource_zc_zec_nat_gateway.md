@@ -45,6 +45,9 @@ resource "zenlayercloud_zec_nat_gateway" "foo" {
   vpc_id            =  zenlayercloud_zec_vpc.vpc.id
   security_group_id =  zenlayercloud_zec_security_group.sg.id
   subnet_ids = [zenlayercloud_zec_subnet.subnet.id]
+  tags = {
+    "group"  = "test"
+  }
 }
 
 ```

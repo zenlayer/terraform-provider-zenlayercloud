@@ -32,6 +32,9 @@ resource "zenlayercloud_zec_subnet" "ipv4" {
   region_id  = var.region
   name       = "test-subnet"
   cidr_block = "10.0.0.0/24"
+  tags = {
+    "group" = "test"
+  }
 }
 ```
 
@@ -57,6 +60,7 @@ The following arguments are supported:
 * `resource_group_id` - (Optional, String) The resource group id the vNIC belongs to, default to ID of Default Resource Group.
 * `security_group_id` - (Optional, String) The ID of a security group. If absent, the security group under VPC will be used.
 * `stack_type` - (Optional, String, ForceNew) The stack type of the subnet. Valid values: `IPv4`, `IPv6`, `IPv4_IPv6`.
+* `tags` - (Optional, Map) The available tags within this vNIC.
 
 ## Attributes Reference
 

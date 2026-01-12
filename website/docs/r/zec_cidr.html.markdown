@@ -22,6 +22,9 @@ resource "zenlayercloud_zec_cidr" "test" {
   region_id    = var.region
   netmask      = 27
   network_type = "BGPLine"
+  tags = {
+    "group" = "test"
+  }
 }
 ```
 
@@ -42,6 +45,7 @@ The following arguments are supported:
 * `name` - (Optional, String) Name of the public CIDR block.The name should start and end with a number or a letter, containing 2 to 63 characters. Only letters, numbers, -, slash(/) and periods (.) are supported.
 * `network_type` - (Optional, String, ForceNew) Network types of public CIDR block. Valid values: `BGPLine`, `CN2Line`, `LocalLine`, `ChinaTelecom`, `ChinaUnicom`, `ChinaMobile`, `Cogent`.
 * `resource_group_id` - (Optional, String) Resource group ID.
+* `tags` - (Optional, Map) The available tags within this CIDR block.
 
 ## Attributes Reference
 

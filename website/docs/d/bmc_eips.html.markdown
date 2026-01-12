@@ -47,5 +47,6 @@ In addition to all arguments above, the following attributes are exported:
    * `public_ip` - The elastic ip address.
    * `resource_group_id` - The ID of resource group grouped instances to be queried.
    * `resource_group_name` - The name of resource group grouped instances to be queried.
+   * `tags` - Tags of the EIP.
 
 

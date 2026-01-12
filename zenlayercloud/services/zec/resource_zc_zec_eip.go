@@ -3,19 +3,21 @@ package zec
 import (
 	"context"
 	"fmt"
+	"time"
+
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	common2 "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/common"
 	traffic "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/traffic20240326"
 	user "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/user20240529"
-	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/common"
 	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/connectivity"
+	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/services/zrm"
 	zec "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/zec20250901"
 )
 
@@ -94,6 +96,11 @@ func ResourceZenlayerCloudZecElasticIP() *schema.Resource {
 				Computed:    true,
 				Description: "The Name of resource group.",
 			},
+			"tags": {
+				Type:        schema.TypeMap,
+				Optional:    true,
+				Description: "The available tags within this elastic IP.",
+			},
 			"bandwidth_cluster_id": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -142,6 +149,18 @@ func resourceZenlayerCloudZecElasticIPCreate(ctx context.Context, d *schema.Reso
 	request.Name = common2.String(d.Get("name").(string))
 	request.InternetChargeType = common2.String(d.Get("internet_charge_type").(string))
 	request.EipV4Type = common2.String(d.Get("ip_network_type").(string))
+
+	if tags := common.GetTags(d, "tags"); len(tags) > 0 {
+		request.Tags = &zec.TagAssociation{}
+		for k, v := range tags {
+			tmpKey := k
+			tmpValue := v
+			request.Tags.Tags = append(request.Tags.Tags, &zec.Tag{
+				Key:   &tmpKey,
+				Value: &tmpValue,
+			})
+		}
+	}
 
 	if v, ok := d.GetOk("bandwidth"); ok {
 		request.Bandwidth = common2.Integer(v.(int))
@@ -206,7 +225,7 @@ func resourceZenlayerCloudZecElasticIPRead(ctx context.Context, d *schema.Resour
 		}
 
 		if eipAddress != nil && ipIsOperating(*eipAddress.Status) {
-			return resource.RetryableError(fmt.Errorf("waiting for eip %s operation", eipAddress.EipId))
+			return resource.RetryableError(fmt.Errorf("waiting for eip %s operation", *eipAddress.EipId))
 		}
 		eip = eipAddress
 		return nil
@@ -241,6 +260,12 @@ func resourceZenlayerCloudZecElasticIPRead(ctx context.Context, d *schema.Resour
 		_ = d.Set("bandwidth_cluster_id", eip.BandwidthCluster.BandwidthClusterId)
 	}
 	_ = d.Set("create_time", eip.CreateTime)
+
+	toMap, errRet := common.TagsToMap(eip.Tags)
+	if errRet != nil {
+		return diag.FromErr(errRet)
+	}
+	_ = d.Set("tags", toMap)
 
 	return nil
 }
@@ -298,6 +323,7 @@ func resourceZenlayerCloudZecElasticIPUpdate(ctx context.Context, d *schema.Reso
 			if err != nil {
 				return common.RetryError(ctx, err, common.InternalServerError, common2.NetworkError)
 			}
+
 			return nil
 		})
 		if err != nil {
@@ -305,6 +331,13 @@ func resourceZenlayerCloudZecElasticIPUpdate(ctx context.Context, d *schema.Reso
 		}
 	}
 
+	if d.HasChange("tags") {
+		zrmService := zrm.NewZrmService(meta.(*connectivity.ZenlayerCloudClient))
+		err := zrmService.ModifyResourceTags(ctx, d, eipId)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+	}
 	d.Partial(false)
 
 	return resourceZenlayerCloudZecElasticIPRead(ctx, d, meta)
@@ -333,6 +366,9 @@ func resourceZenlayerCloudZecElasticIPDelete(ctx context.Context, d *schema.Reso
 		}
 		return nil
 	})
+	if err != nil {
+		return diag.FromErr(err)
+	}
 
 	notExist := false
 
@@ -356,7 +392,7 @@ func resourceZenlayerCloudZecElasticIPDelete(ctx context.Context, d *schema.Reso
 			return resource.RetryableError(fmt.Errorf("zec eip (%s) is deleting", eipId))
 		}
 
-		return resource.NonRetryableError(fmt.Errorf("zec eip status is not recycle, current status %s", eip.Status))
+		return resource.NonRetryableError(fmt.Errorf("zec eip status is not recycle, current status %s", *eip.Status))
 	})
 
 	if err != nil {
@@ -372,18 +408,21 @@ func resourceZenlayerCloudZecElasticIPDelete(ctx context.Context, d *schema.Reso
 	})
 
 	err = resource.RetryContext(ctx, d.Timeout(schema.TimeoutDelete)-time.Minute, func() *resource.RetryError {
-		_, err := zecService.client.WithZec2Client().DeleteEip(request)
-		if err != nil {
-			if sdkError, ok := err.(*common2.ZenlayerCloudSdkError); ok {
+		_, errRet := zecService.client.WithZec2Client().DeleteEip(request)
+		if errRet != nil {
+			if sdkError, ok := errRet.(*common2.ZenlayerCloudSdkError); ok {
 				if sdkError.Code == common.ResourceNotFound {
 					return nil
 				}
 			}
-			return common.RetryError(ctx, err)
+			return common.RetryError(ctx, errRet)
 		}
 
 		return nil
 	})
+	if err != nil {
+		return diag.FromErr(err)
+	}
 
 	return resourceZenlayerCloudZecElasticIPRead(ctx, d, meta)
 }

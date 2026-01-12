@@ -2,6 +2,9 @@ package zec
 
 import (
 	"context"
+	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/services/zrm"
+	"time"
+
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
@@ -12,8 +15,7 @@ import (
 	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/connectivity"
 	"github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/common"
 	user "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/user20240529"
-	zec2 "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/zec20240401"
-	"time"
+	zec "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/zec20250901"
 )
 
 func ResourceZenlayerCloudZecSnapshotPolicy() *schema.Resource {
@@ -51,6 +53,7 @@ func ResourceZenlayerCloudZecSnapshotPolicy() *schema.Resource {
 			"retention_days": {
 				Type:         schema.TypeInt,
 				Optional:     true,
+				Computed:     true,
 				ValidateFunc: validation.Any(validation.IntBetween(1, 65535), validation.IntInSlice([]int{-1})),
 				Description:  "The retention days of the auto snapshot policy. Valid values: `1` to `65535` or `-1` for no expired. Default is `-1`.",
 			},
@@ -78,6 +81,11 @@ func ResourceZenlayerCloudZecSnapshotPolicy() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "The Name of resource group grouped snapshot policy.",
+			},
+			"tags": {
+				Type:        schema.TypeMap,
+				Optional:    true,
+				Description: "The available tags within this snapshot policy.",
 			},
 		},
 	}
@@ -118,7 +126,7 @@ func resourceZenlayerCloudZecSnapshotPolicyUpdate(ctx context.Context, d *schema
 
 	if d.HasChanges("name", "repeat_week_days", "retention_days", "hours") {
 
-		request := zec2.NewModifyAutoSnapshotPolicyRequest()
+		request := zec.NewModifyAutoSnapshotPolicyRequest()
 		request.AutoSnapshotPolicyName = common.String(d.Get("name").(string))
 		request.RetentionDays = common.Integer(d.Get("retention_days").(int))
 		request.AutoSnapshotPolicyId = common.String(snapId)
@@ -142,7 +150,7 @@ func resourceZenlayerCloudZecSnapshotPolicyUpdate(ctx context.Context, d *schema
 
 		err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate)-time.Minute, func() *resource.RetryError {
 
-			_, err := zecService.client.WithZecClient().ModifyAutoSnapshotPolicy(request)
+			_, err := zecService.client.WithZec2Client().ModifyAutoSnapshotPolicy(request)
 
 			if err != nil {
 				return common2.RetryError(ctx, err, common2.InternalServerError, common.NetworkError)
@@ -172,6 +180,14 @@ func resourceZenlayerCloudZecSnapshotPolicyUpdate(ctx context.Context, d *schema
 		}
 	}
 
+	if d.HasChange("tags") {
+		zrmService := zrm.NewZrmService(meta.(*connectivity.ZenlayerCloudClient))
+		err := zrmService.ModifyResourceTags(ctx, d, snapId)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+	}
+
 	return resourceZenlayerCloudZecSnapshotPolicyRead(ctx, d, meta)
 }
 
@@ -180,7 +196,7 @@ func resourceZenlayerCloudZecSnapshotPolicyCreate(ctx context.Context, d *schema
 		client: meta.(*connectivity.ZenlayerCloudClient),
 	}
 
-	request := zec2.NewCreateAutoSnapshotPolicyRequest()
+	request := zec.NewCreateAutoSnapshotPolicyRequest()
 	request.AutoSnapshotPolicyName = common.String(d.Get("name").(string))
 	request.ZoneId = common.String(d.Get("availability_zone").(string))
 
@@ -209,11 +225,23 @@ func resourceZenlayerCloudZecSnapshotPolicyCreate(ctx context.Context, d *schema
 	}
 	request.Hours = hoursInt
 
-	var response *zec2.CreateAutoSnapshotPolicyResponse
+	if tags := common2.GetTags(d, "tags"); len(tags) > 0 {
+		request.Tags = &zec.TagAssociation{}
+		for k, v := range tags {
+			tmpKey := k
+			tmpValue := v
+			request.Tags.Tags = append(request.Tags.Tags, &zec.Tag{
+				Key:   &tmpKey,
+				Value: &tmpValue,
+			})
+		}
+	}
+
+	var response *zec.CreateAutoSnapshotPolicyResponse
 	var err error
 
 	err = resource.RetryContext(ctx, d.Timeout(schema.TimeoutCreate)-time.Minute, func() *resource.RetryError {
-		response, err = zecService.client.WithZecClient().CreateAutoSnapshotPolicy(request)
+		response, err = zecService.client.WithZec2Client().CreateAutoSnapshotPolicy(request)
 		if err != nil {
 			return common2.RetryError(ctx, err, common2.InternalServerError, common.NetworkError)
 		}
@@ -238,15 +266,15 @@ func resourceZenlayerCloudZecSnapshotPolicyRead(ctx context.Context, d *schema.R
 
 	snapshotPolicyId := d.Id()
 
-	vmService := ZecService{
+	zecService := ZecService{
 		client: meta.(*connectivity.ZenlayerCloudClient),
 	}
 
-	var snapshot *zec2.AutoSnapshotPolicy
+	var snapshot *zec.AutoSnapshotPolicy
 	var errRet error
 
 	err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutRead)-time.Minute, func() *resource.RetryError {
-		snapshot, errRet = vmService.DescribeSnapshotPolicyById(ctx, snapshotPolicyId)
+		snapshot, errRet = zecService.DescribeSnapshotPolicyById(ctx, snapshotPolicyId)
 		if errRet != nil {
 			return common2.RetryError(ctx, errRet)
 		}
@@ -275,6 +303,12 @@ func resourceZenlayerCloudZecSnapshotPolicyRead(ctx context.Context, d *schema.R
 	_ = d.Set("hours", snapshot.Hours)
 	_ = d.Set("resource_group_id", snapshot.ResourceGroup.ResourceGroupId)
 	_ = d.Set("resource_group_name", snapshot.ResourceGroup.ResourceGroupName)
+
+	toMap, errRet := common2.TagsToMap(snapshot.Tags)
+	if errRet != nil {
+		return diag.FromErr(errRet)
+	}
+	_ = d.Set("tags", toMap)
 
 	return diags
 

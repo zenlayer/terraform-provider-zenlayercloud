@@ -64,9 +64,7 @@ In addition to all arguments above, the following attributes are exported:
    * `remark` - Remark of the private DNS zone.
    * `resource_group_id` - ID of resource group.
    * `resource_group_name` - Resource group name.
-   * `tags` - tags.
-      * `tag_key` - tag key.
-      * `tag_value` - tag value.
+   * `tags` - The available tags within this private zone.
    * `zone_name` - Name of the private DNS zone.
 
 

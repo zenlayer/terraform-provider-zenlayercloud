@@ -22,6 +22,9 @@ resource "zenlayercloud_zdns_zone" "foo" {
   zone_name     = "example.com"
   remark        = "test"
   proxy_pattern = "RECURSION"
+  tags = {
+    "test" = "test"
+  }
 }
 ```
 
@@ -35,6 +38,7 @@ The following arguments are supported:
 	- `RECURSION`: Enable recursive DNS proxy. When resolving non-existent subdomains under this domain, it queries the recursive module and responds to the resolution request with the final query result.
 * `remark` - (Optional, String) Remarks.
 * `resource_group_id` - (Optional, String) The resource group id the private zone belongs to, default to Default Resource Group.
+* `tags` - (Optional, Map) The available tags within this private zone.
 
 ## Attributes Reference
 

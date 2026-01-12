@@ -25,6 +25,7 @@ import (
 	zec2 "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/zec20250901"
 	zga "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/zga20230706"
 	zlb "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/zlb20250401"
+	zrm "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/zrm20251014"
 )
 
 var ReqClient = "Terraform-latest"
@@ -46,6 +47,7 @@ type ZenlayerCloudClient struct {
 	usrConn           *user.Client
 	CcsConn           *ccs.Client
 	privateDnsConn    *zdns.Client
+	zrmConn    		  *zrm.Client
 }
 
 func (client *ZenlayerCloudClient) WithSdnClient() *sdn.Client {
@@ -164,4 +166,14 @@ func (client *ZenlayerCloudClient) NewConfig() *common.Config {
 	config.Scheme = client.Scheme
 	config.Domain = client.Domain
 	return config
+}
+
+func (client *ZenlayerCloudClient) WithZrmClient() *zrm.Client {
+	if client.zrmConn != nil {
+		return client.zrmConn
+	}
+	config := client.NewConfig()
+	client.zrmConn, _ = zrm.NewClient(config, client.SecretKeyId, client.SecretKeyPassword)
+	client.zrmConn.WithRequestClient(ReqClient)
+	return client.zrmConn
 }

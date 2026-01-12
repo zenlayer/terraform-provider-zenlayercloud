@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	common2 "github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/common"
 	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/connectivity"
+	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/services/zrm"
 	"github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/common"
 	user "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/user20240529"
 	pvtdns "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/zdns20251101"
@@ -43,6 +44,11 @@ func ResourceZenlayerCloudPvtdnsZone() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "Remarks.",
+			},
+			"tags": {
+				Type:        schema.TypeMap,
+				Optional:    true,
+				Description: "The available tags within this private zone.",
 			},
 			"resource_group_id": {
 				Type:        schema.TypeString,
@@ -133,6 +139,14 @@ func resourceZenlayerCloudPvtdnsZoneUpdate(ctx context.Context, d *schema.Resour
 		}
 	}
 
+	if d.HasChange("tags") {
+		zrmService := zrm.NewZrmService(meta.(*connectivity.ZenlayerCloudClient))
+		err := zrmService.ModifyResourceTags(ctx, d, zoneId)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+	}
+
 	return resourceZenlayerCloudPvtdnsZoneRead(ctx, d, meta)
 }
 
@@ -153,6 +167,18 @@ func resourceZenlayerCloudPvtdnsZoneCreate(ctx context.Context, d *schema.Resour
 
 	if v, ok := d.GetOk("resource_group_id"); ok {
 		request.ResourceGroupId = common.String(v.(string))
+	}
+
+	if tags := common2.GetTags(d, "tags"); len(tags) > 0 {
+		request.Tags = &pvtdns.TagAssociation{}
+		for k, v := range tags {
+			tmpKey := k
+			tmpValue := v
+			request.Tags.Tags = append(request.Tags.Tags, &pvtdns.Tag{
+				Key:   &tmpKey,
+				Value: &tmpValue,
+			})
+		}
 	}
 
 	zoneId := ""
@@ -234,5 +260,10 @@ func resourceZenlayerCloudPvtdnsZoneRead(ctx context.Context, d *schema.Resource
 	_ = d.Set("create_time", pz.CreateTime)
 	_ = d.Set("proxy_pattern", pz.ProxyPattern)
 
+	tagMap, errRet := common2.TagsToMap(pz.Tags)
+	if errRet != nil {
+		return diag.FromErr(errRet)
+	}
+	_ = d.Set("tags", tagMap)
 	return diags
 }

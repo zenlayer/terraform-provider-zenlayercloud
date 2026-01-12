@@ -7,7 +7,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/common"
 	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/connectivity"
-	zec "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/zec20240401"
+	zec "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/zec20250901"
 	"regexp"
 	"time"
 )
@@ -83,6 +83,11 @@ func DataSourceZenlayerCloudZecSubnets() *schema.Resource {
 							Computed:    true,
 							Description: "The IPv6 type. Valid values: `Public`, `Private`.",
 						},
+						"dhcp_options_set_id": {
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "DHCP options set ID.",
+						},
 						"is_default": {
 							Type:        schema.TypeBool,
 							Computed:    true,
@@ -148,25 +153,26 @@ func dataSourceZenlayerCloudZecSubnetsRead(ctx context.Context, d *schema.Resour
 	ids := make([]string, 0, len(subnets))
 
 	for _, subnet := range subnets {
-		if nameRegex != nil && !nameRegex.MatchString(subnet.Name) {
+		if nameRegex != nil && !nameRegex.MatchString(*subnet.Name) {
 			continue
 		}
 
 		mapping := map[string]interface{}{
-			"id":       subnet.SubnetId,
-			"vpc_id":          subnet.VpcId,
-			"name":            subnet.Name,
-			"region_id":       subnet.RegionId,
-			"cidr_block":      subnet.CidrBlock,
-			"ipv6_cidr_block": subnet.Ipv6CidrBlock,
-			"ip_stack_type":   subnet.StackType,
-			"ipv6_type":       subnet.Ipv6Type,
-			"is_default":      subnet.IsDefault,
-			"create_time":     subnet.CreateTime,
+			"id":                  subnet.SubnetId,
+			"vpc_id":              subnet.VpcId,
+			"name":                subnet.Name,
+			"region_id":           subnet.RegionId,
+			"cidr_block":          subnet.CidrBlock,
+			"ipv6_cidr_block":     subnet.Ipv6CidrBlock,
+			"ip_stack_type":       subnet.StackType,
+			"ipv6_type":           subnet.Ipv6Type,
+			"is_default":          subnet.IsDefault,
+			"create_time":         subnet.CreateTime,
+			"dhcp_options_set_id": subnet.DhcpOptionsSetId,
 		}
 
 		subnetList = append(subnetList, mapping)
-		ids = append(ids, subnet.SubnetId)
+		ids = append(ids, *subnet.SubnetId)
 	}
 
 	d.SetId(common.DataResourceIdHash(ids))
