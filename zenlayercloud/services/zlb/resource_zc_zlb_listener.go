@@ -4,6 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"regexp"
+	"time"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -12,8 +15,6 @@ import (
 	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/connectivity"
 	"github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/common"
 	zlb "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/zlb20250401"
-	"regexp"
-	"time"
 )
 
 func ResourceZenlayerCloudZlbListener() *schema.Resource {
@@ -136,6 +137,12 @@ func ResourceZenlayerCloudZlbListener() *schema.Resource {
 				ValidateFunc: validation.IntBetween(3, 30),
 				Description:  "Interval between health checks. Measured in second. Valid values: `3` to `30`. `health_check_delay_loop` takes effect only if `health_check_enabled` is set to true. Default is `3`.",
 			},
+			"persistent": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				ValidateFunc: validation.IntAtLeast(0),
+				Description:  "Session persistence duration in seconds. When set, the load balancer will maintain session affinity for the specified duration.",
+			},
 			"create_time": {
 				Type:        schema.TypeString,
 				Computed:    true,
@@ -171,7 +178,6 @@ func healthCheckDisableValidFunc() schema.CustomizeDiffFunc {
 		if !diff.GetRawConfig().GetAttr("health_check_conn_timeout").IsNull() {
 			return errors.New("`health_check_conn_timeout` can't be set when `health_check_enabled` is set to `false`")
 		}
-
 
 		if !diff.GetRawConfig().GetAttr("health_check_http_status_code").IsNull() {
 			return errors.New("`health_check_http_status_code` can't be set when `health_check_enabled` is set to `false`")
@@ -228,6 +234,10 @@ func resourceZenlayerCloudZlbListenerCreate(ctx context.Context, d *schema.Resou
 	request.Port = common.String(d.Get("port").(string))
 	request.Scheduler = common.String(d.Get("scheduler").(string))
 	request.Kind = common.String(d.Get("kind").(string))
+
+	if v, ok := d.GetOk("persistent"); ok {
+		request.Persistent = common.Integer(v.(int))
+	}
 
 	healthCheck := &zlb.HealthCheck{
 		Enabled: common.Bool(d.Get("health_check_enabled").(bool)),
@@ -304,6 +314,7 @@ func resourceZenlayerCloudZlbListenerRead(ctx context.Context, d *schema.Resourc
 	_ = d.Set("port", listener.Port)
 	_ = d.Set("scheduler", listener.Scheduler)
 	_ = d.Set("kind", listener.Kind)
+	_ = d.Set("persistent", listener.Persistent)
 	_ = d.Set("create_time", listener.CreateTime)
 	_ = d.Set("health_check_enabled", listener.HealthCheck.Enabled)
 	_ = d.Set("health_check_type", listener.HealthCheck.CheckType)
@@ -347,6 +358,10 @@ func resourceZenlayerCloudZlbListenerUpdate(ctx context.Context, d *schema.Resou
 
 	if d.HasChange("port") {
 		request.Port = common.String(d.Get("port").(string))
+	}
+
+	if d.HasChange("persistent") {
+		request.Persistent = common.Integer(d.Get("persistent").(int))
 	}
 
 	if d.HasChanges("health_check_enabled", "health_check_type", "health_check_http_get_url",

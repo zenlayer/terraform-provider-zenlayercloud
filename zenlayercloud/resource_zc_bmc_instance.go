@@ -222,7 +222,7 @@ func resourceZenlayerCloudInstance() *schema.Resource {
 			"raid_config_type": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				Description:  "Simple config for instance raid. Modifying will cause the instance reset.",
+				Description:  "Simple config for instance raid. Valid values: `0` (for raid0), `1`(for raid1), `5` (for raid5), `10` (for raid10). Modifying will cause the instance reset.",
 				ValidateFunc: validation.StringInSlice([]string{"0", "1", "5", "10"}, false),
 			},
 			"raid_config_custom": {

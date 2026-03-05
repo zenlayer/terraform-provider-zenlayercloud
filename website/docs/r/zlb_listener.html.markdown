@@ -66,6 +66,7 @@ The following arguments are supported:
 * `health_check_retry` - (Optional, Int) Number of retry attempts for health check. Valid values: `1` to `5`. `health_check_retry` takes effect only if `health_check_enabled` is set to true. Default is `2`.
 * `health_check_type` - (Optional, String) Health check protocols. Valid values: `PING_CHECK`, `TCP`, `HTTP_GET`.
 * `kind` - (Optional, String) Forwarding mode of the listener. Valid values: `DR`(stands for Direct Routing), `FNAT`(stands for Full NAT), `DNAT`(stands for Destination NAT). Default is `FNAT`.
+* `persistent` - (Optional, Int) Session persistence duration in seconds. When set, the load balancer will maintain session affinity for the specified duration.
 * `scheduler` - (Optional, String) Scheduling algorithm of the listener. Valid values: `mh`, `rr`, `wrr`, `lc`, `wlc`, `sh`, `dh`. Default value: `mh`.
 
 ## Attributes Reference
