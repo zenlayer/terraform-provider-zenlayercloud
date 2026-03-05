@@ -140,6 +140,23 @@ func (s *ZlbService) ModifyLoadBalancerName(ctx context.Context, zlbId string, n
 	return err
 }
 
+func (s *ZlbService) SetSecurityGroupForLoadBalancers(ctx context.Context, zlbId string, securityGroupId string) error {
+	request := zlb.NewSetSecurityGroupForLoadBalancersRequest()
+	request.LoadBalancerIds = []string{zlbId}
+	request.SecurityGroupId = &securityGroupId
+	response, err := s.client.WithZlbClient().SetSecurityGroupForLoadBalancers(request)
+	defer common.LogApiRequest(ctx, "SetSecurityGroupForLoadBalancers", request, response, err)
+	return err
+}
+
+func (s *ZlbService) UnbindSecurityGroupFromLoadBalancers(ctx context.Context, zlbId string) error {
+	request := zlb.NewUnbindSecurityGroupFromLoadBalancersRequest()
+	request.LoadBalancerIds = []string{zlbId}
+	response, err := s.client.WithZlbClient().UnbindSecurityGroupFromLoadBalancers(request)
+	defer common.LogApiRequest(ctx, "UnbindSecurityGroupFromLoadBalancers", request, response, err)
+	return err
+}
+
 func convertLbInstancesRequestFilter(filter *LbInstanceFilter) *zlb.DescribeLoadBalancersRequest {
 	request := zlb.NewDescribeLoadBalancersRequest()
 	request.VpcId = &filter.VpcId
