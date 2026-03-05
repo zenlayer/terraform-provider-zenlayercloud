@@ -3,10 +3,11 @@ package zlb
 import (
 	"context"
 	"fmt"
+	"time"
+
 	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/services/zrm"
 	user "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/user20240529"
 	zlb "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/zlb20250401"
-	"time"
 
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -63,6 +64,11 @@ func ResourceZenlayerCloudZlbInstance() *schema.Resource {
 				Optional:    true,
 				Computed:    true,
 				Description: "The resource group id the load balancer belongs to, default to Default Resource Group.",
+			},
+			"security_group_id": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "The ID of security group that the load balancer instance is bound to.",
 			},
 			"resource_group_name": {
 				Type:        schema.TypeString,
@@ -122,6 +128,10 @@ func resourceZenlayerCloudZlbInstanceCreate(ctx context.Context, d *schema.Resou
 
 	if v, ok := d.GetOk("resource_group_id"); ok {
 		request.ResourceGroupId = common.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("security_group_id"); ok {
+		request.SecurityGroupId = common.String(v.(string))
 	}
 
 	var zlbId string
@@ -212,6 +222,7 @@ func resourceZenlayerCloudZlbInstanceRead(ctx context.Context, d *schema.Resourc
 	_ = d.Set("private_ip_address", zlb.PrivateIpAddress)
 	_ = d.Set("resource_group_id", zlb.ResourceGroup.ResourceGroupId)
 	_ = d.Set("resource_group_name", zlb.ResourceGroup.ResourceGroupName)
+	_ = d.Set("security_group_id", zlb.SecurityGroupId)
 
 	toMap, errRet := common2.TagsToMap(zlb.Tags)
 	if errRet != nil {
@@ -259,6 +270,33 @@ func resourceZenlayerCloudZlbInstanceUpdate(ctx context.Context, d *schema.Resou
 
 		if err != nil {
 			return diag.FromErr(err)
+		}
+	}
+
+	if d.HasChange("security_group_id") {
+		securityGroupId := d.Get("security_group_id").(string)
+		if securityGroupId != "" {
+			err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate)-time.Minute, func() *resource.RetryError {
+				err := zlbService.SetSecurityGroupForLoadBalancers(ctx, zlbId, securityGroupId)
+				if err != nil {
+					return common2.RetryError(ctx, err, common2.InternalServerError, common.NetworkError)
+				}
+				return nil
+			})
+			if err != nil {
+				return diag.FromErr(err)
+			}
+		} else {
+			err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate)-time.Minute, func() *resource.RetryError {
+				err := zlbService.UnbindSecurityGroupFromLoadBalancers(ctx, zlbId)
+				if err != nil {
+					return common2.RetryError(ctx, err, common2.InternalServerError, common.NetworkError)
+				}
+				return nil
+			})
+			if err != nil {
+				return diag.FromErr(err)
+			}
 		}
 	}
 

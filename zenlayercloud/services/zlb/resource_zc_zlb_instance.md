@@ -19,6 +19,7 @@ resource "zenlayercloud_zlb_instance" "zlb" {
   region_id = var.region
   vpc_id    = zenlayercloud_zec_vpc.foo.id
   zlb_name  = "example-5"
+  security_group_id = "<security_group_id>"
   tags = {
     "test" = "test-value"
   }
