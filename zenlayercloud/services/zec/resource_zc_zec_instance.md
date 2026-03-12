@@ -56,6 +56,24 @@ resource "zenlayercloud_zec_instance" "instance" {
   }
 }
 
+# Instance options example (e.g. nested virtualization)
+resource "zenlayercloud_zec_instance" "instance" {
+  availability_zone = var.availability_zone
+  instance_type = "z2a.cpu.1"
+  image_id =data.zenlayercloud_zec_images.ubuntu.images.0.id
+  instance_name = "Example-Instance"
+  key_id = data.zenlayercloud_key_pairs.all.key_pairs.0.key_id
+  subnet_id = zenlayercloud_zec_subnet.ipv4.id
+  system_disk_size = 20
+  tags = {
+    "testKey" = "testValue"
+  }
+
+  instance_options {
+    nested_virtualization = true
+  }
+}
+
 ```
 
 Import

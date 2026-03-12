@@ -3,6 +3,8 @@ package zec
 import (
 	"context"
 	"fmt"
+	"time"
+
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -14,7 +16,6 @@ import (
 	"github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/common"
 	user "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/user20240529"
 	zec "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/zec20250901"
-	"time"
 )
 
 func ResourceZenlayerCloudZecInstance() *schema.Resource {
@@ -204,6 +205,23 @@ func ResourceZenlayerCloudZecInstance() *schema.Resource {
 				Computed:    true,
 				Description: "Create time of the ZEC instance.",
 			},
+			"instance_options": {
+				Type:        schema.TypeList,
+				Optional:    true,
+				ForceNew:    true,
+				MaxItems:    1,
+				Description: "Options configuration for Instance.",
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"nested_virtualization": {
+							Type:        schema.TypeBool,
+							Optional:    true,
+							ForceNew:    true, // 放这里
+							Description: "Whether to enable the instance for nested virtualization. To enable nested virtualization, you need to contact Support, otherwise the setting will be invalid.",
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -297,7 +315,6 @@ func resourceZenlayerCloudZecInstanceDelete(ctx context.Context, d *schema.Resou
 		return nil
 	})
 
-
 	err = resource.RetryContext(ctx, d.Timeout(schema.TimeoutDelete)-time.Minute, func() *resource.RetryError {
 		instance, errRet := zecService.DescribeInstanceById(ctx, instanceId)
 		if errRet != nil {
@@ -310,7 +327,7 @@ func resourceZenlayerCloudZecInstanceDelete(ctx context.Context, d *schema.Resou
 			}
 			return common2.RetryError(ctx, errRet)
 		}
-		if instance== nil {
+		if instance == nil {
 			return nil
 		}
 
@@ -665,6 +682,17 @@ func resourceZenlayerCloudZecInstanceCreate(ctx context.Context, d *schema.Resou
 		request.EnableIpForward = common.Bool(v.(bool))
 	}
 
+	if v, ok := d.GetOk("instance_options"); ok {
+		options := v.([]interface{})
+		if len(options) > 0 {
+			option := options[0].(map[string]interface{})
+			request.InstanceOptions = &zec.InstanceOptions{}
+			if nestedVirt, ok := option["nested_virtualization"]; ok {
+				request.InstanceOptions.NestedVirtualization = common.Bool(nestedVirt.(bool))
+			}
+		}
+	}
+
 	instanceId := ""
 
 	err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
@@ -767,7 +795,7 @@ func resourceZenlayerCloudZecInstanceRead(ctx context.Context, d *schema.Resourc
 	//if instance.InstanceChargeType == VmChargeTypePrepaid {
 	//	_ = d.Set("instance_charge_prepaid_period", instance.Period)
 	//}
-	//_ = d.Set("instance_type", instance.InstanceType)
+	_ = d.Set("instance_type", instance.InstanceType)
 	_ = d.Set("key_id", instance.KeyId)
 	_ = d.Set("image_id", instance.ImageId)
 	_ = d.Set("image_name", instance.ImageName)
@@ -795,6 +823,16 @@ func resourceZenlayerCloudZecInstanceRead(ctx context.Context, d *schema.Resourc
 
 	_ = d.Set("disable_qga_agent", !*instance.EnableAgent)
 	_ = d.Set("enable_ip_forwarding", *instance.EnableIpForward)
+
+	if instance.InstanceOptions != nil {
+		instanceOptions := make([]map[string]interface{}, 0)
+		optionMap := make(map[string]interface{})
+		if instance.InstanceOptions.NestedVirtualization != nil {
+			optionMap["nested_virtualization"] = *instance.InstanceOptions.NestedVirtualization
+		}
+		instanceOptions = append(instanceOptions, optionMap)
+		_ = d.Set("instance_options", instanceOptions)
+	}
 
 	tagMap, errRet := common2.TagsToMap(instance.Tags)
 	if errRet != nil {
