@@ -685,9 +685,9 @@ func resourceZenlayerCloudZecInstanceCreate(ctx context.Context, d *schema.Resou
 		options := v.([]interface{})
 		if len(options) > 0 {
 			option := options[0].(map[string]interface{})
-			request.Options = &zec.InstanceOptions{}
+			request.InstanceOptions = &zec.InstanceOptions{}
 			if nestedVirt, ok := option["nested_virtualization"]; ok {
-				request.Options.NestedVirtualization = common.Bool(nestedVirt.(bool))
+				request.InstanceOptions.NestedVirtualization = common.Bool(nestedVirt.(bool))
 			}
 		}
 	}
