@@ -65,6 +65,24 @@ resource "zenlayercloud_zec_instance" "instance" {
     "testKey" = "testValue"
   }
 }
+
+# Instance options example (e.g. nested virtualization)
+resource "zenlayercloud_zec_instance" "instance" {
+  availability_zone = var.availability_zone
+  instance_type     = "z2a.cpu.1"
+  image_id          = data.zenlayercloud_zec_images.ubuntu.images.0.id
+  instance_name     = "Example-Instance"
+  key_id            = data.zenlayercloud_key_pairs.all.key_pairs.0.key_id
+  subnet_id         = zenlayercloud_zec_subnet.ipv4.id
+  system_disk_size  = 20
+  tags = {
+    "testKey" = "testValue"
+  }
+
+  instance_options {
+    nested_virtualization = true
+  }
+}
 ```
 
 ## Argument Reference
@@ -80,6 +98,7 @@ The following arguments are supported:
 * `enable_ip_forwarding` - (Optional, Bool) Indicate whether to enable IP forwarding. IP forwarding is disabled by default.
 * `force_delete` - (Optional, Bool) Indicate whether to force delete the ZEC instance. Default is `true`. If set true, the ZEC instance will be permanently deleted instead of being moved into the recycle bin.
 * `instance_name` - (Optional, String) The name of the ZEC instance. The minimum length of instance name is `2`. The max length of instance_name is 63, and default value is `Terraform-ZEC-Instance`.
+* `instance_options` - (Optional, List, ForceNew) Options configuration for Instance.
 * `key_id` - (Optional, String) The key pair id to use for the ZEC instance. Changing `key_id` will cause the ZEC instance reset.
 * `password` - (Optional, String) Password for the ZEC instance.The password must be 8-16 characters, including letters, numbers, and special characters `~!@$^*-_=+|;:,.?`.
 * `resource_group_id` - (Optional, String) The resource group id the ZEC instance belongs to, default to Default Resource Group.
@@ -88,6 +107,10 @@ The following arguments are supported:
 * `system_disk_category` - (Optional, String, ForceNew) Category of the system disk. Valid values: `Standard NVMe SSD`, `Basic NVMe SSD`, Default is `Standard NVMe SSD`.
 * `tags` - (Optional, Map) The available tags within this ZEC instance.
 * `time_zone` - (Optional, String) Time zone of instance. such as `America/Los_Angeles`. Default is `Asia/Shanghai`. Changing `time_zone` will cause the ZEC instance reset.
+
+The `instance_options` object supports the following:
+
+* `nested_virtualization` - (Optional, Bool, ForceNew) Whether to enable the instance for nested virtualization. To enable nested virtualization, you need to contact Support, otherwise the setting will be invalid.
 
 ## Attributes Reference
 

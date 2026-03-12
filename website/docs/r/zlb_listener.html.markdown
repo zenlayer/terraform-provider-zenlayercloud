@@ -45,6 +45,7 @@ resource "zenlayercloud_zlb_listener" "listener" {
   scheduler            = "mh"
   kind                 = "FNAT"
   health_check_type    = "TCP"
+  persistent           = 300
 }
 ```
 
