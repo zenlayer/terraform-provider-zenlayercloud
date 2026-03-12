@@ -110,7 +110,7 @@ The following arguments are supported:
 
 The `instance_options` object supports the following:
 
-* `nested_virtualization` - (Optional, Bool) Whether to enable the instance for nested virtualization. To enable nested virtualization, you need to contact Support, otherwise the setting will be invalid.
+* `nested_virtualization` - (Optional, Bool, ForceNew) Whether to enable the instance for nested virtualization. To enable nested virtualization, you need to contact Support, otherwise the setting will be invalid.
 
 ## Attributes Reference
 

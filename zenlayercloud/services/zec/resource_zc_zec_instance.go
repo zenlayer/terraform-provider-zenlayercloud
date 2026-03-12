@@ -216,6 +216,7 @@ func ResourceZenlayerCloudZecInstance() *schema.Resource {
 						"nested_virtualization": {
 							Type:        schema.TypeBool,
 							Optional:    true,
+							ForceNew:    true, // 放这里
 							Description: "Whether to enable the instance for nested virtualization. To enable nested virtualization, you need to contact Support, otherwise the setting will be invalid.",
 						},
 					},
