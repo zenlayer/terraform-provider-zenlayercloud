@@ -104,7 +104,7 @@ func resourceZenlayerCloudEip() *schema.Resource {
 				Type:        schema.TypeInt,
 				Optional:    true,
 				Computed: true,
-				Description: "The netmask of the EIP.",
+				Description: "The netmask of the EIP. Default is 32.",
 			},
 			"eip_status": {
 				Type:        schema.TypeString,
