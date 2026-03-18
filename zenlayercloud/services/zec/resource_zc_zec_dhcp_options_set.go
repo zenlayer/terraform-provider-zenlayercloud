@@ -66,6 +66,11 @@ func ResourceZenlayerCloudZecDhcpOptionsSet() *schema.Resource {
 				Computed:    true,
 				Description: "ID of the resource group to which the DHCP options set belongs.",
 			},
+			"resource_group_name": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "The Name of resource group the DHCP options set belongs to.",
+			},
 			"tags": {
 				Type:        schema.TypeMap,
 				Elem:        &schema.Schema{Type: schema.TypeString},
@@ -171,6 +176,7 @@ func resourceZenlayerCloudZecDhcpOptionsSetRead(ctx context.Context, d *schema.R
 	_ = d.Set("description", dhcpOptionsSet.Description)
 	_ = d.Set("create_time", dhcpOptionsSet.CreateTime)
 	_ = d.Set("resource_group_id", dhcpOptionsSet.ResourceGroupId)
+	_ = d.Set("resource_group_name", dhcpOptionsSet.ResourceGroupName)
 
 	// 读取标签
 	tagMap, errRet := common.TagsToMap(dhcpOptionsSet.Tags)
