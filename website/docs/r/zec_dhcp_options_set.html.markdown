@@ -46,6 +46,7 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - ID of the resource.
 * `create_time` - Creation time of the DHCP options set.
+* `resource_group_name` - The Name of resource group the DHCP options set belongs to.
 
 
 ## Import

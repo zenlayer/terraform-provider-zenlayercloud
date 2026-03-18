@@ -75,6 +75,11 @@ func DataSourceZenlayerCloudZlbInstances() *schema.Resource {
 							Computed:    true,
 							Description: "VPC ID to which the load balance belongs.",
 						},
+						"security_group_id": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "ID of the security group bind to the load balancer instance.",
+						},
 						"resource_group_id": {
 							Type:        schema.TypeString,
 							Computed:    true,
@@ -183,6 +188,7 @@ func dataSourceZenlayerCloudZlbInstancesRead(ctx context.Context, d *schema.Reso
 			"resource_group_name":  balancer.ResourceGroup.ResourceGroupName,
 			"private_ip_addresses": balancer.PrivateIpAddress,
 			"public_ip_addresses":  balancer.PublicIpAddress,
+			"security_group_id":    balancer.SecurityGroupId,
 			"status":               balancer.Status,
 			"create_time":          balancer.CreateTime,
 		}
