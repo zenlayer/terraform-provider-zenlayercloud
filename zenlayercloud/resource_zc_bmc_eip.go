@@ -31,6 +31,7 @@ package zenlayercloud
 import (
 	"context"
 	"fmt"
+
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -98,6 +99,12 @@ func resourceZenlayerCloudEip() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "The EIP address.",
+			},
+			"netmask": {
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Computed: true,
+				Description: "The netmask of the EIP. Default is 32.",
 			},
 			"eip_status": {
 				Type:        schema.TypeString,
@@ -258,6 +265,10 @@ func resourceZenlayerCloudEipCreate(ctx context.Context, d *schema.ResourceData,
 		request.ResourceGroupId = v.(string)
 	}
 
+	if v, ok := d.GetOk("netmask"); ok {
+		request.Netmask = v.(int)
+	}
+
 	if tags := common2.GetTags(d, "tags"); len(tags) > 0 {
 		request.Tags = &bmc.TagAssociation{}
 		for k, v := range tags {
@@ -363,6 +374,7 @@ func resourceZenlayerCloudEipRead(ctx context.Context, d *schema.ResourceData, m
 	_ = d.Set("resource_group_name", eipAddress.ResourceGroupName)
 	_ = d.Set("eip_charge_type", eipAddress.EipChargeType)
 	_ = d.Set("public_ip", eipAddress.IpAddress)
+	_ = d.Set("netmask", eipAddress.Netmask)
 	if eipAddress.EipChargeType == BmcChargeTypePrepaid {
 		_ = d.Set("eip_charge_prepaid_period", eipAddress.Period)
 	}

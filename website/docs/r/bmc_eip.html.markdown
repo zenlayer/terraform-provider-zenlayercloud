@@ -34,6 +34,7 @@ The following arguments are supported:
 * `eip_charge_prepaid_period` - (Optional, Int, ForceNew) The tenancy (time unit is month) of the prepaid EIP, NOTE: it only works when eip_charge_type is set to `PREPAID`.
 * `eip_charge_type` - (Optional, String, ForceNew) The charge type of EIP. Valid values are `PREPAID`, `POSTPAID`. The default is `POSTPAID`. Note: `PREPAID` EIP may not allow to delete before expired.
 * `force_delete` - (Optional, Bool) Indicate whether to force delete the EIP. Default is `false`. If set true, the EIP will be permanently deleted instead of being moved into the recycle bin.
+* `netmask` - (Optional, Int) The netmask of the EIP. Default is 32.
 * `resource_group_id` - (Optional, String) The resource group id the EIP belongs to, default to Default Resource Group.
 * `tags` - (Optional, Map) Tags of the EIP.
 

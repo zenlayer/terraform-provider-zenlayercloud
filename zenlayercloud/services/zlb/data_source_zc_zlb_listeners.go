@@ -79,7 +79,6 @@ func DataSourceZenlayerCloudZlbListeners() *schema.Resource {
 							Computed:    true,
 							Description: "Forwarding mode of the listener. Valid values: `DR`, `FNAT`.",
 						},
-
 						"health_check_enabled": {
 							Type:        schema.TypeBool,
 							Computed:    true,
@@ -129,6 +128,16 @@ func DataSourceZenlayerCloudZlbListeners() *schema.Resource {
 							Type:        schema.TypeInt,
 							Computed:    true,
 							Description: "Idle timeout for data connections in seconds.",
+						},
+						"health_check_fail_open": {
+							Type:        schema.TypeBool,
+							Computed:    true,
+							Description: "Indicates whether to enable fail-open for health check.",
+						},
+						"persistent": {
+							Type:        schema.TypeInt,
+							Computed:    true,
+							Description: "Session persistence duration in seconds.",
 						},
 						"create_time": {
 							Type:        schema.TypeString,
@@ -201,6 +210,8 @@ func dataSourceZenlayerCloudZlbListenersRead(ctx context.Context, d *schema.Reso
 			"health_check_retry":            listener.HealthCheck.CheckRetry,
 			"health_check_delay_loop":       listener.HealthCheck.CheckDelayLoop,
 			"idle_timeout":                  listener.IdleTimeout,
+			"health_check_fail_open":        listener.HealthCheck.FailOpen,
+			"persistent":                    listener.Persistent,
 		}
 
 		listenerList = append(listenerList, mapping)

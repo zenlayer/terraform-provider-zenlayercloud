@@ -81,6 +81,12 @@ func ResourceZenlayerCloudZlbListener() *schema.Resource {
 				Default:     true,
 				Description: "Indicates whether health check is enabled. Default is `true`. When health check is disabled, other health check parameter can't be set.",
 			},
+			"health_check_fail_open": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: "Indicates whether to enable fail-open for health check. When enabled, traffic will be sent to backend servers even if health checks fail. Default is `false`.",
+			},
 			"health_check_type": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -205,6 +211,11 @@ func healthCheckDisableValidFunc() schema.CustomizeDiffFunc {
 		if !diff.GetRawConfig().GetAttr("health_check_type").IsNull() {
 			return errors.New("`health_check_type` can't be set when `health_check_enabled` is set to `false`")
 		}
+
+		if !diff.GetRawConfig().GetAttr("health_check_fail_open").IsNull() {
+			return errors.New("`health_check_fail_open` can't be set when `health_check_enabled` is set to `false`")
+		}
+
 		return nil
 	})
 
@@ -279,6 +290,10 @@ func resourceZenlayerCloudZlbListenerCreate(ctx context.Context, d *schema.Resou
 		healthCheck.CheckDelayLoop = common.Integer(v.(int))
 	}
 
+	if v, ok := d.GetOk("health_check_fail_open"); ok {
+		healthCheck.FailOpen = common.Bool(v.(bool))
+	}
+
 	request.HealthCheck = healthCheck
 
 	response, err := zlbService.client.WithZlbClient().CreateListener(request)
@@ -337,6 +352,7 @@ func resourceZenlayerCloudZlbListenerRead(ctx context.Context, d *schema.Resourc
 	_ = d.Set("health_check_port", listener.HealthCheck.CheckPort)
 	_ = d.Set("health_check_retry", listener.HealthCheck.CheckRetry)
 	_ = d.Set("health_check_delay_loop", listener.HealthCheck.CheckDelayLoop)
+	_ = d.Set("health_check_fail_open", listener.HealthCheck.FailOpen)
 
 	return nil
 }
@@ -382,7 +398,7 @@ func resourceZenlayerCloudZlbListenerUpdate(ctx context.Context, d *schema.Resou
 
 	if d.HasChanges("health_check_enabled", "health_check_type", "health_check_http_get_url",
 		"health_check_delay_try", "health_check_conn_timeout", "health_check_http_status_code",
-		"health_check_port", "health_check_retry", "health_check_delay_loop") {
+		"health_check_port", "health_check_retry", "health_check_delay_loop", "health_check_fail_open") {
 
 		healthCheck := &zlb.HealthCheck{}
 
@@ -416,6 +432,10 @@ func resourceZenlayerCloudZlbListenerUpdate(ctx context.Context, d *schema.Resou
 		}
 		if v, ok := d.GetOk("health_check_delay_loop"); ok {
 			healthCheck.CheckDelayLoop = common.Integer(v.(int))
+		}
+
+		if v, ok := d.GetOk("health_check_fail_open"); ok {
+			healthCheck.FailOpen = common.Bool(v.(bool))
 		}
 
 		request.HealthCheck = healthCheck
