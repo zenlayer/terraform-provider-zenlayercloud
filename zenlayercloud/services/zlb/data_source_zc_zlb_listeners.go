@@ -125,6 +125,11 @@ func DataSourceZenlayerCloudZlbListeners() *schema.Resource {
 							Computed:    true,
 							Description: "Interval between health checks. Measured in second.",
 						},
+						"idle_timeout": {
+							Type:        schema.TypeInt,
+							Computed:    true,
+							Description: "Idle timeout for data connections in seconds.",
+						},
 						"create_time": {
 							Type:        schema.TypeString,
 							Computed:    true,
@@ -195,6 +200,7 @@ func dataSourceZenlayerCloudZlbListenersRead(ctx context.Context, d *schema.Reso
 			"health_check_port":             listener.HealthCheck.CheckPort,
 			"health_check_retry":            listener.HealthCheck.CheckRetry,
 			"health_check_delay_loop":       listener.HealthCheck.CheckDelayLoop,
+			"idle_timeout":                  listener.IdleTimeout,
 		}
 
 		listenerList = append(listenerList, mapping)

@@ -143,6 +143,13 @@ func ResourceZenlayerCloudZlbListener() *schema.Resource {
 				ValidateFunc: validation.IntAtLeast(0),
 				Description:  "Session persistence duration in seconds. When set, the load balancer will maintain session affinity for the specified duration.",
 			},
+			"idle_timeout": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Default:      300,
+				ValidateFunc: validation.IntAtLeast(1),
+				Description:  "Idle timeout for data connections in seconds. If no request is received within this timeout, the LB temporarily disconnects until the next request re-establishes a new connection. Must be greater than 0. Default is `300`.",
+			},
 			"create_time": {
 				Type:        schema.TypeString,
 				Computed:    true,
@@ -239,6 +246,10 @@ func resourceZenlayerCloudZlbListenerCreate(ctx context.Context, d *schema.Resou
 		request.Persistent = common.Integer(v.(int))
 	}
 
+	if v, ok := d.GetOk("idle_timeout"); ok {
+		request.IdleTimeout = common.Integer(v.(int))
+	}
+
 	healthCheck := &zlb.HealthCheck{
 		Enabled: common.Bool(d.Get("health_check_enabled").(bool)),
 	}
@@ -315,6 +326,7 @@ func resourceZenlayerCloudZlbListenerRead(ctx context.Context, d *schema.Resourc
 	_ = d.Set("scheduler", listener.Scheduler)
 	_ = d.Set("kind", listener.Kind)
 	_ = d.Set("persistent", listener.Persistent)
+	_ = d.Set("idle_timeout", listener.IdleTimeout)
 	_ = d.Set("create_time", listener.CreateTime)
 	_ = d.Set("health_check_enabled", listener.HealthCheck.Enabled)
 	_ = d.Set("health_check_type", listener.HealthCheck.CheckType)
@@ -362,6 +374,10 @@ func resourceZenlayerCloudZlbListenerUpdate(ctx context.Context, d *schema.Resou
 
 	if d.HasChange("persistent") {
 		request.Persistent = common.Integer(d.Get("persistent").(int))
+	}
+
+	if d.HasChange("idle_timeout") {
+		request.IdleTimeout = common.Integer(d.Get("idle_timeout").(int))
 	}
 
 	if d.HasChanges("health_check_enabled", "health_check_type", "health_check_http_get_url",
