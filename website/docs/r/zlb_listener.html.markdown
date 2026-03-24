@@ -54,7 +54,7 @@ resource "zenlayercloud_zlb_listener" "listener" {
 The following arguments are supported:
 
 * `listener_name` - (Required, String) The name of the load balancer listener.
-* `port` - (Required, String) The port of listener. Multiple ports are separated by commas. When the port is a range, connect with -, for example: 10000-10005.The value range of the port is 1 to 65535. Please note that the port cannot overlap with other ports of the listener.
+* `port` - (Required, String) The port of listener. Multiple ports are separated by commas. When the port is a range, connect with -, for example: 10000-10005. Use '0' to represent all ports. The value range of the port is 0 to 65535. Please note that the port cannot overlap with other ports of the listener.
 * `protocol` - (Required, String, ForceNew) The protocol of listener. Valid values: `TCP`, `UDP`.
 * `zlb_id` - (Required, String, ForceNew) The ID of load balancer that the listener belongs to.
 * `health_check_conn_timeout` - (Optional, Int) Connection timeout for health check. Valid values: `1` to `15`. `health_check_conn_timeout` takes effect only if `health_check_enabled` is set to true. Default is `2`.
@@ -69,7 +69,7 @@ The following arguments are supported:
 * `health_check_type` - (Optional, String) Health check protocols. Valid values: `PING_CHECK`, `TCP`, `HTTP_GET`.
 * `idle_timeout` - (Optional, Int) Idle timeout for data connections in seconds. If no request is received within this timeout, the LB temporarily disconnects until the next request re-establishes a new connection. Must be greater than 0. Default is `300`.
 * `kind` - (Optional, String) Forwarding mode of the listener. Valid values: `DR`(stands for Direct Routing), `FNAT`(stands for Full NAT), `DNAT`(stands for Destination NAT). Default is `FNAT`.
-* `persistent` - (Optional, Int) Session persistence duration in seconds. When set, the load balancer will maintain session affinity for the specified duration.
+* `persistent` - (Optional, Int) Session persistence duration in seconds. Set to 0 or omit this field to disable session affinity. When set to a positive value, the load balancer will maintain session affinity for the specified duration.
 * `scheduler` - (Optional, String) Scheduling algorithm of the listener. Valid values: `mh`, `rr`, `wrr`, `lc`, `wlc`, `sh`, `dh`. Default value: `mh`.
 
 ## Attributes Reference

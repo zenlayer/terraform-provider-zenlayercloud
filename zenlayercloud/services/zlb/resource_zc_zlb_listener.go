@@ -59,7 +59,7 @@ func ResourceZenlayerCloudZlbListener() *schema.Resource {
 			"port": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "The port of listener. Multiple ports are separated by commas. When the port is a range, connect with -, for example: 10000-10005.The value range of the port is 1 to 65535. Please note that the port cannot overlap with other ports of the listener.",
+				Description: "The port of listener. Multiple ports are separated by commas. When the port is a range, connect with -, for example: 10000-10005. Use '0' to represent all ports. The value range of the port is 0 to 65535. Please note that the port cannot overlap with other ports of the listener.",
 			},
 			"scheduler": {
 				Type:         schema.TypeString,
@@ -147,7 +147,7 @@ func ResourceZenlayerCloudZlbListener() *schema.Resource {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				ValidateFunc: validation.IntAtLeast(0),
-				Description:  "Session persistence duration in seconds. When set, the load balancer will maintain session affinity for the specified duration.",
+				Description:  "Session persistence duration in seconds. Set to 0 or omit this field to disable session affinity. When set to a positive value, the load balancer will maintain session affinity for the specified duration.",
 			},
 			"idle_timeout": {
 				Type:         schema.TypeInt,
