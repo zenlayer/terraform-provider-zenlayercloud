@@ -127,7 +127,7 @@ func ResourceZenlayerCloudZlbListener() *schema.Resource {
 				Optional:     true,
 				Computed:     true,
 				ValidateFunc: validation.IntBetween(1, 65535),
-				Description:  "Health check port. Defaults to the backend server port. Valid values: `1` to `65535`. `health_check_port` takes effect only if `health_check_enabled` is set to true.",
+				Description:  "Health check port. Valid values: `1` to `65535`. **When the listener is configured with all ports (port = '0') and `health_check_type` is `TCP` or `HTTP_GET`, this parameter is required and only one port is allowed.** For other cases, defaults to the listener's port.",
 			},
 			"health_check_retry": {
 				Type:         schema.TypeInt,

@@ -33,7 +33,7 @@ resource "zenlayercloud_zlb_instance" "zlb" {
 }
 ```
 
-Create TCP Listener with health check enabled
+Create TCP Listener with health check enabled (single port)
 
 ```hcl
 resource "zenlayercloud_zlb_listener" "listener" {
@@ -41,11 +41,27 @@ resource "zenlayercloud_zlb_listener" "listener" {
   listener_name        = "tcp-listener"
   protocol             = "TCP"
   health_check_enabled = true
-  port                 = 80
+  port                 = "80"
   scheduler            = "mh"
   kind                 = "FNAT"
   health_check_type    = "TCP"
   persistent           = 300
+}
+```
+
+is required and only one port is allowed.
+
+```hcl
+resource "zenlayercloud_zlb_listener" "all_ports_listener" {
+  zlb_id               = zenlayercloud_zlb_instance.zlb.id
+  listener_name        = "all-ports-listener"
+  protocol             = "TCP"
+  health_check_enabled = true
+  port                 = "0" # All ports
+  scheduler            = "mh"
+  kind                 = "FNAT"
+  health_check_type    = "TCP"
+  health_check_port    = 8080 # Required when using all ports with TCP/HTTP_GET health check
 }
 ```
 
@@ -64,7 +80,7 @@ The following arguments are supported:
 * `health_check_fail_open` - (Optional, Bool) Indicates whether to enable fail-open for health check. When enabled, traffic will be sent to backend servers even if health checks fail. Default is `false`.
 * `health_check_http_get_url` - (Optional, String) HTTP request URL for health check. The value should start with '/', Default is `/`.
 * `health_check_http_status_code` - (Optional, Int) HTTP status code for health check. Required when `check_type` is `HTTP_GET`. Valid values: `100` to `599`.
-* `health_check_port` - (Optional, Int) Health check port. Defaults to the backend server port. Valid values: `1` to `65535`. `health_check_port` takes effect only if `health_check_enabled` is set to true.
+* `health_check_port` - (Optional, Int) Health check port. Valid values: `1` to `65535`. **When the listener is configured with all ports (port = '0') and `health_check_type` is `TCP` or `HTTP_GET`, this parameter is required and only one port is allowed.** For other cases, defaults to the listener's port.
 * `health_check_retry` - (Optional, Int) Number of retry attempts for health check. Valid values: `1` to `5`. `health_check_retry` takes effect only if `health_check_enabled` is set to true. Default is `2`.
 * `health_check_type` - (Optional, String) Health check protocols. Valid values: `PING_CHECK`, `TCP`, `HTTP_GET`.
 * `idle_timeout` - (Optional, Int) Idle timeout for data connections in seconds. If no request is received within this timeout, the LB temporarily disconnects until the next request re-establishes a new connection. Must be greater than 0. Default is `300`.
