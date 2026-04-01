@@ -41,7 +41,7 @@ resource "zenlayercloud_zlb_listener" "tcp_listener" {
   listener_name        = "tcp-listener"
   protocol             = "TCP"
   health_check_enabled = true
-  port                 = 8080
+  port                 = "8080"
   scheduler            = "mh"
   kind                 = "FNAT"
   health_check_type    = "TCP"
@@ -75,7 +75,7 @@ resource "zenlayercloud_zec_instance" "instance" {
 }
 ```
 
-Create a backend instance
+Create a backend instance (with specific port)
 
 ```hcl
 resource "zenlayercloud_zlb_backend" "backend" {
@@ -84,6 +84,37 @@ resource "zenlayercloud_zlb_backend" "backend" {
   backends {
     instance_id        = zenlayercloud_zec_instance.instance.id
     private_ip_address = zenlayercloud_zec_instance.instance.private_ip_addresses[0]
+    port               = 8080 # Optional: specify backend port (not allowed when listener uses all ports)
+  }
+}
+```
+
+Create a backend instance for all-ports listener
+
+~> **NOTE:** When the listener is configured with all ports (port = "0"), the backend server port cannot be customized and will follow the listener's port configuration.
+
+```hcl
+# Listener with all ports - health_check_port is required when using TCP/HTTP_GET health check
+resource "zenlayercloud_zlb_listener" "all_ports_listener" {
+  zlb_id               = zenlayercloud_zlb_instance.zlb.id
+  listener_name        = "all-ports-listener"
+  protocol             = "TCP"
+  health_check_enabled = true
+  port                 = "0" # All ports
+  scheduler            = "mh"
+  kind                 = "FNAT"
+  health_check_type    = "TCP"
+  health_check_port    = 8080 # Required when using all ports with TCP/HTTP_GET health check
+}
+
+# Backend for all-ports listener - port cannot be specified
+resource "zenlayercloud_zlb_backend" "all_ports_backend" {
+  zlb_id      = zenlayercloud_zlb_instance.zlb.id
+  listener_id = split(":", zenlayercloud_zlb_listener.all_ports_listener.id)[1]
+  backends {
+    instance_id        = zenlayercloud_zec_instance.instance.id
+    private_ip_address = zenlayercloud_zec_instance.instance.private_ip_addresses[0]
+    # port is NOT allowed here - backend port follows listener's all-ports configuration
   }
 }
 ```
@@ -100,7 +131,7 @@ The `backends` object supports the following:
 
 * `private_ip_address` - (Required, String) Private IP address of the network interface attached to the instance.
 * `instance_id` - (Optional, String) ID of the backend server. The added instance must belong to the VPC associated with lb.
-* `port` - (Optional, Int) Target port for request forwarding and health checks. If left empty, it will follow the listener's port configuration. Valid values: `1` to `65535`.
+* `port` - (Optional, Int) Target port for request forwarding and health checks. **When the listener is configured with all ports (port = '0'), the backend server port must follow the listener's port and cannot be customized.** If left empty, it will follow the listener's port configuration. Valid values: `1` to `65535`.
 * `weight` - (Optional, Int) Forwarding weight of the backend server. Valid value ranges: (0~65535). Default to 100. Weight of 0 means the server will not accept new requests.
 
 ## Attributes Reference

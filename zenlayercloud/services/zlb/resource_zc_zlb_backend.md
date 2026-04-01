@@ -30,7 +30,7 @@ resource "zenlayercloud_zlb_listener" "tcp_listener" {
 	listener_name        = "tcp-listener"
 	protocol             = "TCP"
 	health_check_enabled = true
-	port                 = 8080
+	port                 = "8080"
 	scheduler            = "mh"
 	kind                 = "FNAT"
 	health_check_type    = "TCP"
@@ -64,7 +64,7 @@ resource "zenlayercloud_zec_instance" "instance" {
 }
 ```
 
-Create a backend instance
+Create a backend instance (with specific port)
 
 ```hcl
 resource "zenlayercloud_zlb_backend" "backend" {
@@ -73,6 +73,37 @@ resource "zenlayercloud_zlb_backend" "backend" {
 	backends {
 		instance_id        = zenlayercloud_zec_instance.instance.id
 		private_ip_address = zenlayercloud_zec_instance.instance.private_ip_addresses[0]
+		port               = 8080   # Optional: specify backend port (not allowed when listener uses all ports)
+	}
+}
+```
+
+Create a backend instance for all-ports listener
+
+~> **NOTE:** When the listener is configured with all ports (port = "0"), the backend server port cannot be customized and will follow the listener's port configuration.
+
+```hcl
+# Listener with all ports - health_check_port is required when using TCP/HTTP_GET health check
+resource "zenlayercloud_zlb_listener" "all_ports_listener" {
+	zlb_id               = zenlayercloud_zlb_instance.zlb.id
+	listener_name        = "all-ports-listener"
+	protocol             = "TCP"
+	health_check_enabled = true
+	port                 = "0"    # All ports
+	scheduler            = "mh"
+	kind                 = "FNAT"
+	health_check_type    = "TCP"
+	health_check_port    = 8080   # Required when using all ports with TCP/HTTP_GET health check
+}
+
+# Backend for all-ports listener - port cannot be specified
+resource "zenlayercloud_zlb_backend" "all_ports_backend" {
+	zlb_id      = zenlayercloud_zlb_instance.zlb.id
+	listener_id = split(":", zenlayercloud_zlb_listener.all_ports_listener.id)[1]
+	backends {
+		instance_id        = zenlayercloud_zec_instance.instance.id
+		private_ip_address = zenlayercloud_zec_instance.instance.private_ip_addresses[0]
+		# port is NOT allowed here - backend port follows listener's all-ports configuration
 	}
 }
 ```
