@@ -66,6 +66,7 @@ Bare Metal Cloud(BMC)
 	zenlayercloud_bmc_eip_association
 	zenlayercloud_bmc_vpc
 	zenlayercloud_bmc_subnet
+	zenlayercloud_bmc_byoip
 
 Cloud Networking(SDN)
   Data Source
@@ -265,6 +266,7 @@ func resourcesMap() map[string]*schema.Resource {
 		"zenlayercloud_bmc_eip_association":     resourceZenlayerCloudEipAssociationAssociation(),
 		"zenlayercloud_bmc_vpc":                 resourceZenlayerCloudVpc(),
 		"zenlayercloud_bmc_subnet":              resourceZenlayerCloudBmcSubnet(),
+		"zenlayercloud_bmc_byoip":               resourceZenlayerCloudBmcByoip(),
 
 		// vm product
 		"zenlayercloud_image":                     resourceZenlayerCloudVmImage(),
