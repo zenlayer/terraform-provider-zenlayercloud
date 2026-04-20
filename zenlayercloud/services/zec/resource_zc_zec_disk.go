@@ -65,6 +65,11 @@ func ResourceZenlayerCloudZecDisk() *schema.Resource {
 				Computed:    true,
 				Description: "The resource group id the disk belongs to.",
 			},
+			"resource_group_name": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "The Name of resource group the disk belongs to.",
+			},
 			"tags": {
 				Type:        schema.TypeMap,
 				Optional:    true,

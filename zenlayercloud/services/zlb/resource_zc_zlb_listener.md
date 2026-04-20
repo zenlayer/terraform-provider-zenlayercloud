@@ -22,7 +22,7 @@ resource "zenlayercloud_zlb_instance" "zlb" {
 }
 ```
 
-Create TCP Listener with health check enabled
+Create TCP Listener with health check enabled (single port)
 
 ```hcl
 resource "zenlayercloud_zlb_listener" "listener" {
@@ -30,11 +30,29 @@ resource "zenlayercloud_zlb_listener" "listener" {
   listener_name        = "tcp-listener"
   protocol             = "TCP"
   health_check_enabled = true
-  port                 = 80
+  port                 = "80"
   scheduler            = "mh"
   kind                 = "FNAT"
   health_check_type    = "TCP"
   persistent           = 300
+}
+```
+
+Create Listener with all ports and TCP health check
+
+~> **NOTE:** When using all ports (port = "0") with TCP or HTTP_GET health check type, `health_check_port` is required and only one port is allowed.
+
+```hcl
+resource "zenlayercloud_zlb_listener" "all_ports_listener" {
+  zlb_id               = zenlayercloud_zlb_instance.zlb.id
+  listener_name        = "all-ports-listener"
+  protocol             = "TCP"
+  health_check_enabled = true
+  port                 = "0"           # All ports
+  scheduler            = "mh"
+  kind                 = "FNAT"
+  health_check_type    = "TCP"
+  health_check_port    = 8080          # Required when using all ports with TCP/HTTP_GET health check
 }
 ```
 

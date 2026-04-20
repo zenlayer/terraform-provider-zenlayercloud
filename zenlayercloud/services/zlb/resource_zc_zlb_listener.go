@@ -59,7 +59,7 @@ func ResourceZenlayerCloudZlbListener() *schema.Resource {
 			"port": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "The port of listener. Multiple ports are separated by commas. When the port is a range, connect with -, for example: 10000-10005.The value range of the port is 1 to 65535. Please note that the port cannot overlap with other ports of the listener.",
+				Description: "The port of listener. Multiple ports are separated by commas. When the port is a range, connect with -, for example: 10000-10005. Use '0' to represent all ports. The value range of the port is 0 to 65535. Please note that the port cannot overlap with other ports of the listener.",
 			},
 			"scheduler": {
 				Type:         schema.TypeString,
@@ -80,6 +80,12 @@ func ResourceZenlayerCloudZlbListener() *schema.Resource {
 				Optional:    true,
 				Default:     true,
 				Description: "Indicates whether health check is enabled. Default is `true`. When health check is disabled, other health check parameter can't be set.",
+			},
+			"health_check_fail_open": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: "Indicates whether to enable fail-open for health check. When enabled, traffic will be sent to backend servers even if health checks fail. Default is `false`.",
 			},
 			"health_check_type": {
 				Type:         schema.TypeString,
@@ -121,7 +127,7 @@ func ResourceZenlayerCloudZlbListener() *schema.Resource {
 				Optional:     true,
 				Computed:     true,
 				ValidateFunc: validation.IntBetween(1, 65535),
-				Description:  "Health check port. Defaults to the backend server port. Valid values: `1` to `65535`. `health_check_port` takes effect only if `health_check_enabled` is set to true.",
+				Description:  "Health check port. Valid values: `1` to `65535`. **When the listener is configured with all ports (port = '0') and `health_check_type` is `TCP` or `HTTP_GET`, this parameter is required and only one port is allowed.** For other cases, defaults to the listener's port.",
 			},
 			"health_check_retry": {
 				Type:         schema.TypeInt,
@@ -141,7 +147,14 @@ func ResourceZenlayerCloudZlbListener() *schema.Resource {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				ValidateFunc: validation.IntAtLeast(0),
-				Description:  "Session persistence duration in seconds. When set, the load balancer will maintain session affinity for the specified duration.",
+				Description:  "Session persistence duration in seconds. Set to 0 or omit this field to disable session affinity. When set to a positive value, the load balancer will maintain session affinity for the specified duration.",
+			},
+			"idle_timeout": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Default:      300,
+				ValidateFunc: validation.IntAtLeast(1),
+				Description:  "Idle timeout for data connections in seconds. If no request is received within this timeout, the LB temporarily disconnects until the next request re-establishes a new connection. Must be greater than 0. Default is `300`.",
 			},
 			"create_time": {
 				Type:        schema.TypeString,
@@ -198,6 +211,11 @@ func healthCheckDisableValidFunc() schema.CustomizeDiffFunc {
 		if !diff.GetRawConfig().GetAttr("health_check_type").IsNull() {
 			return errors.New("`health_check_type` can't be set when `health_check_enabled` is set to `false`")
 		}
+
+		if !diff.GetRawConfig().GetAttr("health_check_fail_open").IsNull() {
+			return errors.New("`health_check_fail_open` can't be set when `health_check_enabled` is set to `false`")
+		}
+
 		return nil
 	})
 
@@ -239,6 +257,10 @@ func resourceZenlayerCloudZlbListenerCreate(ctx context.Context, d *schema.Resou
 		request.Persistent = common.Integer(v.(int))
 	}
 
+	if v, ok := d.GetOk("idle_timeout"); ok {
+		request.IdleTimeout = common.Integer(v.(int))
+	}
+
 	healthCheck := &zlb.HealthCheck{
 		Enabled: common.Bool(d.Get("health_check_enabled").(bool)),
 	}
@@ -266,6 +288,10 @@ func resourceZenlayerCloudZlbListenerCreate(ctx context.Context, d *schema.Resou
 	}
 	if v, ok := d.GetOk("health_check_delay_loop"); ok {
 		healthCheck.CheckDelayLoop = common.Integer(v.(int))
+	}
+
+	if v, ok := d.GetOk("health_check_fail_open"); ok {
+		healthCheck.FailOpen = common.Bool(v.(bool))
 	}
 
 	request.HealthCheck = healthCheck
@@ -315,6 +341,7 @@ func resourceZenlayerCloudZlbListenerRead(ctx context.Context, d *schema.Resourc
 	_ = d.Set("scheduler", listener.Scheduler)
 	_ = d.Set("kind", listener.Kind)
 	_ = d.Set("persistent", listener.Persistent)
+	_ = d.Set("idle_timeout", listener.IdleTimeout)
 	_ = d.Set("create_time", listener.CreateTime)
 	_ = d.Set("health_check_enabled", listener.HealthCheck.Enabled)
 	_ = d.Set("health_check_type", listener.HealthCheck.CheckType)
@@ -325,6 +352,7 @@ func resourceZenlayerCloudZlbListenerRead(ctx context.Context, d *schema.Resourc
 	_ = d.Set("health_check_port", listener.HealthCheck.CheckPort)
 	_ = d.Set("health_check_retry", listener.HealthCheck.CheckRetry)
 	_ = d.Set("health_check_delay_loop", listener.HealthCheck.CheckDelayLoop)
+	_ = d.Set("health_check_fail_open", listener.HealthCheck.FailOpen)
 
 	return nil
 }
@@ -364,9 +392,13 @@ func resourceZenlayerCloudZlbListenerUpdate(ctx context.Context, d *schema.Resou
 		request.Persistent = common.Integer(d.Get("persistent").(int))
 	}
 
+	if d.HasChange("idle_timeout") {
+		request.IdleTimeout = common.Integer(d.Get("idle_timeout").(int))
+	}
+
 	if d.HasChanges("health_check_enabled", "health_check_type", "health_check_http_get_url",
 		"health_check_delay_try", "health_check_conn_timeout", "health_check_http_status_code",
-		"health_check_port", "health_check_retry", "health_check_delay_loop") {
+		"health_check_port", "health_check_retry", "health_check_delay_loop", "health_check_fail_open") {
 
 		healthCheck := &zlb.HealthCheck{}
 
@@ -400,6 +432,10 @@ func resourceZenlayerCloudZlbListenerUpdate(ctx context.Context, d *schema.Resou
 		}
 		if v, ok := d.GetOk("health_check_delay_loop"); ok {
 			healthCheck.CheckDelayLoop = common.Integer(v.(int))
+		}
+
+		if v, ok := d.GetOk("health_check_fail_open"); ok {
+			healthCheck.FailOpen = common.Bool(v.(bool))
 		}
 
 		request.HealthCheck = healthCheck
