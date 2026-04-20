@@ -1745,3 +1745,97 @@ func (s *ZecService) DescribeDhcpOptionsSetById(ctx context.Context, dhcpOptions
 	}
 	return response.Response.DataSet[0], nil
 }
+
+func (s *ZecService) DescribePlacementGroupById(ctx context.Context, placementGroupId string) (*zec2.PlacementGroupInfo, error) {
+	request := zec2.NewDescribePlacementGroupsRequest()
+	request.PlacementGroupIds = []string{placementGroupId}
+
+	response, err := s.client.WithZec2Client().DescribePlacementGroups(request)
+	defer common.LogApiRequest(ctx, "DescribePlacementGroups", request, response, err)
+
+	if err != nil {
+		return nil, err
+	} else if len(response.Response.DataSet) == 0 {
+		return nil, nil
+	}
+	return response.Response.DataSet[0], nil
+}
+
+func (s *ZecService) DescribePlacementGroupsByFilter(ctx context.Context, filter *PlacementGroupFilter) (placementGroups []*zec2.PlacementGroupInfo, err error) {
+	request := zec2.NewDescribePlacementGroupsRequest()
+	if len(filter.PlacementGroupIds) > 0 {
+		request.PlacementGroupIds = filter.PlacementGroupIds
+	}
+	if filter.Name != nil {
+		request.Name = filter.Name
+	}
+	if filter.ZoneId != nil {
+		request.ZoneId = filter.ZoneId
+	}
+	if filter.ResourceGroupId != nil {
+		request.ResourceGroupId = filter.ResourceGroupId
+	}
+
+	var limit = 100
+	request.PageSize = &limit
+	request.PageNum = common2.Integer(1)
+	response, err := s.client.WithZec2Client().DescribePlacementGroups(request)
+
+	if err != nil {
+		return
+	}
+	if response == nil || len(response.Response.DataSet) < 1 {
+		return
+	}
+
+	placementGroups = response.Response.DataSet
+	num := int(math.Ceil(float64(*response.Response.TotalCount)/float64(limit))) - 1
+	if num == 0 {
+		return placementGroups, nil
+	}
+	maxConcurrentNum := 50
+	g := common.NewGoRoutine(maxConcurrentNum)
+	wg := sync.WaitGroup{}
+
+	var mu sync.Mutex
+
+	for i := 0; i < num; i++ {
+		wg.Add(1)
+		pageNum := i + 2
+		g.Run(func() {
+			defer wg.Done()
+			req := zec2.NewDescribePlacementGroupsRequest()
+			if len(filter.PlacementGroupIds) > 0 {
+				req.PlacementGroupIds = filter.PlacementGroupIds
+			}
+			if filter.Name != nil {
+				req.Name = filter.Name
+			}
+			if filter.ZoneId != nil {
+				req.ZoneId = filter.ZoneId
+			}
+			if filter.ResourceGroupId != nil {
+				req.ResourceGroupId = filter.ResourceGroupId
+			}
+			req.PageSize = &limit
+			req.PageNum = &pageNum
+			resp, e := s.client.WithZec2Client().DescribePlacementGroups(req)
+			if e != nil {
+				return
+			}
+			mu.Lock()
+			placementGroups = append(placementGroups, resp.Response.DataSet...)
+			mu.Unlock()
+		})
+	}
+	wg.Wait()
+
+	return placementGroups, nil
+}
+
+type PlacementGroupFilter struct {
+	PlacementGroupIds []string
+	Name              *string
+	ZoneId            *string
+	ResourceGroupId   *string
+}
