@@ -67,13 +67,13 @@ func resourceZenlayerCloudBmcByoip() *schema.Resource {
 			},
 			"asn": {
 				Type:        schema.TypeInt,
-				Optional:    true,
+				Required:    true,
 				ForceNew:    true,
 				Description: "ASN number of the announced CIDR block.",
 			},
 			"public_virtual_interface_id": {
 				Type:        schema.TypeString,
-				Optional:    true,
+				Required:    true,
 				ForceNew:    true,
 				Description: "The unique ID of the public virtual interface (public VLAN).",
 			},
