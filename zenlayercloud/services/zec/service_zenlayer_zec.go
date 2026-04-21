@@ -942,6 +942,53 @@ func (s *ZecService) ModifySecurityGroupName(ctx context.Context, securityGroupI
 	return err
 }
 
+func (s *ZecService) DescribeImageById(ctx context.Context, imageId string, zoneId string) (*zec2.Image, error) {
+	request := zec2.NewDescribeImagesRequest()
+	request.ImageIds = []string{imageId}
+	if zoneId != "" {
+		request.ZoneId = common2.String(zoneId)
+	}
+	response, err := s.client.WithZec2Client().DescribeImages(request)
+	common.LogApiRequest(ctx, "DescribeImages", request, response, err)
+	if err != nil {
+		return nil, err
+	}
+	if response == nil || response.Response == nil || len(response.Response.DataSet) < 1 {
+		return nil, nil
+	}
+	return response.Response.DataSet[0], nil
+}
+
+func (s *ZecService) DeleteImage(ctx context.Context, imageId string) error {
+	request := zec2.NewDeleteImagesRequest()
+	request.ImageIds = []string{imageId}
+	response, err := s.client.WithZec2Client().DeleteImages(request)
+	common.LogApiRequest(ctx, "DeleteImages", request, response, err)
+	return err
+}
+
+func (s *ZecService) ImageStateRefreshFunc(ctx context.Context, imageId string, zoneId string, failStates []string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		image, err := s.DescribeImageById(ctx, imageId, zoneId)
+		if err != nil {
+			return nil, "", err
+		}
+		if image == nil {
+			return nil, "", nil
+		}
+		status := ""
+		if image.ImageStatus != nil {
+			status = *image.ImageStatus
+		}
+		for _, fs := range failStates {
+			if status == fs {
+				return image, status, common.Error("image %s entered failed state: %s", imageId, status)
+			}
+		}
+		return image, status, nil
+	}
+}
+
 func (s *ZecService) DeleteSecurityGroupById(ctx context.Context, id string) error {
 	request := zec.NewDeleteSecurityGroupRequest()
 	request.SecurityGroupId = id
