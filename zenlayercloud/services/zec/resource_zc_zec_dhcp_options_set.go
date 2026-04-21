@@ -247,7 +247,7 @@ func resourceZenlayerCloudZecDhcpOptionsSetUpdate(ctx context.Context, d *schema
 		err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate)-time.Minute, func() *resource.RetryError {
 			request := user.NewAddResourceResourceGroupRequest()
 			request.ResourceGroupId = common2.String(d.Get("resource_group_id").(string))
-			request.Resources = []*string{&dhcpOptionsSetId}
+			request.Resources = []string{dhcpOptionsSetId}
 
 			_, err := meta.(*connectivity.ZenlayerCloudClient).WithUsrClient().AddResourceResourceGroup(request)
 			if err != nil {

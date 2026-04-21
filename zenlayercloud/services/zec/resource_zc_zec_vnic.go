@@ -199,7 +199,7 @@ func resourceZenlayerCloudZecVNicUpdate(ctx context.Context, d *schema.ResourceD
 		err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate)-time.Minute, func() *resource.RetryError {
 			request := user.NewAddResourceResourceGroupRequest()
 			request.ResourceGroupId = common.String(d.Get("resource_group_id").(string))
-			request.Resources = []*string{common.String(nicId)}
+			request.Resources = []string{nicId}
 
 			_, err := meta.(*connectivity.ZenlayerCloudClient).WithUsrClient().AddResourceResourceGroup(request)
 			if err != nil {
