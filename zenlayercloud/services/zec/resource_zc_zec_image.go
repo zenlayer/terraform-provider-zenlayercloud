@@ -67,7 +67,7 @@ func ResourceZenlayerCloudZecImage() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(2, 63),
-				Description:  "Name of the image. 2–63 chars; letters, digits, `-`, `_`, `.`; must start and end with a letter or digit.",
+				Description:  "Name of the image. 2-63 chars; letters, digits, `-`, `_`, `.`; must start and end with a letter or digit.",
 			},
 			"resource_group_id": {
 				Type:        schema.TypeString,

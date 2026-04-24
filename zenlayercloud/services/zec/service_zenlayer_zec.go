@@ -986,6 +986,25 @@ func (s *ZecService) ImageStateRefreshFunc(ctx context.Context, imageId string, 
 	}
 }
 
+func (s *ZecService) ImageAvailableForCopyRefreshFunc(ctx context.Context, imageId string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		image, err := s.DescribeCustomImageById(ctx, imageId)
+		if err != nil {
+			return nil, "", err
+		}
+		if image == nil {
+			return nil, "PENDING", nil
+		}
+		if image.ImageStatus == nil {
+			return image, "PENDING", nil
+		}
+		if *image.ImageStatus == ZecImageStatusFailed {
+			return image, ZecImageStatusFailed, common.Error("image %s in failed state", imageId)
+		}
+		return image, *image.ImageStatus, nil
+	}
+}
+
 func (s *ZecService) DeleteSecurityGroupById(ctx context.Context, id string) error {
 	request := zec.NewDeleteSecurityGroupRequest()
 	request.SecurityGroupId = id
