@@ -66,6 +66,7 @@ Bare Metal Cloud(BMC)
 	zenlayercloud_bmc_eip_association
 	zenlayercloud_bmc_vpc
 	zenlayercloud_bmc_subnet
+	zenlayercloud_bmc_byoip
 
 Cloud Networking(SDN)
   Data Source
@@ -108,6 +109,7 @@ Zenlayer Elastic Compute(ZEC)
 	zenlayercloud_zec_nat_gateway_snats
 	zenlayercloud_zec_nat_gateway_dnats
 	zenlayercloud_zec_border_gateways
+	zenlayercloud_zec_placement_groups
 
   Resource
 	zenlayercloud_zec_vpc
@@ -133,6 +135,8 @@ Zenlayer Elastic Compute(ZEC)
 	zenlayercloud_zec_nat_gateway
 	zenlayercloud_zec_nat_gateway_snat
 	zenlayercloud_zec_nat_gateway_dnat
+	zenlayercloud_zec_placement_group
+	zenlayercloud_zec_placement_group_assignment
 	zenlayercloud_zec_image
 
 Zenlayer Load Balancing(ZLB)
@@ -263,6 +267,7 @@ func resourcesMap() map[string]*schema.Resource {
 		"zenlayercloud_bmc_eip_association":     resourceZenlayerCloudEipAssociationAssociation(),
 		"zenlayercloud_bmc_vpc":                 resourceZenlayerCloudVpc(),
 		"zenlayercloud_bmc_subnet":              resourceZenlayerCloudBmcSubnet(),
+		"zenlayercloud_bmc_byoip":               resourceZenlayerCloudBmcByoip(),
 
 		// vm product
 		"zenlayercloud_image":                     resourceZenlayerCloudVmImage(),
@@ -316,6 +321,8 @@ func resourcesMap() map[string]*schema.Resource {
 		"zenlayercloud_zec_nat_gateway_dnat":              zec.ResourceZenlayerCloudZecVpcNatGatewayDnat(),
 		"zenlayercloud_zec_dhcp_options_set":              zec.ResourceZenlayerCloudZecDhcpOptionsSet(),
 		"zenlayercloud_zec_dhcp_options_set_attachment":   zec.ResourceZenlayerCloudZecDhcpOptionsSetAttachment(),
+		"zenlayercloud_zec_placement_group":               zec.ResourceZenlayerCloudZecPlacementGroup(),
+		"zenlayercloud_zec_placement_group_assignment":    zec.ResourceZenlayerCloudZecPlacementGroupAssignment(),
 		"zenlayercloud_zec_image":                         zec.ResourceZenlayerCloudZecImage(),
 		"zenlayercloud_zec_image_copy":                    zec.ResourceZenlayerCloudZecImageCopy(),
 
@@ -395,6 +402,7 @@ func dataSourcesMap() map[string]*schema.Resource {
 		"zenlayercloud_zec_instances":       zec.DataSourceZenlayerCloudZecInstances(),
 		"zenlayercloud_zec_vnics":           zec.DataSourceZenlayerCloudZecVnics(),
 		"zenlayercloud_zec_dhcp_options_sets": zec.DataSourceZenlayerCloudZecDhcpOptionsSets(),
+		"zenlayercloud_zec_placement_groups":  zec.DataSourceZenlayerCloudZecPlacementGroups(),
 
 		// zenlayer load balancer
 		"zenlayercloud_zlb_regions":   zlb.DataSourceZenlayerCloudZlbRegions(),
