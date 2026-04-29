@@ -1967,3 +1967,93 @@ type PlacementGroupFilter struct {
 	ZoneId            *string
 	ResourceGroupId   *string
 }
+
+func (s *ZecService) DescribeQosPolicyGroupById(ctx context.Context, groupId string) (*zec2.QosPolicyGroup, error) {
+	request := zec2.NewDescribeQosPolicyGroupsRequest()
+	request.QosPolicyGroupIds = []string{groupId}
+
+	response, err := s.client.WithZec2Client().DescribeQosPolicyGroups(request)
+	defer common.LogApiRequest(ctx, "DescribeQosPolicyGroups", request, response, err)
+
+	if err != nil {
+		return nil, err
+	} else if len(response.Response.DataSet) == 0 {
+		return nil, nil
+	}
+	return response.Response.DataSet[0], nil
+}
+
+func (s *ZecService) DescribeQosPolicyGroupsByFilter(ctx context.Context, filter *QosPolicyGroupFilter) (groups []*zec2.QosPolicyGroup, err error) {
+	request := zec2.NewDescribeQosPolicyGroupsRequest()
+	if len(filter.Ids) > 0 {
+		request.QosPolicyGroupIds = filter.Ids
+	}
+	if filter.RegionId != "" {
+		request.RegionId = common2.String(filter.RegionId)
+	}
+	if filter.ResourceId != "" {
+		request.ResourceId = common2.String(filter.ResourceId)
+	}
+
+	var limit = 100
+	request.PageSize = &limit
+	request.PageNum = common2.Integer(1)
+	response, err := s.client.WithZec2Client().DescribeQosPolicyGroups(request)
+
+	if err != nil {
+		log.Printf("[CRITAL] Api[%s] fail, request body [%s], error[%s]\n",
+			request.GetAction(), common.ToJsonString(request), err.Error())
+		return
+	}
+	if response == nil || len(response.Response.DataSet) < 1 {
+		return
+	}
+
+	groups = response.Response.DataSet
+	num := int(math.Ceil(float64(*response.Response.TotalCount)/float64(limit))) - 1
+	if num == 0 {
+		return groups, nil
+	}
+	maxConcurrentNum := 50
+	g := common.NewGoRoutine(maxConcurrentNum)
+	wg := sync.WaitGroup{}
+
+	var mu sync.Mutex
+
+	for i := 0; i < num; i++ {
+		wg.Add(1)
+		pageNum := i + 2
+		g.Run(func() {
+			defer wg.Done()
+			req := zec2.NewDescribeQosPolicyGroupsRequest()
+			if len(filter.Ids) > 0 {
+				req.QosPolicyGroupIds = filter.Ids
+			}
+			if filter.RegionId != "" {
+				req.RegionId = common2.String(filter.RegionId)
+			}
+			if filter.ResourceId != "" {
+				req.ResourceId = common2.String(filter.ResourceId)
+			}
+			req.PageSize = &limit
+			req.PageNum = &pageNum
+			resp, e := s.client.WithZec2Client().DescribeQosPolicyGroups(req)
+			if e != nil {
+				return
+			}
+			mu.Lock()
+			groups = append(groups, resp.Response.DataSet...)
+			mu.Unlock()
+		})
+	}
+	wg.Wait()
+
+	return groups, nil
+}
+
+type QosPolicyGroupFilter struct {
+	Ids             []string
+	RegionId        string
+	ResourceId      string
+	ResourceGroupId string
+}

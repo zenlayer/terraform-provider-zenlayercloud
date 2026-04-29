@@ -26,10 +26,10 @@ resource "zenlayercloud_bmc_byoip" "foo" {
 
 The following arguments are supported:
 
+* `asn` - (Required, Int, ForceNew) ASN number of the announced CIDR block.
 * `cidr` - (Required, String, ForceNew) The announced IPv4 or IPv6 CIDR block.
 * `ip_type` - (Required, String, ForceNew) IP type. Valid values: `IPv4`, `IPv6`.
-* `asn` - (Optional, Int, ForceNew) ASN number of the announced CIDR block.
-* `public_virtual_interface_id` - (Optional, String, ForceNew) The unique ID of the public virtual interface (public VLAN).
+* `public_virtual_interface_id` - (Required, String, ForceNew) The unique ID of the public virtual interface (public VLAN).
 
 ## Attributes Reference
 
