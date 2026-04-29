@@ -196,7 +196,7 @@ func resourceZenlayerCloudVmDiskUpdate(ctx context.Context, d *schema.ResourceDa
 		err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate)-time.Minute, func() *resource.RetryError {
 			request := user.NewAddResourceResourceGroupRequest()
 			request.ResourceGroupId = common.String(d.Get("resource_group_id").(string))
-			request.Resources = []*string{common.String(diskId)}
+			request.Resources = []string{diskId}
 
 			_, err := meta.(*connectivity.ZenlayerCloudClient).WithUsrClient().AddResourceResourceGroup(request)
 			if err != nil {

@@ -246,7 +246,7 @@ func resourceZenlayerCloudZecCidrUpdate(ctx context.Context, d *schema.ResourceD
 		err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate)-time.Minute, func() *resource.RetryError {
 			request := user.NewAddResourceResourceGroupRequest()
 			request.ResourceGroupId = common2.String(d.Get("resource_group_id").(string))
-			request.Resources = []*string{common2.String(cidrId)}
+			request.Resources = []string{cidrId}
 
 			_, err := meta.(*connectivity.ZenlayerCloudClient).WithUsrClient().AddResourceResourceGroup(request)
 			if err != nil {

@@ -126,7 +126,7 @@ func resourceZenlayerCloudPvtdnsZoneUpdate(ctx context.Context, d *schema.Resour
 		err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate)-time.Minute, func() *resource.RetryError {
 			request := user.NewAddResourceResourceGroupRequest()
 			request.ResourceGroupId = common.String(d.Get("resource_group_id").(string))
-			request.Resources = []*string{common.String(zoneId)}
+			request.Resources = []string{zoneId}
 
 			_, err := meta.(*connectivity.ZenlayerCloudClient).WithUsrClient().AddResourceResourceGroup(request)
 			if err != nil {
