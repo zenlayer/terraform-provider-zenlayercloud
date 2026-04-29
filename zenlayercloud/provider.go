@@ -137,6 +137,7 @@ Zenlayer Elastic Compute(ZEC)
 	zenlayercloud_zec_nat_gateway_dnat
 	zenlayercloud_zec_placement_group
 	zenlayercloud_zec_placement_group_assignment
+	zenlayercloud_zec_image
 
 Zenlayer Load Balancing(ZLB)
 
@@ -322,6 +323,8 @@ func resourcesMap() map[string]*schema.Resource {
 		"zenlayercloud_zec_dhcp_options_set_attachment":   zec.ResourceZenlayerCloudZecDhcpOptionsSetAttachment(),
 		"zenlayercloud_zec_placement_group":               zec.ResourceZenlayerCloudZecPlacementGroup(),
 		"zenlayercloud_zec_placement_group_assignment":    zec.ResourceZenlayerCloudZecPlacementGroupAssignment(),
+		"zenlayercloud_zec_image":                         zec.ResourceZenlayerCloudZecImage(),
+		"zenlayercloud_zec_image_copy":                    zec.ResourceZenlayerCloudZecImageCopy(),
 
 		// zenlayer load balancer
 		"zenlayercloud_zlb_instance": zlb.ResourceZenlayerCloudZlbInstance(),
