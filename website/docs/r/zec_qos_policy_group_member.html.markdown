@@ -40,7 +40,7 @@ resource "zenlayercloud_zec_eip" "eip" {
 resource "zenlayercloud_zec_qos_policy_group_member" "member" {
   qos_policy_group_id = zenlayercloud_zec_qos_policy_group.example.id
   resource_id         = zenlayercloud_zec_eip.eip.id
-  ip_type             = "EIP"
+  ip_type             = "Eip"
 }
 ```
 
@@ -59,7 +59,7 @@ resource "zenlayercloud_zec_qos_policy_group_member" "members" {
 
   qos_policy_group_id = zenlayercloud_zec_qos_policy_group.example.id
   resource_id         = each.value
-  ip_type             = "EIP"
+  ip_type             = "Eip"
 }
 ```
 
