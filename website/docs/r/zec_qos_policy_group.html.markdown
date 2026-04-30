@@ -38,6 +38,7 @@ The following arguments are supported:
 * `bandwidth_limit` - (Required, Int) The shared bandwidth limit in Mbps.
 * `name` - (Required, String) The name of the QoS policy group.
 * `region_id` - (Required, String, ForceNew) The region ID where the QoS policy group is located.
+* `rate_limit_mode` - (Optional, String) The rate limit mode of the QoS policy group. Default is LOOSE, Valid values: `LOOSE` - each forwarding server starts with the full group cap, allowing a single connection to reach maximum speed immediately but may briefly exceed the cap under concurrent traffic; `STRICT` - bandwidth is divided evenly across forwarding servers so the group cap is never exceeded, but multiple parallel flows are needed to fully utilize the cap.
 * `resource_group_id` - (Optional, String) The resource group ID the QoS policy group belongs to. Defaults to the default resource group.
 * `tags` - (Optional, Map) The tags of the QoS policy group.
 
@@ -48,7 +49,6 @@ In addition to all arguments above, the following attributes are exported:
 * `id` - ID of the resource.
 * `create_time` - The creation time of the QoS policy group.
 * `member_count` - The number of members currently in the QoS policy group.
-* `rate_limit_mode` - The rate limit mode of the QoS policy group. Default is LOOSE, Valid values: `LOOSE` - each forwarding server starts with the full group cap, allowing a single connection to reach maximum speed immediately but may briefly exceed the cap under concurrent traffic; `STRICT` - bandwidth is divided evenly across forwarding servers so the group cap is never exceeded, but multiple parallel flows are needed to fully utilize the cap.
 * `resource_group_name` - The resource group name the QoS policy group belongs to.
 
 
