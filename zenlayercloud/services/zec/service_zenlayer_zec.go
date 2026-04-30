@@ -1994,6 +1994,9 @@ func (s *ZecService) DescribeQosPolicyGroupsByFilter(ctx context.Context, filter
 	if filter.ResourceId != "" {
 		request.ResourceId = common2.String(filter.ResourceId)
 	}
+	if filter.ResourceGroupId != "" {
+		request.ResourceGroupId = common2.String(filter.ResourceGroupId)
+	}
 
 	var limit = 100
 	request.PageSize = &limit
@@ -2034,6 +2037,9 @@ func (s *ZecService) DescribeQosPolicyGroupsByFilter(ctx context.Context, filter
 			}
 			if filter.ResourceId != "" {
 				req.ResourceId = common2.String(filter.ResourceId)
+			}
+			if filter.ResourceGroupId != "" {
+				req.ResourceGroupId = common2.String(filter.ResourceGroupId)
 			}
 			req.PageSize = &limit
 			req.PageNum = &pageNum
