@@ -39,6 +39,7 @@ import (
 	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/connectivity"
 	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/services/zrm"
 	"github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/common"
+	user "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/user20240529"
 	zec "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/zec20250901"
 )
 
@@ -73,7 +74,6 @@ func ResourceZenlayerCloudZecImage() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Computed:    true,
-				ForceNew:    true,
 				Description: "Resource group the image belongs to. Defaults to the default resource group.",
 			},
 			"tags": {
@@ -227,6 +227,7 @@ func resourceZenlayerCloudZecImageRead(ctx context.Context, d *schema.ResourceDa
 	}
 
 	_ = d.Set("image_name", image.ImageName)
+	_ = d.Set("resource_group_id", image.ResourceGroupId)
 	_ = d.Set("image_type", image.ImageType)
 	_ = d.Set("image_source", image.ImageSource)
 	_ = d.Set("image_status", image.ImageStatus)
@@ -262,6 +263,23 @@ func resourceZenlayerCloudZecImageUpdate(ctx context.Context, d *schema.Resource
 			request.ImageName = common.String(d.Get("image_name").(string))
 			response, err := zecService.client.WithZec2Client().ModifyImagesAttributes(request)
 			defer common2.LogApiRequest(ctx, "ModifyImagesAttributes", request, response, err)
+			if err != nil {
+				return common2.RetryError(ctx, err, common2.InternalServerError, common.NetworkError)
+			}
+			return nil
+		})
+		if err != nil {
+			return diag.FromErr(err)
+		}
+	}
+
+	if d.HasChange("resource_group_id") {
+		err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate)-time.Minute, func() *resource.RetryError {
+			request := user.NewAddResourceResourceGroupRequest()
+			request.ResourceGroupId = common.String(d.Get("resource_group_id").(string))
+			request.Resources = []string{imageId}
+			response, err := zecService.client.WithUsrClient().AddResourceResourceGroup(request)
+			defer common2.LogApiRequest(ctx, "AddResourceResourceGroup", request, response, err)
 			if err != nil {
 				return common2.RetryError(ctx, err, common2.InternalServerError, common.NetworkError)
 			}
