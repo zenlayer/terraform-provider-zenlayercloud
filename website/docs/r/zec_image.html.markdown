@@ -35,7 +35,7 @@ The following arguments are supported:
 
 * `image_name` - (Required, String) Name of the image. 2-63 chars; letters, digits, `-`, `_`, `.`; must start and end with a letter or digit.
 * `instance_id` - (Optional, String, ForceNew) ID of the ZEC instance to create the image from. Required for creation; ignored on import.
-* `resource_group_id` - (Optional, String, ForceNew) Resource group the image belongs to. Defaults to the default resource group.
+* `resource_group_id` - (Optional, String) Resource group the image belongs to. Defaults to the default resource group.
 * `tags` - (Optional, Map) Tags bound to the image.
 
 ## Attributes Reference
