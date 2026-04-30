@@ -139,6 +139,7 @@ Zenlayer Elastic Compute(ZEC)
 	zenlayercloud_zec_placement_group
 	zenlayercloud_zec_placement_group_assignment
 	zenlayercloud_zec_image
+	zenlayercloud_zec_image_copy
 	zenlayercloud_zec_qos_policy_group
 	zenlayercloud_zec_qos_policy_group_member
 
