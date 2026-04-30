@@ -67,6 +67,18 @@ const (
 	NatStatusRecycled     = "RECYCLED"
 	NatStatusCreateFailed = "CREATE_FAILED"
 	NatStatusReleasing    = "RELEASING"
+
+	ZecImageStatusCreating    = "CREATING"
+	ZecImageStatusAvailable   = "AVAILABLE"
+	ZecImageStatusUnavailable = "UNAVAILABLE"
+	ZecImageStatusSyncing     = "SYNCING"
+	ZecImageStatusFailed      = "FAILED"
+	ZecImageStatusDeleting    = "DELETING"
+	ZecImageStatusProcessing  = "PROCESSING"
+
+	ZecImageSourceOfficial  = "OFFICIAL"
+	ZecImageSourceMarketing = "MARKETING"
+	ZecImageSourceCustom    = "CUSTOM"
 )
 
 var (

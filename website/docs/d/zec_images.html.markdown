@@ -31,6 +31,8 @@ The following arguments are supported:
 * `category` - (Optional, String) The catalog which the image belongs to. such as `CentOS`, `Windows`, `FreeBSD` etc.
 * `ids` - (Optional, Set: [`String`]) IDs of the image to be queried.
 * `image_name_regex` - (Optional, String) A regex string to apply to the image list returned by ZenlayerCloud, conflict with 'os_name'. **NOTE**: it is not wildcard, should look like `image_name_regex = "^CentOS\s+6\.8\s+64\w*"`.
+* `image_source` - (Optional, String) Filter by image source. Valid values: 'OFFICIAL', 'MARKETING', 'CUSTOM'.
+* `image_status` - (Optional, String) Filter by image status. Valid values: 'CREATING', 'AVAILABLE', 'UNAVAILABLE', 'SYNCING', 'FAILED', 'DELETING', 'PROCESSING'.
 * `image_type` - (Optional, String) The image type. Valid values: 'PUBLIC_IMAGE', 'CUSTOM_IMAGE'.
 * `os_type` - (Optional, String) os type of the image. Valid values: 'windows', 'linux', 'bsd', 'android', 'any'.
 * `result_output_file` - (Optional, String) Used to save results.
@@ -45,8 +47,11 @@ In addition to all arguments above, the following attributes are exported:
    * `image_description` - The description of image.
    * `image_name` - Name of the image.
    * `image_size` - The size of image. Measured in GiB.
+   * `image_source` - The source of image.
+   * `image_status` - The status of image. Values: 'CREATING', 'AVAILABLE', 'UNAVAILABLE', 'SYNCING', 'FAILED', 'DELETING'.
    * `image_type` - Type of the image. With value: `PUBLIC_IMAGE` and `CUSTOM_IMAGE`.
    * `image_version` - The version of image, such as 'Server 20.04 LTS'.
+   * `nic_network_type` - The supported NIC network types of image. Each element is one of: `auto` (adaptive), `vf,virtio` (failover), `virtio` (software emulation), `vf` (physical passthrough).
    * `os_type` - Type of the image, `windows` or `linux`.
    * `tags` - The available tags within this image.
 

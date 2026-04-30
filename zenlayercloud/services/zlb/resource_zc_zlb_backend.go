@@ -3,6 +3,8 @@ package zlb
 import (
 	"context"
 	"fmt"
+	"time"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -10,7 +12,6 @@ import (
 	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/connectivity"
 	"github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/common"
 	zlb "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/zlb20250401"
-	"time"
 )
 
 func ResourceZenlayerCloudZlbBackend() *schema.Resource {
@@ -59,10 +60,10 @@ func ResourceZenlayerCloudZlbBackend() *schema.Resource {
 							Description: "Private IP address of the network interface attached to the instance.",
 						},
 						"port": {
-							Type:         schema.TypeInt,
-							Optional:     true,
+							Type:     schema.TypeInt,
+							Optional: true,
 							//Computed:     true,
-							Description:  "Target port for request forwarding and health checks. If left empty, it will follow the listener's port configuration. Valid values: `1` to `65535`.",
+							Description:  "Target port for request forwarding and health checks. **When the listener is configured with all ports (port = '0'), the backend server port must follow the listener's port and cannot be customized.** If left empty, it will follow the listener's port configuration. Valid values: `1` to `65535`.",
 							ValidateFunc: validation.IntBetween(1, 65535),
 						},
 						"weight": {
@@ -241,7 +242,7 @@ func resourceZenlayerCloudZlbBackendUpdate(ctx context.Context, d *schema.Resour
 		}
 
 		// Register new backends
-		if addSet.Len()> 0 {
+		if addSet.Len() > 0 {
 			registerRequest := zlb.NewRegisterBackendRequest()
 			registerRequest.LoadBalancerId = &zlbId
 			registerRequest.ListenerId = &listenerId
@@ -287,7 +288,7 @@ func resourceZenlayerCloudZlbBackendUpdate(ctx context.Context, d *schema.Resour
 				s := server.(map[string]interface{})
 				if updateSet.Contains(s["instance_id"]) {
 					backendServer := &zlb.BackendServer{
-						InstanceId: common.String(s["instance_id"].(string)),
+						InstanceId:       common.String(s["instance_id"].(string)),
 						PrivateIpAddress: common.String(s["private_ip_address"].(string)),
 					}
 

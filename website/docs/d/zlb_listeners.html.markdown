@@ -50,14 +50,17 @@ In addition to all arguments above, the following attributes are exported:
    * `health_check_delay_loop` - Interval between health checks. Measured in second.
    * `health_check_delay_try` - Health check delay try time.
    * `health_check_enabled` - Indicates whether health check is enabled.
+   * `health_check_fail_open` - Indicates whether to enable fail-open for health check.
    * `health_check_http_get_url` - HTTP request URL for health check.
    * `health_check_http_status_code` - HTTP status code for health check.
    * `health_check_port` - Health check port. Defaults to the backend server port.
    * `health_check_retry` - Number of retry attempts for health check.
    * `health_check_type` - Health check protocols.
+   * `idle_timeout` - Idle timeout for data connections in seconds.
    * `kind` - Forwarding mode of the listener. Valid values: `DR`, `FNAT`.
    * `listener_id` - ID of the load balancer listener.
    * `listener_name` - The name of the load balancer listener.
+   * `persistent` - Session persistence duration in seconds.
    * `port` - The port of listener. Use commas (,) to separate multiple ports. Use a hyphen (-) to define a port range, e.g., 10000-10005.
    * `protocol` - The protocol of listener.
    * `scheduler` - Scheduling algorithm of the listener.

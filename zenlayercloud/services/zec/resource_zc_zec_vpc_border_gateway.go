@@ -171,7 +171,7 @@ func resourceZenlayerCloudBorderGatewayRead(ctx context.Context, d *schema.Resou
 	_ = d.Set("cloud_router_ids", borderGateway.CloudRouterIds)
 	_ = d.Set("advertised_subnet", borderGateway.AdvertisedSubnet)
 	_ = d.Set("advertised_cidrs", borderGateway.AdvertisedCidrs)
-	_ = d.Set("nat_id", borderGateway)
+	_ = d.Set("nat_id", borderGateway.NatId)
 	_ = d.Set("create_time", borderGateway.CreateTime)
 	_ = d.Set("zbgId", borderGateway.ZbgId)
 

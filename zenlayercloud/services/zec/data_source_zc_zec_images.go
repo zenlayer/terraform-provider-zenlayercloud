@@ -36,6 +36,18 @@ func DataSourceZenlayerCloudZecImages() *schema.Resource {
 				ValidateFunc: validation.StringInSlice(ImageTypes, false),
 				Description:  "The image type. Valid values: 'PUBLIC_IMAGE', 'CUSTOM_IMAGE'.",
 			},
+			"image_status": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice([]string{"CREATING", "AVAILABLE", "UNAVAILABLE", "SYNCING", "FAILED", "DELETING", "PROCESSING"}, false),
+				Description:  "Filter by image status. Valid values: 'CREATING', 'AVAILABLE', 'UNAVAILABLE', 'SYNCING', 'FAILED', 'DELETING', 'PROCESSING'.",
+			},
+			"image_source": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice([]string{ZecImageSourceOfficial, ZecImageSourceMarketing, ZecImageSourceCustom}, false),
+				Description:  "Filter by image source. Valid values: 'OFFICIAL', 'MARKETING', 'CUSTOM'.",
+			},
 			"image_name_regex": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -105,6 +117,22 @@ func DataSourceZenlayerCloudZecImages() *schema.Resource {
 							Computed:    true,
 							Description: "The description of image.",
 						},
+						"image_status": {
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "The status of image. Values: 'CREATING', 'AVAILABLE', 'UNAVAILABLE', 'SYNCING', 'FAILED', 'DELETING'.",
+						},
+						"image_source": {
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "The source of image.",
+						},
+						"nic_network_type": {
+							Type:        schema.TypeList,
+							Computed:    true,
+							Elem:        &schema.Schema{Type: schema.TypeString},
+							Description: "The supported NIC network types of image. Each element is one of: `auto` (adaptive), `vf,virtio` (failover), `virtio` (software emulation), `vf` (physical passthrough).",
+						},
 						"tags": {
 							Type:        schema.TypeMap,
 							Computed:    true,
@@ -159,6 +187,14 @@ func dataSourceZenlayerCloudZecImagesRead(ctx context.Context, d *schema.Resourc
 		filter.category = v.(string)
 	}
 
+	if v, ok := d.GetOk("image_status"); ok {
+		filter.imageStatus = v.(string)
+	}
+
+	if v, ok := d.GetOk("image_source"); ok {
+		filter.imageSource = v.(string)
+	}
+
 	var images []*zec.Image
 
 	err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutRead)-time.Minute, func() *resource.RetryError {
@@ -198,6 +234,9 @@ func dataSourceZenlayerCloudZecImagesRead(ctx context.Context, d *schema.Resourc
 			"image_version":     image.ImageVersion,
 			"image_size":        image.ImageSize,
 			"image_description": image.ImageDescription,
+			"image_status":      image.ImageStatus,
+			"image_source":      image.ImageSource,
+			"nic_network_type":  image.NicNetworkType,
 		}
 
 		tagMap, errRet := common.TagsToMap(image.Tags)
@@ -226,9 +265,11 @@ func dataSourceZenlayerCloudZecImagesRead(ctx context.Context, d *schema.Resourc
 }
 
 type ImageFilter struct {
-	zoneId    string
-	imageIds  []string
-	imageType string
-	category  string
-	osType    string
+	zoneId      string
+	imageIds    []string
+	imageType   string
+	category    string
+	osType      string
+	imageStatus string
+	imageSource string
 }

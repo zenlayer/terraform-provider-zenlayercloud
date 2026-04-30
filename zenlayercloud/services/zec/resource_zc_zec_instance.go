@@ -375,7 +375,7 @@ func resourceZenlayerCloudZecInstanceUpdate(ctx context.Context, d *schema.Resou
 		err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate)-time.Minute, func() *resource.RetryError {
 			request := user.NewAddResourceResourceGroupRequest()
 			request.ResourceGroupId = common.String(d.Get("resource_group_id").(string))
-			request.Resources = []*string{common.String(instanceId)}
+			request.Resources = []string{instanceId}
 
 			_, err := zecService.client.WithUsrClient().AddResourceResourceGroup(request)
 			if err != nil {
@@ -796,6 +796,8 @@ func resourceZenlayerCloudZecInstanceRead(ctx context.Context, d *schema.Resourc
 	//	_ = d.Set("instance_charge_prepaid_period", instance.Period)
 	//}
 	_ = d.Set("instance_type", instance.InstanceType)
+	_ = d.Set("cpu", instance.Cpu)
+	_ = d.Set("memory", instance.Memory)
 	_ = d.Set("key_id", instance.KeyId)
 	_ = d.Set("image_id", instance.ImageId)
 	_ = d.Set("image_name", instance.ImageName)

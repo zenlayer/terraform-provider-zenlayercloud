@@ -44,6 +44,13 @@ const (
 	BmcVpcStatusCreateAvailable = "AVAILABLE"
 	BmcVpcStatusDeleting        = "DELETING"
 
+	BmcCidrBlockStatusCreating  = "CREATING"
+	BmcCidrBlockStatusAvailable = "AVAILABLE"
+	BmcCidrBlockStatusFailed    = "FAILED"
+	BmcCidrBlockStatusRecycling = "RECYCLING"
+	BmcCidrBlockStatusRecycled  = "RECYCLED"
+	BmcCidrBlockStatusDeleting  = "DELETING"
+
 	BmcEipStatusCreating      = "CREATING"
 	BmcEipStatusCreateFailed  = "CREATE_FAILED"
 	BmcEipStatusAssociating   = "ASSOCIATING"

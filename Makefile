@@ -4,7 +4,12 @@ NAMESPACE=test
 NAME=zenlayercloud
 BINARY=terraform-provider-${NAME}
 VERSION=0.1.0
+UNAME_M := $(shell uname -m)
+ifeq ($(UNAME_M),arm64)
+OS_ARCH=darwin_arm64
+else
 OS_ARCH=darwin_amd64
+endif
 WEBSITE_REPO=github.com/Click2Cloud/terraform-website
 
 default: install

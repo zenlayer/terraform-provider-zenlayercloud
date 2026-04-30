@@ -268,7 +268,7 @@ func resourceZenlayerCloudZecVpcNatGatewaySnatRead(ctx context.Context, d *schem
 		}
 		_ = d.Set("subnet_ids", subnetIds)
 	} else {
-		_ = d.Set("source_cidr_block", snatEntry.Cidrs)
+		_ = d.Set("source_cidr_blocks", snatEntry.Cidrs)
 	}
 	_ = d.Set("nat_gateway_id", natGatewayId)
 	_ = d.Set("nat_gateway_id", natGatewayId)

@@ -83,6 +83,11 @@ func ResourceZenlayerCloudZecVpcNatGateway() *schema.Resource {
 				Computed:    true,
 				Description: "The resource group id the NAT gateway belongs to, default to ID of Default Resource Group.",
 			},
+			"resource_group_name": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "The Name of resource group the NAT gateway belongs to.",
+			},
 			"create_time": {
 				Type:        schema.TypeString,
 				Computed:    true,
@@ -212,7 +217,7 @@ func resourceZenlayerCloudZecVpcNatGatewayUpdate(ctx context.Context, d *schema.
 		err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate)-time.Minute, func() *resource.RetryError {
 			request := user.NewAddResourceResourceGroupRequest()
 			request.ResourceGroupId = common.String(d.Get("resource_group_id").(string))
-			request.Resources = []*string{common.String(natGatewayId)}
+			request.Resources = []string{natGatewayId}
 
 			_, err := meta.(*connectivity.ZenlayerCloudClient).WithUsrClient().AddResourceResourceGroup(request)
 			if err != nil {
@@ -395,6 +400,7 @@ func resourceZenlayerCloudZecVpcNatGatewayRead(ctx context.Context, d *schema.Re
 	}
 	_ = d.Set("subnet_ids", nil)
 	_ = d.Set("resource_group_id", natGateway.ResourceGroupId)
+	_ = d.Set("resource_group_name", natGateway.ResourceGroupName)
 	_ = d.Set("security_group_id", natGateway.SecurityGroupId)
 	_ = d.Set("create_time", natGateway.CreateTime)
 	_ = d.Set("enable_icmp_reply", natGateway.IcmpReplyEnabled)

@@ -942,12 +942,140 @@ func (s *ZecService) ModifySecurityGroupName(ctx context.Context, securityGroupI
 	return err
 }
 
+func (s *ZecService) DescribeImageById(ctx context.Context, imageId string) (*zec2.CustomImage, error) {
+	request := zec2.NewDescribeCustomImagesRequest()
+	request.ImageIds = []string{imageId}
+	response, err := s.client.WithZec2Client().DescribeCustomImages(request)
+	common.LogApiRequest(ctx, "DescribeCustomImages", request, response, err)
+	if err != nil {
+		return nil, err
+	}
+	if response == nil || response.Response == nil || len(response.Response.DataSet) == 0 {
+		return nil, nil
+	}
+	return response.Response.DataSet[0], nil
+}
+
+func (s *ZecService) DeleteImage(ctx context.Context, imageId string) error {
+	request := zec2.NewDeleteImagesRequest()
+	request.ImageIds = []string{imageId}
+	response, err := s.client.WithZec2Client().DeleteImages(request)
+	common.LogApiRequest(ctx, "DeleteImages", request, response, err)
+	return err
+}
+
+func (s *ZecService) ImageStateRefreshFunc(ctx context.Context, imageId string, failStates []string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		image, err := s.DescribeImageById(ctx, imageId)
+		if err != nil {
+			return nil, "", err
+		}
+		if image == nil {
+			return nil, "", nil
+		}
+		status := ""
+		if image.ImageStatus != nil {
+			status = *image.ImageStatus
+		}
+		for _, fs := range failStates {
+			if status == fs {
+				return image, status, common.Error("image %s entered failed state: %s", imageId, status)
+			}
+		}
+		return image, status, nil
+	}
+}
+
+func (s *ZecService) ImageAvailableForCopyRefreshFunc(ctx context.Context, imageId string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		image, err := s.DescribeCustomImageById(ctx, imageId)
+		if err != nil {
+			return nil, "", err
+		}
+		if image == nil {
+			return nil, "PENDING", nil
+		}
+		if image.ImageStatus == nil {
+			return image, "PENDING", nil
+		}
+		if *image.ImageStatus == ZecImageStatusFailed {
+			return image, ZecImageStatusFailed, common.Error("image %s in failed state", imageId)
+		}
+		return image, *image.ImageStatus, nil
+	}
+}
+
 func (s *ZecService) DeleteSecurityGroupById(ctx context.Context, id string) error {
 	request := zec.NewDeleteSecurityGroupRequest()
 	request.SecurityGroupId = id
 	response, err := s.client.WithZecClient().DeleteSecurityGroup(request)
 	defer common.LogApiRequest(ctx, "DeleteSecurityGroup", request, response, err)
 	return err
+}
+
+func (s *ZecService) DescribeCustomImageById(ctx context.Context, imageId string) (*zec2.CustomImage, error) {
+	request := zec2.NewDescribeCustomImagesRequest()
+	request.ImageIds = []string{imageId}
+	response, err := s.client.WithZec2Client().DescribeCustomImages(request)
+	common.LogApiRequest(ctx, "DescribeCustomImages", request, response, err)
+	if err != nil {
+		return nil, err
+	}
+	if response == nil || response.Response == nil || len(response.Response.DataSet) == 0 {
+		return nil, nil
+	}
+	return response.Response.DataSet[0], nil
+}
+
+func (s *ZecService) CopyImage(ctx context.Context, imageId string, regionIds []string) error {
+	request := zec2.NewCopyImageRequest()
+	request.ImageId = common2.String(imageId)
+	request.RegionIdList = regionIds
+	response, err := s.client.WithZec2Client().CopyImage(request)
+	common.LogApiRequest(ctx, "CopyImage", request, response, err)
+	return err
+}
+
+func (s *ZecService) DeleteImageCopy(ctx context.Context, imageId string, regionIds []string) error {
+	request := zec2.NewDeleteImageCopyRequest()
+	request.ImageId = common2.String(imageId)
+	request.RegionIds = regionIds
+	response, err := s.client.WithZec2Client().DeleteImageCopy(request)
+	common.LogApiRequest(ctx, "DeleteImageCopy", request, response, err)
+	return err
+}
+
+func (s *ZecService) ImageCopyStateRefreshFunc(ctx context.Context, imageId string, wantPresent []string, wantAbsent []string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		image, err := s.DescribeCustomImageById(ctx, imageId)
+		if err != nil {
+			return nil, "", err
+		}
+		if image == nil {
+			return nil, "NOT_FOUND", nil
+		}
+		if image.ImageStatus != nil && *image.ImageStatus == ZecImageStatusFailed {
+			return image, ZecImageStatusFailed, common.Error("image %s in failed state", imageId)
+		}
+		if image.ImageStatus == nil || *image.ImageStatus != ZecImageStatusAvailable {
+			return image, "PENDING", nil
+		}
+		regionSet := make(map[string]bool, len(image.RegionIdList))
+		for _, r := range image.RegionIdList {
+			regionSet[r] = true
+		}
+		for _, r := range wantPresent {
+			if !regionSet[r] {
+				return image, "PENDING", nil
+			}
+		}
+		for _, r := range wantAbsent {
+			if regionSet[r] {
+				return image, "PENDING", nil
+			}
+		}
+		return image, "COMPLETE", nil
+	}
 }
 
 func (s *ZecService) DeleteVpcRoute(ctx context.Context, routeId string) error {
@@ -1838,4 +1966,100 @@ type PlacementGroupFilter struct {
 	Name              *string
 	ZoneId            *string
 	ResourceGroupId   *string
+}
+
+func (s *ZecService) DescribeQosPolicyGroupById(ctx context.Context, groupId string) (*zec2.QosPolicyGroup, error) {
+	request := zec2.NewDescribeQosPolicyGroupsRequest()
+	request.QosPolicyGroupIds = []string{groupId}
+
+	response, err := s.client.WithZec2Client().DescribeQosPolicyGroups(request)
+	defer common.LogApiRequest(ctx, "DescribeQosPolicyGroups", request, response, err)
+
+	if err != nil {
+		return nil, err
+	} else if len(response.Response.DataSet) == 0 {
+		return nil, nil
+	}
+	return response.Response.DataSet[0], nil
+}
+
+func (s *ZecService) DescribeQosPolicyGroupsByFilter(ctx context.Context, filter *QosPolicyGroupFilter) (groups []*zec2.QosPolicyGroup, err error) {
+	request := zec2.NewDescribeQosPolicyGroupsRequest()
+	if len(filter.Ids) > 0 {
+		request.QosPolicyGroupIds = filter.Ids
+	}
+	if filter.RegionId != "" {
+		request.RegionId = common2.String(filter.RegionId)
+	}
+	if filter.ResourceId != "" {
+		request.ResourceId = common2.String(filter.ResourceId)
+	}
+	if filter.ResourceGroupId != "" {
+		request.ResourceGroupId = common2.String(filter.ResourceGroupId)
+	}
+
+	var limit = 100
+	request.PageSize = &limit
+	request.PageNum = common2.Integer(1)
+	response, err := s.client.WithZec2Client().DescribeQosPolicyGroups(request)
+
+	if err != nil {
+		log.Printf("[CRITAL] Api[%s] fail, request body [%s], error[%s]\n",
+			request.GetAction(), common.ToJsonString(request), err.Error())
+		return
+	}
+	if response == nil || len(response.Response.DataSet) < 1 {
+		return
+	}
+
+	groups = response.Response.DataSet
+	num := int(math.Ceil(float64(*response.Response.TotalCount)/float64(limit))) - 1
+	if num == 0 {
+		return groups, nil
+	}
+	maxConcurrentNum := 50
+	g := common.NewGoRoutine(maxConcurrentNum)
+	wg := sync.WaitGroup{}
+
+	var mu sync.Mutex
+
+	for i := 0; i < num; i++ {
+		wg.Add(1)
+		pageNum := i + 2
+		g.Run(func() {
+			defer wg.Done()
+			req := zec2.NewDescribeQosPolicyGroupsRequest()
+			if len(filter.Ids) > 0 {
+				req.QosPolicyGroupIds = filter.Ids
+			}
+			if filter.RegionId != "" {
+				req.RegionId = common2.String(filter.RegionId)
+			}
+			if filter.ResourceId != "" {
+				req.ResourceId = common2.String(filter.ResourceId)
+			}
+			if filter.ResourceGroupId != "" {
+				req.ResourceGroupId = common2.String(filter.ResourceGroupId)
+			}
+			req.PageSize = &limit
+			req.PageNum = &pageNum
+			resp, e := s.client.WithZec2Client().DescribeQosPolicyGroups(req)
+			if e != nil {
+				return
+			}
+			mu.Lock()
+			groups = append(groups, resp.Response.DataSet...)
+			mu.Unlock()
+		})
+	}
+	wg.Wait()
+
+	return groups, nil
+}
+
+type QosPolicyGroupFilter struct {
+	Ids             []string
+	RegionId        string
+	ResourceId      string
+	ResourceGroupId string
 }
