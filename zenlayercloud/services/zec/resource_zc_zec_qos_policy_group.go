@@ -48,7 +48,7 @@ func ResourceZenlayerCloudZecQosPolicyGroup() *schema.Resource {
 			},
 			"rate_limit_mode": {
 				Type:         schema.TypeString,
-				Required:     false,
+				Optional:     true,
 				Computed:     true,
 				ValidateFunc: validation.StringInSlice([]string{"LOOSE", "STRICT"}, false),
 				Description:  "The rate limit mode of the QoS policy group. Default is LOOSE, Valid values: `LOOSE` - each forwarding server starts with the full group cap, allowing a single connection to reach maximum speed immediately but may briefly exceed the cap under concurrent traffic; `STRICT` - bandwidth is divided evenly across forwarding servers so the group cap is never exceeded, but multiple parallel flows are needed to fully utilize the cap.",
