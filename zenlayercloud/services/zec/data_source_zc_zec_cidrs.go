@@ -39,6 +39,11 @@ func DataSourceZenlayerCloudCidrs() *schema.Resource {
 				Optional:    true,
 				Description: "Resource group ID.",
 			},
+			"asn": {
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Description: "ASN number to filter the public CIDR block list. Only valid for `BYOIP` CIDR blocks.",
+			},
 			"result_output_file": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -111,6 +116,11 @@ func DataSourceZenlayerCloudCidrs() *schema.Resource {
                             Computed:    true,
                             Description: "Status of the elastic IP.",
                         },
+                        "asn": {
+                            Type:        schema.TypeInt,
+                            Computed:    true,
+                            Description: "ASN number. Only present when the CIDR block source is `BYOIP`.",
+                        },
                         "tags": {
                             Type:        schema.TypeMap,
                             Computed:    true,
@@ -147,6 +157,10 @@ func dataSourceZenlayerCloudCidrsRead(ctx context.Context, d *schema.ResourceDat
 		filter.ResourceGroupId = v.(string)
 	}
 
+	if v, ok := d.GetOk("asn"); ok {
+		asn := v.(int)
+		filter.Asn = &asn
+	}
 
 	var nameRegex *regexp.Regexp
 
@@ -195,6 +209,7 @@ func dataSourceZenlayerCloudCidrsRead(ctx context.Context, d *schema.ResourceDat
             "network_type":        cidr.EipV4Type,
             "create_time":         cidr.CreateTime,
             "status":              cidr.Status,
+            "asn":                 cidr.Asn,
         }
 
         tagMap, errRet := common.TagsToMap(cidr.Tags)
@@ -220,7 +235,8 @@ func dataSourceZenlayerCloudCidrsRead(ctx context.Context, d *schema.ResourceDat
 }
 
 type CidrFilter struct {
-	Ids              []string
-	RegionId         string
-	ResourceGroupId  string
+	Ids             []string
+	RegionId        string
+	ResourceGroupId string
+	Asn             *int
 }

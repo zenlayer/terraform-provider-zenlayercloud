@@ -45,6 +45,7 @@ The following arguments are supported:
 * `flow_package_size` - (Optional, Float64, ForceNew) The Data transfer package. Measured in TB.
 * `ip_network_type` - (Optional, String, ForceNew) Network types of public IPv4. Valid values: `CN2Line`, `LocalLine`, `ChinaTelecom`, `ChinaUnicom`, `ChinaMobile`, `Cogent`.
 * `peer_region_id` - (Optional, String, ForceNew) Remote region ID.
+* `rate_limit_mode` - (Optional, String) Bandwidth rate limit mode. Valid values: `LOOSE`, `STRICT`.
 * `resource_group_id` - (Optional, String) Resource group ID.
 * `tags` - (Optional, Map) The available tags within this elastic IP.
 

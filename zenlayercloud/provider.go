@@ -102,6 +102,7 @@ Zenlayer Elastic Compute(ZEC)
 	zenlayercloud_zec_disk_snapshots
 	zenlayercloud_zec_disk_snapshot_policies
 	zenlayercloud_zec_cidrs
+	zenlayercloud_zec_ipv6_cidrs
 	zenlayercloud_zec_eips
 	zenlayercloud_zec_instances
 	zenlayercloud_zec_vnics
@@ -127,6 +128,7 @@ Zenlayer Elastic Compute(ZEC)
 	zenlayercloud_zec_cidr
 	zenlayercloud_zec_eip
 	zenlayercloud_zec_eip_association
+	zenlayercloud_zec_unmanaged_egress_ip
 	zenlayercloud_zec_instance
 	zenlayercloud_zec_disk
 	zenlayercloud_zec_disk_attachment
@@ -313,6 +315,7 @@ func resourcesMap() map[string]*schema.Resource {
 		"zenlayercloud_zec_cidr": 						   zec.ResourceZenlayerCloudZecCidr(),
 		"zenlayercloud_zec_eip":                           zec.ResourceZenlayerCloudZecElasticIP(),
 		"zenlayercloud_zec_eip_association":               zec.ResourceZenlayerCloudEipAssociation(),
+		"zenlayercloud_zec_unmanaged_egress_ip":           zec.ResourceZenlayerCloudZecUnmanagedEgressIp(),
 		"zenlayercloud_zec_disk":                          zec.ResourceZenlayerCloudZecDisk(),
 		"zenlayercloud_zec_disk_attachment":               zec.ResourceZenlayerCloudZecDiskAttachment(),
 		"zenlayercloud_zec_disk_snapshot":                 zec.ResourceZenlayerCloudZecSnapshot(),
@@ -398,6 +401,7 @@ func dataSourcesMap() map[string]*schema.Resource {
 		"zenlayercloud_zec_subnets":         zec.DataSourceZenlayerCloudZecSubnets(),
 		"zenlayercloud_zec_border_gateways": zec.DataSourceZenlayerCloudBorderGateways(),
 		"zenlayercloud_zec_cidrs": 			 zec.DataSourceZenlayerCloudCidrs(),
+		"zenlayercloud_zec_ipv6_cidrs":       zec.DataSourceZenlayerCloudIpv6Cidrs(),
 		"zenlayercloud_zec_eips":            zec.DataSourceZenlayerCloudEips(),
 		"zenlayercloud_zec_disks":           zec.DataSourceZenlayerCloudZecDisks(),
 		"zenlayercloud_zec_disk_snapshots":  zec.DataSourceZenlayerCloudZecSnapshots(),

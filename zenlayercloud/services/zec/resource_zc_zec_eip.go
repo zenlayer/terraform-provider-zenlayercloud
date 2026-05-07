@@ -106,6 +106,13 @@ func ResourceZenlayerCloudZecElasticIP() *schema.Resource {
 				Optional:    true,
 				Description: "Bandwidth cluster ID. Required when `internet_charge_type` is `BandwidthCluster`.",
 			},
+			"rate_limit_mode": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.StringInSlice([]string{ZecEipRateLimitModeLoose, ZecEipRateLimitModeStrict}, false),
+				Description:  "Bandwidth rate limit mode. Valid values: `LOOSE`, `STRICT`.",
+			},
 			"public_ip_address": {
 				Type:        schema.TypeString,
 				Computed:    true,
@@ -186,6 +193,10 @@ func resourceZenlayerCloudZecElasticIPCreate(ctx context.Context, d *schema.Reso
 		request.PeerRegionId = common2.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("rate_limit_mode"); ok {
+		request.RateLimitMode = common2.String(v.(string))
+	}
+
 	err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
 		response, err := zecService.client.WithZec2Client().CreateEips(request)
 		if err != nil {
@@ -259,6 +270,7 @@ func resourceZenlayerCloudZecElasticIPRead(ctx context.Context, d *schema.Resour
 	if eip.BandwidthCluster != nil {
 		_ = d.Set("bandwidth_cluster_id", eip.BandwidthCluster.BandwidthClusterId)
 	}
+	_ = d.Set("rate_limit_mode", eip.RateLimitMode)
 	_ = d.Set("create_time", eip.CreateTime)
 
 	toMap, errRet := common.TagsToMap(eip.Tags)
@@ -298,6 +310,16 @@ func resourceZenlayerCloudZecElasticIPUpdate(ctx context.Context, d *schema.Reso
 		request.EipId = common2.String(eipId)
 		request.Bandwidth = common2.Integer(d.Get("bandwidth").(int))
 		_, err := zecService.client.WithZec2Client().ModifyEipBandwidth(request)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+	}
+
+	if d.HasChange("rate_limit_mode") {
+		request := zec.NewModifyEipBandwidthLimitModeRequest()
+		request.EipId = common2.String(eipId)
+		request.RateLimitMode = common2.String(d.Get("rate_limit_mode").(string))
+		_, err := zecService.client.WithZec2Client().ModifyEipBandwidthLimitMode(request)
 		if err != nil {
 			return diag.FromErr(err)
 		}

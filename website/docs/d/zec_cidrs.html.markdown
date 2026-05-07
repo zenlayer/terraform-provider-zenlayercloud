@@ -47,6 +47,7 @@ data "zenlayercloud_zec_cidrs" "foo" {
 
 The following arguments are supported:
 
+* `asn` - (Optional, Int) ASN number to filter the public CIDR block list. Only valid for `BYOIP` CIDR blocks.
 * `ids` - (Optional, Set: [`String`]) IDs of the public CIDR block to be queried.
 * `name_regex` - (Optional, String) A regex string to apply to the public CIDR block list returned.
 * `region_id` - (Optional, String) The region ID that the public CIDR block locates at.
@@ -58,6 +59,7 @@ The following arguments are supported:
 In addition to all arguments above, the following attributes are exported:
 
 * `cidrs` - An information list of CIDR blocks. Each element contains the following attributes:
+   * `asn` - ASN number. Only present when the CIDR block source is `BYOIP`.
    * `cidr_block_address` - CIDR block address.
    * `create_time` - Creation time of the elastic IP.
    * `id` - ID of the public CIDR block.

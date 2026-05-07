@@ -52,6 +52,7 @@ The following arguments are supported:
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - ID of the resource.
+* `asn` - ASN number. Only present when the CIDR block source is `BYOIP`.
 * `cidr_block_address` - The public CIDR block address.
 * `create_time` - Creation time of the public CIDR block.
 * `resource_group_name` - The Name of resource group.
