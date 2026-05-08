@@ -65,7 +65,7 @@ In addition to all arguments above, the following attributes are exported:
    * `id` - ID of the public CIDR block.
    * `name` - Name of the public CIDR block.
    * `netmask` - The IDR block size.
-   * `network_type` - Network types of public CIDR block. Valid values: `CN2Line`, `LocalLine`, `ChinaTelecom`, `ChinaUnicom`, `ChinaMobile`, `Cogent`.
+   * `network_type` - Network types of public CIDR block. Valid values: `BGPLine`, `CN2Line`, `LocalLine`, `ChinaTelecom`, `ChinaUnicom`, `ChinaMobile`, `Cogent`.
    * `region_id` - The region ID that the public CIDR block locates at.
    * `resource_group_id` - Resource group ID.
    * `resource_group_name` - The Name of resource group.
