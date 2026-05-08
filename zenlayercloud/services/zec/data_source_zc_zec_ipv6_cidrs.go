@@ -136,7 +136,7 @@ func DataSourceZenlayerCloudIpv6Cidrs() *schema.Resource {
 						"asn": {
 							Type:        schema.TypeInt,
 							Computed:    true,
-							Description: "ASN number. Only present when the IPv6 CIDR block source is `BYOIP`.",
+							Description: "ASN number. Only meaningful when the IPv6 CIDR block source is `BYOIP`; returns `0` for non-BYOIP CIDR blocks (the underlying API returns null in that case, which Terraform renders as `0` due to the limitation that `TypeInt` cannot represent null).",
 						},
 						"tags": {
 							Type:        schema.TypeMap,

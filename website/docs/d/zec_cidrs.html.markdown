@@ -59,7 +59,7 @@ The following arguments are supported:
 In addition to all arguments above, the following attributes are exported:
 
 * `cidrs` - An information list of CIDR blocks. Each element contains the following attributes:
-   * `asn` - ASN number. Only present when the CIDR block source is `BYOIP`.
+   * `asn` - ASN number. Only meaningful when the CIDR block source is `BYOIP`; returns `0` for non-BYOIP CIDR blocks (the underlying API returns null in that case, which Terraform renders as `0` due to the limitation that `TypeInt` cannot represent null).
    * `cidr_block_address` - CIDR block address.
    * `create_time` - Creation time of the elastic IP.
    * `id` - ID of the public CIDR block.
