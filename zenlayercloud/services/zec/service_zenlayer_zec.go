@@ -2191,3 +2191,29 @@ func (s *ZecService) ModifyUnmanagedEgressIpBandwidthLimitMode(ctx context.Conte
 	common.LogApiRequest(ctx, "ModifyUnmanagedEgressIpBandwidthLimitMode", request, response, err)
 	return err
 }
+
+func (s *ZecService) DescribeNetworkInterfacePublicIPv6ByNicId(ctx context.Context, nicId string) (*zec2.PublicIpv6CidrAddress, error) {
+	request := zec2.NewDescribeNetworkInterfacePublicIPv6Request()
+	request.NicId = common2.String(nicId)
+
+	response, err := s.client.WithZec2Client().DescribeNetworkInterfacePublicIPv6(request)
+	defer common.LogApiRequest(ctx, "DescribeNetworkInterfacePublicIPv6", request, response, err)
+
+	if err != nil {
+		return nil, err
+	}
+	if response == nil || response.Response == nil {
+		return nil, nil
+	}
+	return response.Response.Address, nil
+}
+
+func (s *ZecService) ModifyNetworkInterfacePublicIPv6BandwidthLimitMode(ctx context.Context, ipv6CidrId string, rateLimitMode string) error {
+	request := zec2.NewModifyNetworkInterfacePublicIPv6BandwidthLimitModeRequest()
+	request.Ipv6CidrId = common2.String(ipv6CidrId)
+	request.RateLimitMode = common2.String(rateLimitMode)
+
+	response, err := s.client.WithZec2Client().ModifyNetworkInterfacePublicIPv6BandwidthLimitMode(request)
+	common.LogApiRequest(ctx, "ModifyNetworkInterfacePublicIPv6BandwidthLimitMode", request, response, err)
+	return err
+}

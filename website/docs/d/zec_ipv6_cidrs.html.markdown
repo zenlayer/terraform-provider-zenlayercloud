@@ -47,7 +47,7 @@ Query BYOIP IPv6 CIDRs by ASN
 
 ```hcl
 data "zenlayercloud_zec_ipv6_cidrs" "foo" {
-  asn = 62610
+  asn = 62210
 }
 ```
 
