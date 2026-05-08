@@ -104,7 +104,7 @@ func DataSourceZenlayerCloudCidrs() *schema.Resource {
 						"network_type": {
 							Type:          schema.TypeString,
 							Computed:      true,
-							Description:   "Network types of public CIDR block. Valid values: `CN2Line`, `LocalLine`, `ChinaTelecom`, `ChinaUnicom`, `ChinaMobile`, `Cogent`.",
+							Description:   "Network types of public CIDR block. Valid values: `BGPLine`, `CN2Line`, `LocalLine`, `ChinaTelecom`, `ChinaUnicom`, `ChinaMobile`, `Cogent`.",
 						},
 						"create_time": {
 							Type:        schema.TypeString,

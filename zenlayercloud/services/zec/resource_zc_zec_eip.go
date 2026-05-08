@@ -32,6 +32,7 @@ func ResourceZenlayerCloudZecElasticIP() *schema.Resource {
 		},
 		CustomizeDiff: customdiff.All(
 			bandwidthClusterIdValidFunc(),
+			bandwidthRequiredForByBandwidthFunc(),
 		),
 		Schema: map[string]*schema.Schema{
 			"region_id": {
@@ -51,7 +52,7 @@ func ResourceZenlayerCloudZecElasticIP() *schema.Resource {
 				ForceNew:      true,
 				ConflictsWith: []string{"cidr_id"},
 				ValidateFunc:  validation.StringInSlice([]string{"BGPLine", "CN2Line", "LocalLine", "ChinaTelecom", "ChinaUnicom", "ChinaMobile", "Cogent"}, false),
-				Description:   "Network types of public IPv4. Valid values: `CN2Line`, `LocalLine`, `ChinaTelecom`, `ChinaUnicom`, `ChinaMobile`, `Cogent`.",
+				Description:   "Network types of public IPv4. Valid values: `BGPLine`, `CN2Line`, `LocalLine`, `ChinaTelecom`, `ChinaUnicom`, `ChinaMobile`, `Cogent`.",
 			},
 			"internet_charge_type": {
 				Type:         schema.TypeString,
@@ -61,9 +62,10 @@ func ResourceZenlayerCloudZecElasticIP() *schema.Resource {
 			},
 			"bandwidth": {
 				Type:         schema.TypeInt,
-				Required:     true,
+				Optional:     true,
+				Computed:     true,
 				ValidateFunc: validation.IntAtLeast(1),
-				Description:  "Bandwidth. Measured in Mbps.",
+				Description:  "Bandwidth. Measured in Mbps. Required when `internet_charge_type` is `ByBandwidth`.",
 			},
 			"flow_package_size": {
 				Type:         schema.TypeFloat,
@@ -142,6 +144,20 @@ func bandwidthClusterIdValidFunc() schema.CustomizeDiffFunc {
 		return nil
 	})
 
+}
+
+func bandwidthRequiredForByBandwidthFunc() schema.CustomizeDiffFunc {
+	return customdiff.IfValue("internet_charge_type", func(ctx context.Context, value, meta interface{}) bool {
+		return value == "ByBandwidth"
+	}, func(ctx context.Context, diff *schema.ResourceDiff, i interface{}) error {
+		if diff.Id() != "" {
+			return nil
+		}
+		if _, ok := diff.GetOk("bandwidth"); !ok {
+			return fmt.Errorf("bandwidth must be set when internet_charge_type is `ByBandwidth`")
+		}
+		return nil
+	})
 }
 
 func resourceZenlayerCloudZecElasticIPCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
