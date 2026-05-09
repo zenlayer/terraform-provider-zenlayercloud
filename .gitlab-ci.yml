@@ -1,0 +1,9 @@
+check-go-mod-replace:
+  stage: test
+  script:
+    - |
+      if grep -qE "^\s*replace\s+.*=>\s*(\.\.?/|/)" go.mod; then
+        echo "ERROR: go.mod 中存在本地 replace 指令，请移除后再提交："
+        grep -E "^\s*replace\s+.*=>\s*(\.\.?/|/)" go.mod
+        exit 1
+      fi
