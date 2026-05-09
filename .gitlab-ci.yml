@@ -1,5 +1,7 @@
 check-go-mod-replace:
   stage: test
+  tags:
+    - node
   script:
     - |
       if grep -qE "^\s*replace\s+.*=>\s*(\.\.?/|/)" go.mod; then
