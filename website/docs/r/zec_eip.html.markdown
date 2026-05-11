@@ -36,15 +36,16 @@ resource "zenlayercloud_zec_eip" "eip" {
 
 The following arguments are supported:
 
-* `bandwidth` - (Required, Int) Bandwidth. Measured in Mbps.
 * `internet_charge_type` - (Required, String) Network billing methods. Valid values: `ByBandwidth`, `ByTrafficPackage`, `BandwidthCluster`.
 * `name` - (Required, String) Name of the elastic IP.
 * `region_id` - (Required, String, ForceNew) The region ID that the elastic IP locates at.
+* `bandwidth` - (Optional, Int) Bandwidth. Measured in Mbps. Required when `internet_charge_type` is `ByBandwidth`.
 * `bandwidth_cluster_id` - (Optional, String) Bandwidth cluster ID. Required when `internet_charge_type` is `BandwidthCluster`.
 * `cidr_id` - (Optional, String, ForceNew) CIDR ID, the elastic ip will allocated from given CIDR.
 * `flow_package_size` - (Optional, Float64, ForceNew) The Data transfer package. Measured in TB.
-* `ip_network_type` - (Optional, String, ForceNew) Network types of public IPv4. Valid values: `CN2Line`, `LocalLine`, `ChinaTelecom`, `ChinaUnicom`, `ChinaMobile`, `Cogent`.
+* `ip_network_type` - (Optional, String, ForceNew) Network types of public IPv4. Valid values: `BGPLine`, `CN2Line`, `LocalLine`, `ChinaTelecom`, `ChinaUnicom`, `ChinaMobile`, `Cogent`.
 * `peer_region_id` - (Optional, String, ForceNew) Remote region ID.
+* `rate_limit_mode` - (Optional, String) Bandwidth rate limit mode. Valid values: `LOOSE`, `STRICT`.
 * `resource_group_id` - (Optional, String) Resource group ID.
 * `tags` - (Optional, Map) The available tags within this elastic IP.
 

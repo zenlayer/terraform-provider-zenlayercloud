@@ -1413,6 +1413,85 @@ func (s *ZecService) DescribeCidrsByFilter(ctx context.Context, filter *CidrFilt
 
 }
 
+func (s *ZecService) DescribeIpv6CidrById(ctx context.Context, cidrId string) (*zec2.Ipv6CidrInfo, error) {
+	request := zec2.NewDescribeIpv6CidrsRequest()
+	request.CidrIds = []string{cidrId}
+
+	response, err := s.client.WithZec2Client().DescribeIpv6Cidrs(request)
+	defer common.LogApiRequest(ctx, "DescribeIpv6Cidrs", request, response, err)
+
+	if err != nil {
+		return nil, err
+	} else if len(response.Response.DataSet) == 0 {
+		return nil, nil
+	}
+	return response.Response.DataSet[0], nil
+}
+
+func (s *ZecService) DescribeIpv6CidrsByFilter(ctx context.Context, filter *Ipv6CidrFilter) (cidrs []*zec2.Ipv6CidrInfo, err error) {
+	request := convertIpv6CidrRequestFilter(filter)
+
+	var limit = 100
+	request.PageSize = &limit
+	request.PageNum = common2.Integer(1)
+	response, err := s.client.WithZec2Client().DescribeIpv6Cidrs(request)
+
+	if err != nil {
+		log.Printf("[CRITAL] Api[%s] fail, request body [%s], error[%s]\n",
+			request.GetAction(), common.ToJsonString(request), err.Error())
+		return
+	}
+	if response == nil || len(response.Response.DataSet) < 1 {
+		return
+	}
+
+	cidrs = response.Response.DataSet
+	num := int(math.Ceil(float64(*response.Response.TotalCount)/float64(limit))) - 1
+	if num == 0 {
+		return cidrs, nil
+	}
+	maxConcurrentNum := 50
+	g := common.NewGoRoutine(maxConcurrentNum)
+	wg := sync.WaitGroup{}
+
+	pageList := make([]interface{}, num)
+
+	for i := 0; i < num; i++ {
+		wg.Add(1)
+		value := i
+		goFunc := func() {
+			request := convertIpv6CidrRequestFilter(filter)
+
+			request.PageNum = common2.Integer(value + 2)
+			request.PageSize = common2.Integer(limit)
+
+			response, err := s.client.WithZec2Client().DescribeIpv6Cidrs(request)
+			if err != nil {
+				log.Printf("[CRITAL] Api[%s] fail, request body [%s], error[%s]\n",
+					request.GetAction(), common.ToJsonString(request), err.Error())
+				return
+			}
+			log.Printf("[DEBUG] Api[%s] success, request body [%s], response body [%s]\n",
+				request.GetAction(), common.ToJsonString(request), common.ToJsonString(response))
+
+			pageList[value] = response.Response.DataSet
+
+			wg.Done()
+			log.Printf("[DEBUG] thread %d finished", value)
+		}
+		g.Run(goFunc)
+	}
+	wg.Wait()
+
+	log.Printf("[DEBUG] DescribeIpv6Cidrs request finished")
+	for _, v := range pageList {
+		cidrs = append(cidrs, v.([]*zec2.Ipv6CidrInfo)...)
+	}
+	log.Printf("[DEBUG] transfer IPv6 CIDR block instances finished")
+	return
+
+}
+
 func (s *ZecService) DeleteNatGateway(ctx context.Context, natGatewayId string) error {
 	request := zec2.NewDeleteNatGatewayRequest()
 	request.NatGatewayId = &natGatewayId
@@ -1571,6 +1650,29 @@ func convertCidrRequestFilter(filter *CidrFilter) *zec2.DescribeCidrsRequest {
 
 	if filter.ResourceGroupId != "" {
 		request.ResourceGroupId = &filter.ResourceGroupId
+	}
+	if filter.Asn != nil {
+		request.Asn = filter.Asn
+	}
+	return request
+}
+
+func convertIpv6CidrRequestFilter(filter *Ipv6CidrFilter) *zec2.DescribeIpv6CidrsRequest {
+	request := zec2.NewDescribeIpv6CidrsRequest()
+	if len(filter.Ids) > 0 {
+		request.CidrIds = filter.Ids
+	}
+	if filter.RegionId != "" {
+		request.RegionId = &filter.RegionId
+	}
+	if filter.CidrBlock != "" {
+		request.CidrBlock = &filter.CidrBlock
+	}
+	if filter.ResourceGroupId != "" {
+		request.ResourceGroupId = &filter.ResourceGroupId
+	}
+	if filter.Asn != nil {
+		request.Asn = filter.Asn
 	}
 	return request
 }
@@ -2062,4 +2164,56 @@ type QosPolicyGroupFilter struct {
 	RegionId        string
 	ResourceId      string
 	ResourceGroupId string
+}
+
+func (s *ZecService) DescribeUnmanagedEgressIpById(ctx context.Context, unmanagedEgressIpId string) (*zec2.UnmanagedEgressIpInfo, error) {
+	request := zec2.NewDescribeUnmanagedEgressIpsRequest()
+	request.UnmanagedEgressIpIds = []string{unmanagedEgressIpId}
+
+	response, err := s.client.WithZec2Client().DescribeUnmanagedEgressIps(request)
+	defer common.LogApiRequest(ctx, "DescribeUnmanagedEgressIps", request, response, err)
+
+	if err != nil {
+		return nil, err
+	}
+	if response == nil || response.Response == nil || len(response.Response.DataSet) == 0 {
+		return nil, nil
+	}
+	return response.Response.DataSet[0], nil
+}
+
+func (s *ZecService) ModifyUnmanagedEgressIpBandwidthLimitMode(ctx context.Context, unmanagedEgressIpId string, rateLimitMode string) error {
+	request := zec2.NewModifyUnmanagedEgressIpBandwidthLimitModeRequest()
+	request.UnmanagedEgressIpId = common2.String(unmanagedEgressIpId)
+	request.RateLimitMode = common2.String(rateLimitMode)
+
+	response, err := s.client.WithZec2Client().ModifyUnmanagedEgressIpBandwidthLimitMode(request)
+	common.LogApiRequest(ctx, "ModifyUnmanagedEgressIpBandwidthLimitMode", request, response, err)
+	return err
+}
+
+func (s *ZecService) DescribeNetworkInterfacePublicIPv6ByNicId(ctx context.Context, nicId string) (*zec2.PublicIpv6CidrAddress, error) {
+	request := zec2.NewDescribeNetworkInterfacePublicIPv6Request()
+	request.NicId = common2.String(nicId)
+
+	response, err := s.client.WithZec2Client().DescribeNetworkInterfacePublicIPv6(request)
+	defer common.LogApiRequest(ctx, "DescribeNetworkInterfacePublicIPv6", request, response, err)
+
+	if err != nil {
+		return nil, err
+	}
+	if response == nil || response.Response == nil {
+		return nil, nil
+	}
+	return response.Response.Address, nil
+}
+
+func (s *ZecService) ModifyNetworkInterfacePublicIPv6BandwidthLimitMode(ctx context.Context, ipv6CidrId string, rateLimitMode string) error {
+	request := zec2.NewModifyNetworkInterfacePublicIPv6BandwidthLimitModeRequest()
+	request.Ipv6CidrId = common2.String(ipv6CidrId)
+	request.RateLimitMode = common2.String(rateLimitMode)
+
+	response, err := s.client.WithZec2Client().ModifyNetworkInterfacePublicIPv6BandwidthLimitMode(request)
+	common.LogApiRequest(ctx, "ModifyNetworkInterfacePublicIPv6BandwidthLimitMode", request, response, err)
+	return err
 }

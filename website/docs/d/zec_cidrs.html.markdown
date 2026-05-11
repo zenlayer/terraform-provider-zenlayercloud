@@ -47,6 +47,7 @@ data "zenlayercloud_zec_cidrs" "foo" {
 
 The following arguments are supported:
 
+* `asn` - (Optional, Int) ASN number to filter the public CIDR block list. Only valid for `BYOIP` CIDR blocks.
 * `ids` - (Optional, Set: [`String`]) IDs of the public CIDR block to be queried.
 * `name_regex` - (Optional, String) A regex string to apply to the public CIDR block list returned.
 * `region_id` - (Optional, String) The region ID that the public CIDR block locates at.
@@ -58,12 +59,13 @@ The following arguments are supported:
 In addition to all arguments above, the following attributes are exported:
 
 * `cidrs` - An information list of CIDR blocks. Each element contains the following attributes:
+   * `asn` - ASN number. Only meaningful when the CIDR block source is `BYOIP`; returns `0` for non-BYOIP CIDR blocks (the underlying API returns null in that case, which Terraform renders as `0` due to the limitation that `TypeInt` cannot represent null).
    * `cidr_block_address` - CIDR block address.
    * `create_time` - Creation time of the elastic IP.
    * `id` - ID of the public CIDR block.
    * `name` - Name of the public CIDR block.
    * `netmask` - The IDR block size.
-   * `network_type` - Network types of public CIDR block. Valid values: `CN2Line`, `LocalLine`, `ChinaTelecom`, `ChinaUnicom`, `ChinaMobile`, `Cogent`.
+   * `network_type` - Network types of public CIDR block. Valid values: `BGPLine`, `CN2Line`, `LocalLine`, `ChinaTelecom`, `ChinaUnicom`, `ChinaMobile`, `Cogent`.
    * `region_id` - The region ID that the public CIDR block locates at.
    * `resource_group_id` - Resource group ID.
    * `resource_group_name` - The Name of resource group.

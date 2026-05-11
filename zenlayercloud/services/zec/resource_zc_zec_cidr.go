@@ -91,6 +91,11 @@ func ResourceZenlayerCloudZecCidr() *schema.Resource {
 				Computed:    true,
 				Description: "Status of the public CIDR block.",
 			},
+			"asn": {
+				Type:        schema.TypeInt,
+				Computed:    true,
+				Description: "ASN number. Only meaningful when the CIDR block source is `BYOIP`; returns `0` for non-BYOIP CIDR blocks (the underlying API returns null in that case, which Terraform renders as `0` due to the limitation that `TypeInt` cannot represent null).",
+			},
 		},
 	}
 }
@@ -209,6 +214,7 @@ func resourceZenlayerCloudZecCidrRead(ctx context.Context, d *schema.ResourceDat
 	_ = d.Set("status", cidrInfo.Status)
 	_ = d.Set("netmask", cidrInfo.Netmask)
 	_ = d.Set("create_time", cidrInfo.CreateTime)
+	_ = d.Set("asn", cidrInfo.Asn)
 
 	toMap, errRet := common.TagsToMap(cidrInfo.Tags)
 	if errRet != nil {

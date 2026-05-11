@@ -52,6 +52,7 @@ The following arguments are supported:
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - ID of the resource.
+* `asn` - ASN number. Only meaningful when the CIDR block source is `BYOIP`; returns `0` for non-BYOIP CIDR blocks (the underlying API returns null in that case, which Terraform renders as `0` due to the limitation that `TypeInt` cannot represent null).
 * `cidr_block_address` - The public CIDR block address.
 * `create_time` - Creation time of the public CIDR block.
 * `resource_group_name` - The Name of resource group.

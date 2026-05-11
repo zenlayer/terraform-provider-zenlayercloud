@@ -97,6 +97,7 @@ In addition to all arguments above, the following attributes are exported:
    * `peer_region_id` - Remote region ID.
    * `private_ip_address` - The private address that the EIP attached to. Only valid when the associate type is `NIC`.
    * `public_ip_address` - The elastic ipv4 address.
+   * `rate_limit_mode` - Bandwidth rate limit mode. Valid values: `LOOSE`, `STRICT`.
    * `region_id` - The region ID that the elastic IP locates at.
    * `resource_group_id` - Resource group ID.
    * `resource_group_name` - The Name of resource group.

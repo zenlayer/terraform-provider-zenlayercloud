@@ -96,7 +96,7 @@ func resourceZenlayerCloudZecImageCopyCreate(ctx context.Context, d *schema.Reso
 		if err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
 			e := zecService.CopyImage(ctx, imageId, toAdd)
 			if e != nil {
-				return common2.RetryError(ctx, e, common2.InternalServerError, sdkcommon.NetworkError)
+				return common2.RetryError(ctx, e, sdkcommon.NetworkError)
 			}
 			return nil
 		}); err != nil {
@@ -183,7 +183,7 @@ func resourceZenlayerCloudZecImageCopyUpdate(ctx context.Context, d *schema.Reso
 		if err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate), func() *resource.RetryError {
 			e := zecService.CopyImage(ctx, imageId, toAdd)
 			if e != nil {
-				return common2.RetryError(ctx, e, common2.InternalServerError, sdkcommon.NetworkError)
+				return common2.RetryError(ctx, e, sdkcommon.NetworkError)
 			}
 			return nil
 		}); err != nil {
@@ -234,7 +234,7 @@ func resourceZenlayerCloudZecImageCopyUpdate(ctx context.Context, d *schema.Reso
 		if err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate), func() *resource.RetryError {
 			e := zecService.DeleteImageCopy(ctx, imageId, toRemove)
 			if e != nil {
-				return common2.RetryError(ctx, e, common2.InternalServerError, sdkcommon.NetworkError)
+				return common2.RetryError(ctx, e, sdkcommon.NetworkError)
 			}
 			return nil
 		}); err != nil {

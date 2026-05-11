@@ -57,7 +57,7 @@ func DataSourceZenlayerCloudEips() *schema.Resource {
 				Description: "The ID of associated resource to be queried.",
 			},
 			"cidr_ids": {
-				Type:        schema.TypeSet,
+				Type: schema.TypeSet,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
@@ -150,6 +150,11 @@ func DataSourceZenlayerCloudEips() *schema.Resource {
 							Type:        schema.TypeString,
 							Computed:    true,
 							Description: "The name of Bandwidth cluster.",
+						},
+						"rate_limit_mode": {
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "Bandwidth rate limit mode. Valid values: `LOOSE`, `STRICT`.",
 						},
 						"peer_region_id": {
 							Type:        schema.TypeString,
@@ -303,6 +308,7 @@ func dataSourceZenlayerCloudEipsRead(ctx context.Context, d *schema.ResourceData
 			"associated_id":        eip.AssociatedId,
 			"associated_type":      eip.AssociatedType,
 			"bind_type":            eip.BindType,
+			"rate_limit_mode":      eip.RateLimitMode,
 		}
 
 		if eip.BandwidthCluster != nil {
