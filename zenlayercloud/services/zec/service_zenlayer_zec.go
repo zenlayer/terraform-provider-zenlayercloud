@@ -2217,3 +2217,19 @@ func (s *ZecService) ModifyNetworkInterfacePublicIPv6BandwidthLimitMode(ctx cont
 	common.LogApiRequest(ctx, "ModifyNetworkInterfacePublicIPv6BandwidthLimitMode", request, response, err)
 	return err
 }
+
+func (s *ZecService) DescribeVmInventoryCapacity(ctx context.Context, regionIds []string) ([]*zec2.VmRegionCapacityItem, error) {
+	request := zec2.NewDescribeVmInventoryCapacityRequest()
+	if len(regionIds) > 0 {
+		request.RegionIds = regionIds
+	}
+	response, err := s.client.WithZec2Client().DescribeVmInventoryCapacity(request)
+	common.LogApiRequest(ctx, "DescribeVmInventoryCapacity", request, response, err)
+	if err != nil {
+		return nil, err
+	}
+	if response == nil || response.Response == nil {
+		return nil, nil
+	}
+	return response.Response.DataSet, nil
+}
