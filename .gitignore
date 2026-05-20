@@ -24,4 +24,5 @@ go.work
 
 .idea
 .claude
+CLAUDE*.md
 test/

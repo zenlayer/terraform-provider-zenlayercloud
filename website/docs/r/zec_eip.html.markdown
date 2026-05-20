@@ -41,6 +41,7 @@ The following arguments are supported:
 * `region_id` - (Required, String, ForceNew) The region ID that the elastic IP locates at.
 * `bandwidth` - (Optional, Int) Bandwidth. Measured in Mbps. Required when `internet_charge_type` is `ByBandwidth`.
 * `bandwidth_cluster_id` - (Optional, String) Bandwidth cluster ID. Required when `internet_charge_type` is `BandwidthCluster`.
+* `bandwidth` - (Optional, Int) Bandwidth. Measured in Mbps. Required when `internet_charge_type` is `ByBandwidth`.
 * `cidr_id` - (Optional, String, ForceNew) CIDR ID, the elastic ip will allocated from given CIDR.
 * `flow_package_size` - (Optional, Float64, ForceNew) The Data transfer package. Measured in TB.
 * `ip_network_type` - (Optional, String, ForceNew) Network types of public IPv4. Valid values: `BGPLine`, `CN2Line`, `LocalLine`, `ChinaTelecom`, `ChinaUnicom`, `ChinaMobile`, `Cogent`.
