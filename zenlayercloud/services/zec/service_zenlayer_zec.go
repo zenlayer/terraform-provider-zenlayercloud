@@ -2233,3 +2233,131 @@ func (s *ZecService) DescribeVmInventoryCapacity(ctx context.Context, regionIds 
 	}
 	return response.Response.DataSet, nil
 }
+
+func (s *ZecService) DescribeHaVipById(ctx context.Context, haVipId string) (*zec2.HaVipInfo, error) {
+	request := zec2.NewDescribeHaVipsRequest()
+	request.HaVipIds = []string{haVipId}
+
+	response, err := s.client.WithZec2Client().DescribeHaVips(request)
+	common.LogApiRequest(ctx, "DescribeHaVips", request, response, err)
+	if err != nil {
+		return nil, err
+	}
+	if response == nil || response.Response == nil || len(response.Response.DataSet) == 0 {
+		return nil, nil
+	}
+	return response.Response.DataSet[0], nil
+}
+
+type HaVipFilter struct {
+	Ids         []string
+	Name        string
+	RegionId    string
+	VpcIds      []string
+	SubnetIds   []string
+	IpAddresses []string
+	InstanceIds []string
+}
+
+func (s *ZecService) DescribeHaVipsByFilter(ctx context.Context, filter *HaVipFilter) ([]*zec2.HaVipInfo, error) {
+	request := zec2.NewDescribeHaVipsRequest()
+	pageSize := 100
+	request.PageSize = &pageSize
+	request.PageNum = common2.Integer(1)
+
+	if filter != nil {
+		if len(filter.Ids) > 0 {
+			request.HaVipIds = filter.Ids
+		}
+		if filter.Name != "" {
+			request.Name = common2.String(filter.Name)
+		}
+		if filter.RegionId != "" {
+			request.RegionId = common2.String(filter.RegionId)
+		}
+		if len(filter.VpcIds) > 0 {
+			request.VpcIds = filter.VpcIds
+		}
+		if len(filter.SubnetIds) > 0 {
+			request.SubnetIds = filter.SubnetIds
+		}
+		if len(filter.IpAddresses) > 0 {
+			request.IpAddresses = filter.IpAddresses
+		}
+		if len(filter.InstanceIds) > 0 {
+			request.InstanceIds = filter.InstanceIds
+		}
+	}
+
+	response, err := s.client.WithZec2Client().DescribeHaVips(request)
+	common.LogApiRequest(ctx, "DescribeHaVips", request, response, err)
+	if err != nil {
+		return nil, err
+	}
+	if response == nil || response.Response == nil {
+		return nil, nil
+	}
+
+	haVips := response.Response.DataSet
+	totalCount := *response.Response.TotalCount
+	if totalCount <= pageSize {
+		return haVips, nil
+	}
+
+	totalPages := (totalCount + pageSize - 1) / pageSize
+	g := common.NewGoRoutine(50)
+	wg := sync.WaitGroup{}
+	var mu sync.Mutex
+	var firstErr error
+
+	for page := 2; page <= totalPages; page++ {
+		wg.Add(1)
+		pageNum := page
+		g.Run(func() {
+			defer wg.Done()
+			req := zec2.NewDescribeHaVipsRequest()
+			req.PageSize = &pageSize
+			req.PageNum = common2.Integer(pageNum)
+			if filter != nil {
+				if len(filter.Ids) > 0 {
+					req.HaVipIds = filter.Ids
+				}
+				if filter.Name != "" {
+					req.Name = common2.String(filter.Name)
+				}
+				if filter.RegionId != "" {
+					req.RegionId = common2.String(filter.RegionId)
+				}
+				if len(filter.VpcIds) > 0 {
+					req.VpcIds = filter.VpcIds
+				}
+				if len(filter.SubnetIds) > 0 {
+					req.SubnetIds = filter.SubnetIds
+				}
+				if len(filter.IpAddresses) > 0 {
+					req.IpAddresses = filter.IpAddresses
+				}
+				if len(filter.InstanceIds) > 0 {
+					req.InstanceIds = filter.InstanceIds
+				}
+			}
+			resp, e := s.client.WithZec2Client().DescribeHaVips(req)
+			mu.Lock()
+			defer mu.Unlock()
+			if e != nil {
+				if firstErr == nil {
+					firstErr = e
+				}
+				return
+			}
+			if resp != nil && resp.Response != nil {
+				haVips = append(haVips, resp.Response.DataSet...)
+			}
+		})
+	}
+	wg.Wait()
+	if firstErr != nil {
+		return nil, firstErr
+	}
+	return haVips, nil
+}
