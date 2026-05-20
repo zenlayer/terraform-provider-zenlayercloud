@@ -148,12 +148,51 @@ resource "zenlayercloud_zec_eip_association" "eip_association" {
 }
 ```
 
+Bind EIP to HaVip
+
+```hcl
+variable "region" {
+  default = "asia-east-1"
+}
+
+resource "zenlayercloud_zec_vpc" "vpc" {
+  name       = "example"
+  cidr_block = "10.0.0.0/16"
+}
+
+resource "zenlayercloud_zec_subnet" "subnet" {
+  vpc_id     = zenlayercloud_zec_vpc.vpc.id
+  region_id  = var.region
+  name       = "example-subnet"
+  cidr_block = "10.0.0.0/24"
+}
+
+resource "zenlayercloud_zec_havip" "havip" {
+  subnet_id = zenlayercloud_zec_subnet.subnet.id
+  name      = "example-havip"
+}
+
+resource "zenlayercloud_zec_eip" "eip" {
+  region_id            = var.region
+  name                 = "example"
+  ip_network_type      = "BGPLine"
+  internet_charge_type = "ByBandwidth"
+  bandwidth            = 10
+}
+
+resource "zenlayercloud_zec_eip_association" "eip_havip" {
+  eip_id          = zenlayercloud_zec_eip.eip.id
+  associated_id   = zenlayercloud_zec_havip.havip.id
+  associated_type = "HAVIP"
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
 
 * `associated_id` - (Required, String, ForceNew) ID of the instance to associate with the EIP.
-* `associated_type` - (Required, String, ForceNew) Type of the associated instance. Valid values: LB(Load balancer.), NIC(vNic), NAT(NAT gateway).
+* `associated_type` - (Required, String, ForceNew) Type of the associated instance. Valid values: LB(Load balancer.), NIC(vNic), NAT(NAT gateway), HAVIP(High-availability virtual IP).
 * `eip_id` - (Required, String, ForceNew) ID of the elastic IP.
 * `bind_type` - (Optional, String, ForceNew) Elastic IP bind type. Effective when the elastic IP is assigned to a vNIC.
 * `private_ip_address` - (Optional, String, ForceNew) Private IP address of the instance. Required if associated_type is `Nic`.

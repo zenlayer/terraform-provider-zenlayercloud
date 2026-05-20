@@ -174,7 +174,7 @@ func DataSourceZenlayerCloudEips() *schema.Resource {
 						"associated_type": {
 							Type:        schema.TypeString,
 							Computed:    true,
-							Description: "The type of associated instance that the EIP attached to. Valid values: `NAT`(for NAT gateway), `NIC`(for virtual NetworkInterface), `LB`(for Load balancer Instance).",
+							Description: "The type of associated instance that the EIP attached to. Valid values: `NAT`(for NAT gateway), `NIC`(for virtual NetworkInterface), `LB`(for Load balancer Instance), `HAVIP`(for High-availability virtual IP).",
 						},
 						"bind_type": {
 							Type:        schema.TypeString,

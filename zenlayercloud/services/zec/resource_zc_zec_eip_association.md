@@ -137,6 +137,45 @@ resource "zenlayercloud_zec_eip_association" "eip_association" {
 
 ```
 
+Bind EIP to HaVip
+```hcl
+variable "region" {
+  default = "asia-east-1"
+}
+
+resource "zenlayercloud_zec_vpc" "vpc" {
+  name       = "example"
+  cidr_block = "10.0.0.0/16"
+}
+
+resource "zenlayercloud_zec_subnet" "subnet" {
+  vpc_id     = zenlayercloud_zec_vpc.vpc.id
+  region_id  = var.region
+  name       = "example-subnet"
+  cidr_block = "10.0.0.0/24"
+}
+
+resource "zenlayercloud_zec_havip" "havip" {
+  subnet_id = zenlayercloud_zec_subnet.subnet.id
+  name      = "example-havip"
+}
+
+resource "zenlayercloud_zec_eip" "eip" {
+  region_id            = var.region
+  name                 = "example"
+  ip_network_type      = "BGPLine"
+  internet_charge_type = "ByBandwidth"
+  bandwidth            = 10
+}
+
+resource "zenlayercloud_zec_eip_association" "eip_havip" {
+  eip_id          = zenlayercloud_zec_eip.eip.id
+  associated_id   = zenlayercloud_zec_havip.havip.id
+  associated_type = "HAVIP"
+}
+
+```
+
 Import
 
 EIP association can be imported, e.g.

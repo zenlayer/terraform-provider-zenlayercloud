@@ -44,8 +44,8 @@ func ResourceZenlayerCloudEipAssociation() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice([]string{"NAT", "NIC", "LB"}, false),
-				Description:  "Type of the associated instance. Valid values: LB(Load balancer.), NIC(vNic), NAT(NAT gateway).",
+				ValidateFunc: validation.StringInSlice([]string{"NAT", "NIC", "LB", "HAVIP"}, false),
+				Description:  "Type of the associated instance. Valid values: LB(Load balancer.), NIC(vNic), NAT(NAT gateway), HAVIP(High-availability virtual IP).",
 			},
 			"private_ip_address": {
 				Type:         schema.TypeString,
@@ -92,7 +92,7 @@ func resourceZenlayerCloudEipAssociationCreate(ctx context.Context, d *schema.Re
 	instanceId := d.Get("associated_id").(string)
 	instanceType := d.Get("associated_type").(string)
 	// 根据 instanceType 映射到对应的 API 字段
-	var loadBalancerId, nicId, natId string
+	var loadBalancerId, nicId, natId, haVipId string
 	switch instanceType {
 	case "LB":
 		loadBalancerId = instanceId
@@ -100,6 +100,8 @@ func resourceZenlayerCloudEipAssociationCreate(ctx context.Context, d *schema.Re
 		nicId = instanceId
 	case "NAT":
 		natId = instanceId
+	case "HAVIP":
+		haVipId = instanceId
 	}
 
 	// 如果 instanceType 是 Nic，则 lan_ip 必须提供
@@ -115,6 +117,7 @@ func resourceZenlayerCloudEipAssociationCreate(ctx context.Context, d *schema.Re
 	request.NicId = &nicId
 	request.LanIp = common2.String(d.Get("private_ip_address").(string))
 	request.NatId = &natId
+	request.HaVipId = &haVipId
 	request.BindType = &bindType
 
 	err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {

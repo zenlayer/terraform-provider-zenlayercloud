@@ -114,6 +114,7 @@ Zenlayer Elastic Compute(ZEC)
 	zenlayercloud_zec_border_gateways
 	zenlayercloud_zec_placement_groups
 	zenlayercloud_zec_qos_policy_groups
+	zenlayercloud_zec_havips
 
   Resource
 	zenlayercloud_zec_vpc
@@ -147,6 +148,8 @@ Zenlayer Elastic Compute(ZEC)
 	zenlayercloud_zec_image_copy
 	zenlayercloud_zec_qos_policy_group
 	zenlayercloud_zec_qos_policy_group_member
+	zenlayercloud_zec_havip
+	zenlayercloud_zec_havip_association
 
 Zenlayer Load Balancing(ZLB)
 
@@ -338,6 +341,8 @@ func resourcesMap() map[string]*schema.Resource {
 		"zenlayercloud_zec_image_copy":                    zec.ResourceZenlayerCloudZecImageCopy(),
 		"zenlayercloud_zec_qos_policy_group":              zec.ResourceZenlayerCloudZecQosPolicyGroup(),
 		"zenlayercloud_zec_qos_policy_group_member":       zec.ResourceZenlayerCloudZecQosPolicyGroupMember(),
+		"zenlayercloud_zec_havip":                         zec.ResourceZenlayerCloudZecHaVip(),
+		"zenlayercloud_zec_havip_association":             zec.ResourceZenlayerCloudZecHaVipAssociation(),
 
 		// zenlayer load balancer
 		"zenlayercloud_zlb_instance": zlb.ResourceZenlayerCloudZlbInstance(),
@@ -420,6 +425,7 @@ func dataSourcesMap() map[string]*schema.Resource {
 		"zenlayercloud_zec_placement_groups":  zec.DataSourceZenlayerCloudZecPlacementGroups(),
 		"zenlayercloud_zec_qos_policy_groups":        zec.DataSourceZenlayerCloudZecQosPolicyGroups(),
 		"zenlayercloud_zec_vm_inventory_capacities": zec.DataSourceZenlayerCloudZecVmInventoryCapacities(),
+		"zenlayercloud_zec_havips":                   zec.DataSourceZenlayerCloudZecHaVips(),
 
 		// zenlayer load balancer
 		"zenlayercloud_zlb_regions":   zlb.DataSourceZenlayerCloudZlbRegions(),
