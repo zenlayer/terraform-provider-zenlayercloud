@@ -65,7 +65,7 @@ func ResourceZenlayerCloudZecHaVip() *schema.Resource {
 				Optional:     true,
 				Default:      "Terraform-HaVip",
 				ValidateFunc: validation.StringLenBetween(1, 64),
-				Description:  "The name of the HaVip. Length must be between 1 and 64 characters.",
+				Description:  "The name of the HaVip. Length must be between 1 and 64 characters. Default is `Terraform-HaVip`.",
 			},
 			"ip_address": {
 				Type:         schema.TypeString,

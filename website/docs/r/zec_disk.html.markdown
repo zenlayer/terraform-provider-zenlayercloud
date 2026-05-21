@@ -35,8 +35,8 @@ The following arguments are supported:
 
 * `availability_zone` - (Required, String, ForceNew) The ID of zone that the disk locates at.
 * `disk_size` - (Required, Int) The size of disk. Unit: GiB. The minimum value is 20 GiB. When resize the disk, the new size must be greater than the former value.
-* `disk_category` - (Optional, String, ForceNew) The category of disk.
-* `disk_name` - (Optional, String) The name of the disk.
+* `disk_category` - (Optional, String, ForceNew) The category of disk. Default is `Standard NVMe SSD`.
+* `disk_name` - (Optional, String) The name of the disk. Default is `Terraform-Disk`.
 * `force_delete` - (Optional, Bool) Indicate whether to force delete the data disk. Default is `false`. If set true, the disk will be permanently deleted instead of being moved into the recycle bin.
 * `resource_group_id` - (Optional, String) The resource group id the disk belongs to.
 * `tags` - (Optional, Map) The available tags within this disk.

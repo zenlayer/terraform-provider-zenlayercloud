@@ -54,8 +54,8 @@ resource "zenlayercloud_sdn_private_connect" "aws-port-test" {
 The following arguments are supported:
 
 * `endpoints` - (Required, List) Access points of private connect. Length must be equal to 2.
-* `connect_bandwidth` - (Optional, Int) The bandwidth of private connect. Valid range: [1,500]. Unit: Mbps.
-* `connect_name` - (Optional, String) The private connect name. Up to 255 characters in length are allowed.
+* `connect_bandwidth` - (Optional, Int) The bandwidth of private connect. Valid range: [1,500]. Unit: Mbps. Default is `1`.
+* `connect_name` - (Optional, String) The private connect name. Up to 255 characters in length are allowed. Default is `Terraform-Private-Connect`.
 * `force_delete` - (Optional, Bool) Indicate whether to force delete the private connect. Default is `false`. If set true, the private connect will be permanently deleted instead of being moved into the recycle bin.
 
 The `endpoints` object supports the following:

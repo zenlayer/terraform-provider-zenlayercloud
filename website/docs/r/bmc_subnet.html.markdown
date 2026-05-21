@@ -48,7 +48,7 @@ The following arguments are supported:
 
 * `availability_zone` - (Required, String, ForceNew) The ID of zone that the bmc subnet locates at.
 * `cidr_block` - (Required, String, ForceNew) A network address block which should be a subnet of the three internal network segments (10.0.0.0/16, 172.16.0.0/12 and 192.168.0.0/16).
-* `name` - (Optional, String) The name of the bmc subnet.
+* `name` - (Optional, String) The name of the bmc subnet. Default is `Terraform-Subnet`.
 * `resource_group_id` - (Optional, String) The resource group id the subnet belongs to, default to Default Resource Group.
 * `vpc_id` - (Optional, String, ForceNew) ID of the VPC to be associated.
 

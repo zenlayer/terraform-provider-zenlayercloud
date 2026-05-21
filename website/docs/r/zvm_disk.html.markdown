@@ -31,9 +31,9 @@ The following arguments are supported:
 * `availability_zone` - (Required, String, ForceNew) The ID of zone that the disk locates at.
 * `disk_size` - (Required, Int, ForceNew) The size of disk. Unit: GB. The minimum value is 20 GB.
 * `charge_prepaid_period` - (Optional, Int, ForceNew) The tenancy (time unit is month) of the prepaid disk.
-* `charge_type` - (Optional, String, ForceNew) Charge type of disk.
+* `charge_type` - (Optional, String, ForceNew) Charge type of disk. Valid values: `POSTPAID`, `PREPAID`. Default is `POSTPAID`.
 * `force_delete` - (Optional, Bool) Indicate whether to force delete the data disk. Default is `false`. If set true, the disk will be permanently deleted instead of being moved into the recycle bin.
-* `name` - (Optional, String) The name of the disk.
+* `name` - (Optional, String) The name of the disk. Default is `Terraform-Disk`.
 * `resource_group_id` - (Optional, String) The resource group id the disk belongs to.
 * `tags` - (Optional, Map) Tags of the disk.
 
