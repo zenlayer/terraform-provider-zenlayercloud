@@ -92,6 +92,19 @@ func resourceZenlayerCloudEipAssociationCreate(ctx context.Context, d *schema.Re
 	eipId := d.Get("eip_id").(string)
 	instanceId := d.Get("associated_id").(string)
 	instanceType := d.Get("associated_type").(string)
+
+	eipInfo, err := zecService.DescribeEipById(ctx, eipId)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	if eipInfo != nil && eipInfo.AssociatedId != nil && *eipInfo.AssociatedId != "" {
+		if *eipInfo.AssociatedId != instanceId {
+			return diag.Errorf("EIP %s is already associated with instance %s, cannot associate with %s", eipId, *eipInfo.AssociatedId, instanceId)
+		}
+		d.SetId(fmt.Sprintf("%s:%s:%s", eipId, instanceId, instanceType))
+		return resourceZenlayerCloudEipAssociationRead(ctx, d, meta)
+	}
+
 	// 根据 instanceType 映射到对应的 API 字段
 	var loadBalancerId, nicId, natId, haVipId string
 	switch instanceType {
@@ -121,7 +134,7 @@ func resourceZenlayerCloudEipAssociationCreate(ctx context.Context, d *schema.Re
 	request.HaVipId = &haVipId
 	request.BindType = &bindType
 
-	err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
+	err = resource.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
 		_, err := zecService.client.WithZec2Client().AssociateEipAddress(request)
 		if err != nil {
 			return common.RetryError(ctx, err, common.OperationTimeout)
