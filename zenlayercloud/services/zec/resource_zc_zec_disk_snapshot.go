@@ -36,7 +36,7 @@ func ResourceZenlayerCloudZecSnapshot() *schema.Resource {
 				Optional:     true,
 				Default:      "Terraform-Snapshot",
 				ValidateFunc: validation.StringLenBetween(2, 63),
-				Description:  "The name of the snapshot. The name should start and end with a number or a letter, containing 2 to 63 characters. Only letters, numbers, - and periods (.) are supported.",
+				Description:  "The name of the snapshot. The name should start and end with a number or a letter, containing 2 to 63 characters. Only letters, numbers, - and periods (.) are supported. Default is `Terraform-Snapshot`.",
 			},
 			"availability_zone": {
 				Type:        schema.TypeString,

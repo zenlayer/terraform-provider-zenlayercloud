@@ -58,7 +58,7 @@ The following arguments are supported:
 
 * `subnet_id` - (Required, String, ForceNew) The ID of the subnet to which the HaVip belongs.
 * `ip_address` - (Optional, String, ForceNew) The private IPv4 address of the HaVip. Must be one of the available IPs in the subnet's CIDR block. If not specified, the system will allocate one automatically from the subnet.
-* `name` - (Optional, String) The name of the HaVip. Length must be between 1 and 64 characters.
+* `name` - (Optional, String) The name of the HaVip. Length must be between 1 and 64 characters. Default is `Terraform-HaVip`.
 * `security_group_id` - (Optional, String, ForceNew) The ID of the security group. If not specified, the default security group of the VPC will be used.
 * `tags` - (Optional, Map) The tags associated with the HaVip.
 

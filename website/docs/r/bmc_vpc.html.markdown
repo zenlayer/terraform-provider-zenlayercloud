@@ -33,7 +33,7 @@ The following arguments are supported:
 
 * `cidr_block` - (Required, String, ForceNew) A network address block which should be a subnet of the three internal network segments (10.0.0.0/16, 172.16.0.0/12 and 192.168.0.0/16).
 * `region` - (Required, String, ForceNew) The ID of region that the vpc locates at.
-* `name` - (Optional, String) The name of the vpc.
+* `name` - (Optional, String) The name of the vpc. Default is `Terraform-VPC`.
 * `resource_group_id` - (Optional, String) The resource group id the vpc belongs to, default to ID of Default Resource Group.
 * `tags` - (Optional, Map) The tags of the vpc.
 

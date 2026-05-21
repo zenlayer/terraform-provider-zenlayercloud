@@ -192,7 +192,7 @@ func resourceZenlayerCloudInstance() *schema.Resource {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Default:     true,
-				Description: "Whether to reinstall the instance when modifying field including `user_data`.",
+				Description: "Whether to reinstall the instance when modifying field including `user_data`. Default is `true`.",
 			},
 			"internet_charge_type": {
 				Type:         schema.TypeString,

@@ -65,7 +65,7 @@ func resourceZenlayerCloudVpc() *schema.Resource {
 				Optional:     true,
 				Default:      "Terraform-VPC",
 				ValidateFunc: validation.StringLenBetween(1, 64),
-				Description:  "The name of the vpc.",
+				Description:  "The name of the vpc. Default is `Terraform-VPC`.",
 			},
 			"cidr_block": {
 				Type:         schema.TypeString,

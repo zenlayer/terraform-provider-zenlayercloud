@@ -64,7 +64,7 @@ func resourceZenlayerCloudSecurityGroupRule() *schema.Resource {
 				Default:      "accept",
 				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice(SecurityGroupRulePolicy, false),
-				Description:  "The policy of the rule, currently only `accept` is supported.",
+				Description:  "The policy of the rule, currently only `accept` is supported. Default is `accept`.",
 			},
 			"ip_protocol": {
 				Type:         schema.TypeString,

@@ -55,7 +55,7 @@ func resourceZenlayerCloudDcPorts() *schema.Resource {
 				Optional:     true,
 				Default:      "Terraform-Port",
 				ValidateFunc: validation.StringLenBetween(1, 255),
-				Description:  "Port name. Up to 255 characters in length are allowed.",
+				Description:  "Port name. Up to 255 characters in length are allowed. Default is `Terraform-Port`.",
 			},
 			"datacenter": {
 				Type:        schema.TypeString,

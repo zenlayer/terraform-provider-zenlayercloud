@@ -77,7 +77,7 @@ func resourceZenlayerCloudBmcSubnet() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Default:     "Terraform-Subnet",
-				Description: "The name of the bmc subnet.",
+				Description: "The name of the bmc subnet. Default is `Terraform-Subnet`.",
 			},
 			"cidr_block": {
 				Type:         schema.TypeString,

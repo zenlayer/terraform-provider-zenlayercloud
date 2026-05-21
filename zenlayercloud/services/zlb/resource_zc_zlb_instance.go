@@ -47,7 +47,7 @@ func ResourceZenlayerCloudZlbInstance() *schema.Resource {
 				Optional:     true,
 				Default:      "Terraform-ZLB",
 				ValidateFunc: validation.StringLenBetween(1, 64),
-				Description:  "The name of the load balancer instance.",
+				Description:  "The name of the load balancer instance. Default is `Terraform-ZLB`.",
 			},
 			"create_time": {
 				Type:        schema.TypeString,
