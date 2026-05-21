@@ -37,7 +37,7 @@ func ResourceZenlayerCloudZecVNic() *schema.Resource {
 				Optional:     true,
 				Default:      "Terraform-vNIC",
 				ValidateFunc: validation.StringLenBetween(2, 63),
-				Description:  "The name of the vNIC. maximum length is 63.",
+				Description:  "The name of the vNIC. Maximum length is 63. Default is `Terraform-vNIC`.",
 			},
 			"subnet_id": {
 				Type:        schema.TypeString,

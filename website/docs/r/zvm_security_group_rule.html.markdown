@@ -40,7 +40,7 @@ The following arguments are supported:
 * `ip_protocol` - (Required, String, ForceNew) The protocol of the rule.
 * `port_range` - (Required, String, ForceNew) The port range of the rule.
 * `security_group_id` - (Required, String, ForceNew) ID of the security group to be queried.
-* `policy` - (Optional, String, ForceNew) The policy of the rule, currently only `accept` is supported.
+* `policy` - (Optional, String, ForceNew) The policy of the rule, currently only `accept` is supported. Default is `accept`.
 
 ## Attributes Reference
 

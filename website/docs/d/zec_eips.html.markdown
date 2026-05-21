@@ -82,7 +82,7 @@ In addition to all arguments above, the following attributes are exported:
 
 * `result` - An information list of EIPs. Each element contains the following attributes:
    * `associated_id` - The ID of associated instance that the EIP attached to.
-   * `associated_type` - The type of associated instance that the EIP attached to. Valid values: `NAT`(for NAT gateway), `NIC`(for virtual NetworkInterface), `LB`(for Load balancer Instance).
+   * `associated_type` - The type of associated instance that the EIP attached to. Valid values: `NAT`(for NAT gateway), `NIC`(for virtual NetworkInterface), `LB`(for Load balancer Instance), `HAVIP`(for High-availability virtual IP).
    * `bandwidth_cluster_id` - Bandwidth cluster ID.
    * `bandwidth_cluster_name` - The name of Bandwidth cluster.
    * `bandwidth` - Bandwidth. Measured in Mbps.

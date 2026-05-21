@@ -82,14 +82,14 @@ func resourceZenlayerCloudPrivateConnect() *schema.Resource {
 				Optional:     true,
 				Default:      "Terraform-Private-Connect",
 				ValidateFunc: validation.StringLenBetween(1, 255),
-				Description:  "The private connect name. Up to 255 characters in length are allowed.",
+				Description:  "The private connect name. Up to 255 characters in length are allowed. Default is `Terraform-Private-Connect`.",
 			},
 			"connect_bandwidth": {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				Default:      1,
 				ValidateFunc: validation.IntBetween(1, 500),
-				Description:  "The bandwidth of private connect. Valid range: [1,500]. Unit: Mbps.",
+				Description:  "The bandwidth of private connect. Valid range: [1,500]. Unit: Mbps. Default is `1`.",
 			},
 			"endpoints": {
 				Type:        schema.TypeList,

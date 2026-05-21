@@ -39,7 +39,7 @@ func ResourceZenlayerCloudZecDisk() *schema.Resource {
 				Optional:     true,
 				Default:      "Terraform-Disk",
 				ValidateFunc: validation.StringLenBetween(1, 64),
-				Description:  "The name of the disk.",
+				Description:  "The name of the disk. Default is `Terraform-Disk`.",
 			},
 			"disk_size": {
 				Type:         schema.TypeInt,
@@ -52,7 +52,7 @@ func ResourceZenlayerCloudZecDisk() *schema.Resource {
 				Optional:    true,
 				ForceNew:    true,
 				Default:     "Standard NVMe SSD",
-				Description: "The category of disk.",
+				Description: "The category of disk. Default is `Standard NVMe SSD`.",
 			},
 			"disk_type": {
 				Type:        schema.TypeString,

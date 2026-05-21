@@ -132,7 +132,7 @@ The `health_check` object supports the following:
 
 * `enable` - (Required, Bool) Whether to enable health check. If the enable is `false`, the alarm will be set to `false` and the port will be cleared.
 * `alarm` - (Optional, Bool) Whether to enable alarm. Default is `false`.
-* `port` - (Optional, Int) The port of health check.
+* `port` - (Optional, Int) The port of health check. Default is `0` (uses the backend service port).
 
 The `l4_listeners` object supports the following:
 

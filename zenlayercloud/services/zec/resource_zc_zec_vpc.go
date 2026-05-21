@@ -37,7 +37,7 @@ func ResourceZenlayerCloudGlobalVpc() *schema.Resource {
 				Optional:     true,
 				Default:      "Terraform-Global-VPC",
 				ValidateFunc: validation.StringLenBetween(1, 64),
-				Description:  "The name of the global VPC.",
+				Description:  "The name of the global VPC. Default is `Terraform-Global-VPC`.",
 			},
 			"cidr_block": {
 				Type:         schema.TypeString,
@@ -51,13 +51,13 @@ func ResourceZenlayerCloudGlobalVpc() *schema.Resource {
 				Default:      1500,
 				ValidateFunc: validation.IntInSlice([]int{1300, 1500, 9000}),
 				ForceNew:     true,
-				Description:  "The maximum transmission unit. This value cannot be changed.",
+				Description:  "The maximum transmission unit. Valid values: `1300`, `1500`, `9000`. Default is `1500`. This value cannot be changed after creation.",
 			},
 			"enable_ipv6": {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Default:     false,
-				Description: "Whether to enable the private IPv6 network segment. Once the ipv6 is enabled, disable it will cause the resource to `ForceNew`.",
+				Description: "Whether to enable the private IPv6 network segment. Default is `false`. Once the ipv6 is enabled, disable it will cause the resource to `ForceNew`.",
 			},
 			"tags": {
 				Type:        schema.TypeMap,

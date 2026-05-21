@@ -68,7 +68,7 @@ func resourceZenlayerCloudVmDisk() *schema.Resource {
 				Optional:     true,
 				Default:      "Terraform-Disk",
 				ValidateFunc: validation.StringLenBetween(1, 64),
-				Description:  "The name of the disk.",
+				Description:  "The name of the disk. Default is `Terraform-Disk`.",
 			},
 			"disk_size": {
 				Type:         schema.TypeInt,
@@ -88,7 +88,7 @@ func resourceZenlayerCloudVmDisk() *schema.Resource {
 				Default:      "POSTPAID",
 				ValidateFunc: validation.StringInSlice([]string{"POSTPAID", "PREPAID"}, false),
 				ForceNew:     true,
-				Description:  "Charge type of disk.",
+				Description:  "Charge type of disk. Valid values: `POSTPAID`, `PREPAID`. Default is `POSTPAID`.",
 			},
 			"force_delete": {
 				Type:        schema.TypeBool,

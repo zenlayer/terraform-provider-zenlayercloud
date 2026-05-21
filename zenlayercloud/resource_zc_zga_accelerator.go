@@ -385,7 +385,7 @@ func resourceZenlayerCloudAccelerator() *schema.Resource {
 							Optional:     true,
 							Default:      0,
 							ValidateFunc: validation.IsPortNumberOrZero,
-							Description:  "The port of health check.",
+							Description:  "The port of health check. Default is `0` (uses the backend service port).",
 						},
 					},
 				},

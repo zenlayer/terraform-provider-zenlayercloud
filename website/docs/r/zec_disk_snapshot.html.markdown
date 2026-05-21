@@ -42,7 +42,7 @@ resource "zenlayercloud_zec_disk_snapshot" "snapshot" {
 The following arguments are supported:
 
 * `disk_id` - (Required, String, ForceNew) The ID of disk which the snapshot created from.
-* `name` - (Optional, String) The name of the snapshot. The name should start and end with a number or a letter, containing 2 to 63 characters. Only letters, numbers, - and periods (.) are supported.
+* `name` - (Optional, String) The name of the snapshot. The name should start and end with a number or a letter, containing 2 to 63 characters. Only letters, numbers, - and periods (.) are supported. Default is `Terraform-Snapshot`.
 * `retention_time` - (Optional, String) Retention time of snapshot. Valid format: yyyy-MM-ddTHH:mm:ssZ, and must be at least 24 hours in the future. Example: 2025-10-01T10:10:10Z.
 
 ## Attributes Reference

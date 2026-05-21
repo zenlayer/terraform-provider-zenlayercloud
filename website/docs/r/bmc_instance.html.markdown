@@ -77,7 +77,7 @@ The following arguments are supported:
 * `password` - (Optional, String) Password for the instance. The max length of password is 16. Modifying will cause the instance reset.
 * `raid_config_custom` - (Optional, List) Custom config for instance raid. Modifying will cause the instance reset.
 * `raid_config_type` - (Optional, String) Simple config for instance raid. Valid values: `0` (for raid0), `1`(for raid1), `5` (for raid5), `10` (for raid10). Modifying will cause the instance reset.
-* `reinstall` - (Optional, Bool) Whether to reinstall the instance when modifying field including `user_data`.
+* `reinstall` - (Optional, Bool) Whether to reinstall the instance when modifying field including `user_data`. Default is `true`.
 * `resource_group_id` - (Optional, String) The resource group id the instance belongs to, default to Default Resource Group.
 * `ssh_keys` - (Optional, Set: [`String`], **Deprecated**) please use 'key_id' instead. The ssh keys to use for the instance. The max number of ssh keys is 5. Modifying will cause the instance reset.
 * `subnet_id` - (Optional, String) The ID of a VPC subnet. If you want to create instances in a VPC network, this parameter must be set.

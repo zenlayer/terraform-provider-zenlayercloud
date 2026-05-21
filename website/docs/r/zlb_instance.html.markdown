@@ -46,7 +46,7 @@ The following arguments are supported:
 * `resource_group_id` - (Optional, String) The resource group id the load balancer belongs to, default to Default Resource Group.
 * `security_group_id` - (Optional, String) The ID of security group that the load balancer instance is bound to.
 * `tags` - (Optional, Map) The available tags within this load balancer instance.
-* `zlb_name` - (Optional, String) The name of the load balancer instance.
+* `zlb_name` - (Optional, String) The name of the load balancer instance. Default is `Terraform-ZLB`.
 
 ## Attributes Reference
 

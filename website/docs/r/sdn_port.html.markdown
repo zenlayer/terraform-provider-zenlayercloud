@@ -31,7 +31,7 @@ The following arguments are supported:
 * `datacenter` - (Required, String, ForceNew) ID of data center.
 * `port_type` - (Required, String, ForceNew) Type of port. eg. 1G/10G/40G.
 * `force_delete` - (Optional, Bool) Indicate whether to force delete the port. Default is `false`. If set true, the port will be permanently deleted instead of being moved into the recycle bin.
-* `name` - (Optional, String) Port name. Up to 255 characters in length are allowed.
+* `name` - (Optional, String) Port name. Up to 255 characters in length are allowed. Default is `Terraform-Port`.
 * `remarks` - (Optional, String) Description of port.
 
 ## Attributes Reference

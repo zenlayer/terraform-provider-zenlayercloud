@@ -56,7 +56,7 @@ The following arguments are supported:
 * `ipv6_bandwidth` - (Optional, Int, ForceNew) Bandwidth of public IPv6. Measured in Mbps.
 * `ipv6_internet_charge_type` - (Optional, String, ForceNew) Network billing methods for public IPv6. Valid values: `ByBandwidth`, `ByTrafficPackage`, `BandwidthCluster`.
 * `ipv6_traffic_package_size` - (Optional, Float64, ForceNew) Traffic Package size for public IPv6. Measured in TB. Only valid when `ipv6_internet_charge_type` is `ByTrafficPackage`.
-* `name` - (Optional, String) The name of the vNIC. maximum length is 63.
+* `name` - (Optional, String) The name of the vNIC. Maximum length is 63. Default is `Terraform-vNIC`.
 * `resource_group_id` - (Optional, String) The resource group id the vNIC belongs to, default to ID of Default Resource Group.
 * `security_group_id` - (Optional, String) The ID of a security group. If absent, the security group under VPC will be used.
 * `stack_type` - (Optional, String, ForceNew) The stack type of the subnet. Valid values: `IPv4`, `IPv6`, `IPv4_IPv6`.
