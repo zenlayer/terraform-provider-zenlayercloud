@@ -61,7 +61,7 @@ func ResourceZenlayerCloudEipAssociation() *schema.Resource {
 				// TODO 支持更新
 				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice([]string{"FullNat", "Passthrough"}, false),
-				Description:  "Elastic IP bind type. Effective when the elastic IP is assigned to a vNIC.",
+				Description:  "Elastic IP bind type. Valid values: `FullNat`, `Passthrough`. Effective when the elastic IP is assigned to a vNIC (`NIC`) or a HaVip (`HAVIP`).",
 			},
 		},
 	}
@@ -69,10 +69,11 @@ func ResourceZenlayerCloudEipAssociation() *schema.Resource {
 
 func nonNicValidFunc() schema.CustomizeDiffFunc {
 	return customdiff.IfValue("associated_type", func(ctx context.Context, value, meta interface{}) bool {
-		return value != "NIC"
+		v, _ := value.(string)
+		return v != "NIC" && v != "HAVIP"
 	}, func(ctx context.Context, diff *schema.ResourceDiff, i interface{}) error {
 		if _, ok := diff.GetOk("bind_type"); ok {
-			return errors.New("`bind_type` is only available for `NIC`")
+			return errors.New("`bind_type` is only available for `NIC` or `HAVIP`")
 		}
 		if _, ok := diff.GetOk("private_ip_address"); ok {
 			return errors.New("`private_ip_address` is only available for `NIC`")
