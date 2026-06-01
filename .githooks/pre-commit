@@ -1,0 +1,34 @@
+#!/bin/sh
+#
+# Pre-commit hook: blocks local-only dev config from being committed.
+# Install: git config core.hooksPath .githooks
+
+FAIL=0
+
+# Check staged go.mod for local replace directive
+if git diff --cached --name-only | grep -q "^go\.mod$"; then
+    if git show :go.mod | grep -q "replace github.com/zenlayer/zenlayercloud-sdk-go"; then
+        echo ""
+        echo "❌ BLOCKED: go.mod contains a local replace directive that must not be committed."
+        echo "   Remove this line before committing:"
+        echo "   replace github.com/zenlayer/zenlayercloud-sdk-go => ../zenlayercloud-sdk-go"
+        echo ""
+        FAIL=1
+    fi
+fi
+
+# Check staged main.go for debug configuration
+if git diff --cached --name-only | grep -q "^main\.go$"; then
+    if git show :main.go | grep -qE "ProviderAddr|Debug:[[:space:]]+true"; then
+        echo ""
+        echo "❌ BLOCKED: main.go contains debug-only configuration that must not be committed."
+        echo "   Revert main.go to use 'Debug: debug,' and remove ProviderAddr."
+        echo ""
+        FAIL=1
+    fi
+fi
+
+if [ "$FAIL" -eq 1 ]; then
+    echo "Commit aborted. Fix the issues above and try again."
+    exit 1
+fi
