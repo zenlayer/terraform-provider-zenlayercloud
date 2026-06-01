@@ -1,4 +1,4 @@
-Provides a resource to create a ZEC high-availability virtual IP (HaVip).
+Provides a resource to create a ZEC high-availability virtual IP (HaVip). For more information, see [High-Availability Virtual IP](https://docs.console.zenlayer.com/welcome/elastic-compute/01-overview).
 
 ~> **NOTE:** Make sure the target subnet has available private IP addresses. If `ip_address` is omitted, the system will allocate one automatically from the subnet; if specified, it must be an available IP within the subnet's CIDR block.
 
