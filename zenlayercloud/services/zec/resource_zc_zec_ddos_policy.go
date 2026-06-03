@@ -61,6 +61,7 @@ $ terraform import zenlayercloud_zec_ddos_policy.example pol-xxxxxxxx
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -98,7 +99,7 @@ func ResourceZenlayerCloudZecDDoSPolicy() *schema.Resource {
 			"policy_name": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validation.StringLenBetween(2, 63),
+				ValidateFunc: validation.All(validation.StringLenBetween(2, 63), validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9][a-zA-Z0-9\-.]*[a-zA-Z0-9]$`), "must start and end with a letter or digit, and contain only letters, digits, hyphens, and dots")),
 				Description:  "Name of the DDoS protection policy. 2-63 characters, only letters, digits, `-`, and `.` are allowed, must start and end with a letter or digit.",
 			},
 			"resource_group_id": {
@@ -159,25 +160,25 @@ func ResourceZenlayerCloudZecDDoSPolicy() *schema.Resource {
 							Type:         schema.TypeInt,
 							Required:     true,
 							ValidateFunc: validation.IntBetween(0, 65535),
-							Description:  "Source port range start value.",
+							Description:  "Source port range start value. Range: 0-65535.",
 						},
 						"src_port_end": {
 							Type:         schema.TypeInt,
 							Required:     true,
 							ValidateFunc: validation.IntBetween(0, 65535),
-							Description:  "Source port range end value.",
+							Description:  "Source port range end value. Range: 0-65535.",
 						},
 						"dst_port_start": {
 							Type:         schema.TypeInt,
 							Required:     true,
 							ValidateFunc: validation.IntBetween(0, 65535),
-							Description:  "Destination port range start value.",
+							Description:  "Destination port range start value. Range: 0-65535.",
 						},
 						"dst_port_end": {
 							Type:         schema.TypeInt,
 							Required:     true,
 							ValidateFunc: validation.IntBetween(0, 65535),
-							Description:  "Destination port range end value.",
+							Description:  "Destination port range end value. Range: 0-65535.",
 						},
 						"action": {
 							Type:         schema.TypeString,
@@ -198,43 +199,43 @@ func ResourceZenlayerCloudZecDDoSPolicy() *schema.Resource {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringInSlice([]string{"TCP", "UDP", "ICMP"}, false),
-							Description:  "Protocol type.",
+							Description:  "Protocol type. Valid values: `TCP`, `UDP`, `ICMP`.",
 						},
 						"src_port_start": {
 							Type:         schema.TypeInt,
 							Required:     true,
 							ValidateFunc: validation.IntBetween(0, 65535),
-							Description:  "Source port range start value.",
+							Description:  "Source port range start value. Range: 0-65535.",
 						},
 						"src_port_end": {
 							Type:         schema.TypeInt,
 							Required:     true,
 							ValidateFunc: validation.IntBetween(0, 65535),
-							Description:  "Source port range end value.",
+							Description:  "Source port range end value. Range: 0-65535.",
 						},
 						"dst_port_start": {
 							Type:         schema.TypeInt,
 							Required:     true,
 							ValidateFunc: validation.IntBetween(0, 65535),
-							Description:  "Destination port range start value.",
+							Description:  "Destination port range start value. Range: 0-65535.",
 						},
 						"dst_port_end": {
 							Type:         schema.TypeInt,
 							Required:     true,
 							ValidateFunc: validation.IntBetween(0, 65535),
-							Description:  "Destination port range end value.",
+							Description:  "Destination port range end value. Range: 0-65535.",
 						},
 						"min_pkt_length": {
 							Type:         schema.TypeInt,
 							Required:     true,
-							ValidateFunc: validation.IntAtLeast(0),
-							Description:  "Minimum packet length to filter.",
+							ValidateFunc: validation.IntBetween(1, 1500),
+							Description:  "Minimum packet length to filter. Range: 1-1500.",
 						},
 						"max_pkt_length": {
 							Type:         schema.TypeInt,
 							Required:     true,
-							ValidateFunc: validation.IntAtLeast(0),
-							Description:  "Maximum packet length to filter.",
+							ValidateFunc: validation.IntBetween(1, 1500),
+							Description:  "Maximum packet length to filter. Range: 1-1500.",
 						},
 						"offset": {
 							Type:         schema.TypeInt,
@@ -244,7 +245,7 @@ func ResourceZenlayerCloudZecDDoSPolicy() *schema.Resource {
 						},
 						"match_bytes": {
 							Type:        schema.TypeString,
-							Optional:    true,
+							Required:    true,
 							Description: "Bytes to match in the payload. Hexadecimal lowercase, zero-padded to 2 digits (e.g. `deadbeef`).",
 						},
 						"action": {

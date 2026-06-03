@@ -89,24 +89,24 @@ The following arguments are supported:
 The `fingerprint_rule` object supports the following:
 
 * `action` - (Required, String) Action to take on match. Valid values: `Drop`.
-* `dst_port_end` - (Required, Int) Destination port range end value.
-* `dst_port_start` - (Required, Int) Destination port range start value.
-* `max_pkt_length` - (Required, Int) Maximum packet length to filter.
-* `min_pkt_length` - (Required, Int) Minimum packet length to filter.
-* `protocol` - (Required, String) Protocol type.
-* `src_port_end` - (Required, Int) Source port range end value.
-* `src_port_start` - (Required, Int) Source port range start value.
-* `match_bytes` - (Optional, String) Bytes to match in the payload. Hexadecimal lowercase, zero-padded to 2 digits (e.g. `deadbeef`).
+* `dst_port_end` - (Required, Int) Destination port range end value. Range: 0-65535.
+* `dst_port_start` - (Required, Int) Destination port range start value. Range: 0-65535.
+* `match_bytes` - (Required, String) Bytes to match in the payload. Hexadecimal lowercase, zero-padded to 2 digits (e.g. `deadbeef`).
+* `max_pkt_length` - (Required, Int) Maximum packet length to filter. Range: 1-1500.
+* `min_pkt_length` - (Required, Int) Minimum packet length to filter. Range: 1-1500.
+* `protocol` - (Required, String) Protocol type. Valid values: `TCP`, `UDP`, `ICMP`.
+* `src_port_end` - (Required, Int) Source port range end value. Range: 0-65535.
+* `src_port_start` - (Required, Int) Source port range start value. Range: 0-65535.
 * `offset` - (Optional, Int) Payload offset for fingerprint matching. Range: 0-1500.
 
 The `port` object supports the following:
 
 * `action` - (Required, String) Action to take on match. Valid values: `Drop`.
-* `dst_port_end` - (Required, Int) Destination port range end value.
-* `dst_port_start` - (Required, Int) Destination port range start value.
+* `dst_port_end` - (Required, Int) Destination port range end value. Range: 0-65535.
+* `dst_port_start` - (Required, Int) Destination port range start value. Range: 0-65535.
 * `protocol` - (Required, String) Protocol type. Valid values: `TCP`, `UDP`.
-* `src_port_end` - (Required, Int) Source port range end value.
-* `src_port_start` - (Required, Int) Source port range start value.
+* `src_port_end` - (Required, Int) Source port range end value. Range: 0-65535.
+* `src_port_start` - (Required, Int) Source port range start value. Range: 0-65535.
 
 The `reflect_udp_port` object supports the following:
 
