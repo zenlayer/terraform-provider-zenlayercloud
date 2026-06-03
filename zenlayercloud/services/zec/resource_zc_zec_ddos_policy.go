@@ -74,6 +74,7 @@ import (
 	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/connectivity"
 	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/services/zrm"
 	common2 "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/common"
+	user "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/user20240529"
 	zec "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/zec20250901"
 )
 
@@ -664,6 +665,23 @@ func resourceZenlayerCloudZecDDoSPolicyUpdate(ctx context.Context, d *schema.Res
 			if err := zecService.AttachDDoSPolicy(ctx, policyId, added); err != nil {
 				return diag.FromErr(fmt.Errorf("error attaching EIPs to DDoS policy %s: %w", policyId, err))
 			}
+		}
+	}
+
+	// Update resource group
+	if d.HasChange("resource_group_id") {
+		err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate)-time.Minute, func() *resource.RetryError {
+			request := user.NewAddResourceResourceGroupRequest()
+			request.ResourceGroupId = common2.String(d.Get("resource_group_id").(string))
+			request.Resources = []string{policyId}
+			_, err := meta.(*connectivity.ZenlayerCloudClient).WithUsrClient().AddResourceResourceGroup(request)
+			if err != nil {
+				return common.RetryError(ctx, err, common.InternalServerError, common2.NetworkError)
+			}
+			return nil
+		})
+		if err != nil {
+			return diag.FromErr(err)
 		}
 	}
 
