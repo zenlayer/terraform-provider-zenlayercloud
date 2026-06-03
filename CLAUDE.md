@@ -20,6 +20,14 @@
 
 **必填参数在前，非必填参数在后**：无论是 `.go`、`.md`、`.html` 还是其他任何文件，定义参数/字段/属性时，必填项必须排在所有可选项之前。
 
+## Schema 字段校验与文档同步规范（强约束）
+
+**`ValidateFunc` 与 `Description` 必须同步**：凡是 API 文档规定了取值范围或枚举值的字段，schema 定义中必须同时满足：
+1. `ValidateFunc`：添加对应的范围校验（如 `validation.IntBetween`、`validation.StringInSlice` 等）
+2. `Description`：在描述末尾明确写出范围或枚举，例如 `Range: 0-65535.` 或 `Valid values: \`TCP\`, \`UDP\`.`
+
+`Description` 是自动生成 HTML 文档（`make gendoc`）的唯一来源，缺少范围说明会导致生成的文档中用户看不到有效值约束。两者缺一不可。
+
 ## 构建、测试与开发命令
 
 ```bash
