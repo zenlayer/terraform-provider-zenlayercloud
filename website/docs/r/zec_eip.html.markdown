@@ -43,7 +43,7 @@ The following arguments are supported:
 * `bandwidth` - (Optional, Int) Bandwidth. Measured in Mbps. Required when `internet_charge_type` is `ByBandwidth`.
 * `cidr_id` - (Optional, String, ForceNew) CIDR ID, the elastic ip will allocated from given CIDR.
 * `flow_package_size` - (Optional, Float64, ForceNew) The Data transfer package. Measured in TB.
-* `ip_network_type` - (Optional, String, ForceNew) Network types of public IPv4. Valid values: `BGPLine`, `CN2Line`, `LocalLine`, `ChinaTelecom`, `ChinaUnicom`, `ChinaMobile`, `Cogent`.
+* `ip_network_type` - (Optional, String, ForceNew) Network types of public IPv4. Valid values: `BGPLine`, `CN2Line`, `PathBasedBandwidthIP`, `LocalLine`, `ChinaTelecom`, `ChinaUnicom`, `ChinaMobile`, `Cogent`.
 * `peer_region_id` - (Optional, String, ForceNew) Remote region ID.
 * `rate_limit_mode` - (Optional, String) Bandwidth rate limit mode. Valid values: `LOOSE`, `STRICT`.
 * `resource_group_id` - (Optional, String) Resource group ID.

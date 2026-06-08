@@ -14,8 +14,10 @@ package zec
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"math"
+	"net"
 	"sync"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -585,6 +587,175 @@ func (s *ZecService) ModifyBorderGateway(ctx context.Context, request *zec.Modif
 	response, err := s.client.WithZecClient().ModifyBorderGatewaysAttribute(request)
 	common.LogApiRequest(ctx, "ModifyBorderGatewaysAttribute", request, response, err)
 	return err
+}
+
+// DDoSPolicyFilter 查询DDoS防护策略的过滤条件
+type DDoSPolicyFilter struct {
+	PolicyIds  []string
+	PolicyName string
+}
+
+func (s *ZecService) DescribeDDoSPolicyById(ctx context.Context, policyId string) (*zec2.DescribePolicyDetailResponseParams, error) {
+	request := zec2.NewDescribePolicyDetailRequest()
+	request.PolicyId = &policyId
+
+	response, err := s.client.WithZec2Client().DescribePolicyDetail(request)
+	defer common.LogApiRequest(ctx, "DescribePolicyDetail", request, response, err)
+
+	if err != nil {
+		return nil, err
+	}
+	if response == nil || response.Response == nil || response.Response.PolicyId == nil {
+		return nil, nil
+	}
+	return response.Response, nil
+}
+
+func (s *ZecService) DescribeDDoSPoliciesByFilter(ctx context.Context, filter *DDoSPolicyFilter) (policies []*zec2.PolicyInfo, err error) {
+	request := zec2.NewDescribePolicysRequest()
+	if filter != nil {
+		if len(filter.PolicyIds) > 0 {
+			request.PolicyIds = filter.PolicyIds
+		}
+		if filter.PolicyName != "" {
+			request.PolicyName = &filter.PolicyName
+		}
+	}
+
+	var limit = 100
+	request.PageSize = &limit
+	request.PageNum = common2.Integer(1)
+
+	response, err := s.client.WithZec2Client().DescribePolicys(request)
+	defer common.LogApiRequest(ctx, "DescribePolicys", request, response, err)
+
+	if err != nil {
+		return nil, err
+	}
+	if response == nil || response.Response == nil || len(response.Response.DataSet) == 0 {
+		return policies, nil
+	}
+
+	policies = response.Response.DataSet
+	num := int(math.Ceil(float64(*response.Response.TotalCount)/float64(limit))) - 1
+	if num == 0 {
+		return policies, nil
+	}
+
+	maxConcurrentNum := 50
+	g := common.NewGoRoutine(maxConcurrentNum)
+	wg := sync.WaitGroup{}
+
+	var pageList = make([]interface{}, num)
+	var firstErr error
+	var mu sync.Mutex
+
+	for i := 0; i < num; i++ {
+		wg.Add(1)
+		value := i
+		g.Run(func() {
+			defer wg.Done()
+			req := zec2.NewDescribePolicysRequest()
+			if filter != nil {
+				if len(filter.PolicyIds) > 0 {
+					req.PolicyIds = filter.PolicyIds
+				}
+				if filter.PolicyName != "" {
+					req.PolicyName = &filter.PolicyName
+				}
+			}
+			req.PageNum = common2.Integer(value + 2)
+			req.PageSize = &limit
+
+			resp, e := s.client.WithZec2Client().DescribePolicys(req)
+			mu.Lock()
+			defer mu.Unlock()
+			if e != nil {
+				if firstErr == nil {
+					firstErr = e
+				}
+				return
+			}
+			if resp != nil && resp.Response != nil {
+				pageList[value] = resp.Response.DataSet
+			}
+		})
+	}
+	wg.Wait()
+
+	if firstErr != nil {
+		return nil, firstErr
+	}
+	for _, v := range pageList {
+		if v != nil {
+			policies = append(policies, v.([]*zec2.PolicyInfo)...)
+		}
+	}
+	return policies, nil
+}
+
+func (s *ZecService) AttachDDoSPolicy(ctx context.Context, policyId string, ipv4Ids []string) error {
+	request := zec2.NewAttachToPolicyRequest()
+	request.PolicyId = &policyId
+	request.Ipv4IdList = ipv4Ids
+
+	response, err := s.client.WithZec2Client().AttachToPolicy(request)
+	defer common.LogApiRequest(ctx, "AttachToPolicy", request, response, err)
+	return err
+}
+
+func (s *ZecService) DetachDDoSPolicy(ctx context.Context, policyId string, ipv4Ids []string) error {
+	request := zec2.NewDetachFromPolicyRequest()
+	request.PolicyId = &policyId
+	request.Ipv4IdList = ipv4Ids
+
+	response, err := s.client.WithZec2Client().DetachFromPolicy(request)
+	defer common.LogApiRequest(ctx, "DetachFromPolicy", request, response, err)
+	return err
+}
+
+// ResolveIpv4IdsFromAttachmentIps maps DescribePolicyDetail AttachmentIps to EIP IDs.
+// The API returns public IP addresses; AttachToPolicy/DetachFromPolicy require ipv4 IDs.
+func (s *ZecService) ResolveIpv4IdsFromAttachmentIps(ctx context.Context, attachments []string) ([]string, error) {
+	if len(attachments) == 0 {
+		return []string{}, nil
+	}
+
+	var ipsToResolve []string
+	for _, attachment := range attachments {
+		if net.ParseIP(attachment) != nil {
+			ipsToResolve = append(ipsToResolve, attachment)
+		}
+	}
+
+	ipToEipId := make(map[string]string, len(ipsToResolve))
+	if len(ipsToResolve) > 0 {
+		eips, err := s.DescribeEipsByFilter(ctx, &EipFilter{IpAddress: ipsToResolve})
+		if err != nil {
+			return nil, err
+		}
+		for _, eip := range eips {
+			if eip.EipId == nil {
+				continue
+			}
+			for _, pubIp := range eip.PublicIpAddresses {
+				ipToEipId[pubIp] = *eip.EipId
+			}
+		}
+	}
+
+	ipv4Ids := make([]string, 0, len(attachments))
+	for _, attachment := range attachments {
+		if eipId, ok := ipToEipId[attachment]; ok {
+			ipv4Ids = append(ipv4Ids, eipId)
+			continue
+		}
+		if net.ParseIP(attachment) != nil {
+			return nil, fmt.Errorf("failed to resolve EIP ID for IP %s", attachment)
+		}
+		ipv4Ids = append(ipv4Ids, attachment)
+	}
+	return ipv4Ids, nil
 }
 
 func (s *ZecService) DescribeEipById(ctx context.Context, eipId string) (*zec2.EipInfo, error) {

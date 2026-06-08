@@ -51,8 +51,8 @@ func ResourceZenlayerCloudZecElasticIP() *schema.Resource {
 				Optional:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"cidr_id"},
-				ValidateFunc:  validation.StringInSlice([]string{"BGPLine", "CN2Line", "LocalLine", "ChinaTelecom", "ChinaUnicom", "ChinaMobile", "Cogent"}, false),
-				Description:   "Network types of public IPv4. Valid values: `BGPLine`, `CN2Line`, `LocalLine`, `ChinaTelecom`, `ChinaUnicom`, `ChinaMobile`, `Cogent`.",
+				ValidateFunc:  validation.StringInSlice([]string{"BGPLine", "CN2Line", "PathBasedBandwidthIP", "LocalLine", "ChinaTelecom", "ChinaUnicom", "ChinaMobile", "Cogent"}, false),
+				Description:   "Network types of public IPv4. Valid values: `BGPLine`, `CN2Line`, `PathBasedBandwidthIP`, `LocalLine`, `ChinaTelecom`, `ChinaUnicom`, `ChinaMobile`, `Cogent`.",
 			},
 			"internet_charge_type": {
 				Type:         schema.TypeString,
