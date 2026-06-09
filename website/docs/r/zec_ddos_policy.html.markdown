@@ -88,7 +88,7 @@ The following arguments are supported:
 
 The `fingerprint_rule` object supports the following:
 
-* `action` - (Required, String) Action to take on match. Valid values: `Drop`.
+* `action` - (Required, String) Action to take on match. Valid values: `Drop`, `Accept`.
 * `dst_port_end` - (Required, Int) Destination port range end value. Range: 0-65535.
 * `dst_port_start` - (Required, Int) Destination port range start value. Range: 0-65535.
 * `match_bytes` - (Required, String) Bytes to match in the payload. Hexadecimal lowercase, zero-padded to 2 digits (e.g. `deadbeef`).
@@ -101,7 +101,7 @@ The `fingerprint_rule` object supports the following:
 
 The `port` object supports the following:
 
-* `action` - (Required, String) Action to take on match. Valid values: `Drop`.
+* `action` - (Required, String) Action to take on match. Valid values: `Drop`, `Accept`.
 * `dst_port_end` - (Required, Int) Destination port range end value. Range: 0-65535.
 * `dst_port_start` - (Required, Int) Destination port range start value. Range: 0-65535.
 * `protocol` - (Required, String) Protocol type. Valid values: `TCP`, `UDP`.

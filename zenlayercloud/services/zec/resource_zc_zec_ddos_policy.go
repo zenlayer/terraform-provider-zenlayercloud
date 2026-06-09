@@ -184,8 +184,8 @@ func ResourceZenlayerCloudZecDDoSPolicy() *schema.Resource {
 						"action": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validation.StringInSlice([]string{"Drop"}, false),
-							Description:  "Action to take on match. Valid values: `Drop`.",
+							ValidateFunc: validation.StringInSlice([]string{"Drop", "Accept"}, false),
+							Description:  "Action to take on match. Valid values: `Drop`, `Accept`.",
 						},
 					},
 				},
@@ -252,8 +252,8 @@ func ResourceZenlayerCloudZecDDoSPolicy() *schema.Resource {
 						"action": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validation.StringInSlice([]string{"Drop"}, false),
-							Description:  "Action to take on match. Valid values: `Drop`.",
+							ValidateFunc: validation.StringInSlice([]string{"Drop", "Accept"}, false),
+							Description:  "Action to take on match. Valid values: `Drop`, `Accept`.",
 						},
 					},
 				},
