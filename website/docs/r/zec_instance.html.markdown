@@ -91,7 +91,7 @@ The following arguments are supported:
 
 * `availability_zone` - (Required, String, ForceNew) The ID of zone that the ZEC instance locates at. such as `asia-southeast-1a`.
 * `image_id` - (Required, String) The image to use for the ZEC instance. Changing `image_id` will cause the ZEC instance reset.
-* `instance_type` - (Required, String, ForceNew) The type of the ZEC instance. such as `z2a.cpu.4`.
+* `instance_type` - (Required, String) The type of the ZEC instance. For regular instances, use `DescribeZoneInstanceConfigInfos` to get available values. For GPU instances, use `DescribeZoneGpuInstanceConfigInfos` to get available values, such as `z3a.g.C49.c8m32.1`.
 * `subnet_id` - (Required, String, ForceNew) The ID of a VPC subnet. Note: The **IPv6 only** stack subnet is not support for instance creation.
 * `system_disk_size` - (Required, Int, ForceNew) Size of the system disk. unit is GiB. If modified, the ZEC instance may force stop.
 * `disable_qga_agent` - (Optional, Bool) Indicate whether to disable QEMU Guest Agent (QGA). QGA is enabled by default. Changing `disable_qga_agent` will cause the ZEC instance reset.
