@@ -371,7 +371,29 @@ func resourceZenlayerCloudZecInstanceUpdate(ctx context.Context, d *schema.Resou
 	}
 
 	if d.HasChange("instance_type") {
-		err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate)-time.Minute, func() *resource.RetryError {
+		err := zecService.shutdownInstance(ctx, instanceId)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+
+		err = resource.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate)-time.Minute, func() *resource.RetryError {
+			instance, errRet := zecService.DescribeInstanceById(ctx, instanceId)
+			if errRet != nil {
+				return common2.RetryError(ctx, errRet, common2.InternalServerError)
+			}
+			if *instance.Status == ZecInstanceStatusStopped {
+				return nil
+			}
+			if instanceIsOperating(*instance.Status) {
+				return resource.RetryableError(fmt.Errorf("waiting for instance %s stopping, current status: %s", instance.InstanceId, instance.Status))
+			}
+			return resource.NonRetryableError(fmt.Errorf("vm instance status is not stopped, current status %s", instance.Status))
+		})
+		if err != nil {
+			return diag.FromErr(err)
+		}
+
+		err = resource.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate)-time.Minute, func() *resource.RetryError {
 			request := zec.NewModifyInstanceTypeRequest()
 			request.InstanceId = common.String(instanceId)
 			request.InstanceType = common.String(d.Get("instance_type").(string))
