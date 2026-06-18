@@ -427,6 +427,25 @@ func resourceZenlayerCloudZecInstanceUpdate(ctx context.Context, d *schema.Resou
 		if _, err := stateConf.WaitForStateContext(ctx); err != nil {
 			return diag.FromErr(fmt.Errorf("error waiting for zec instance (%s) to finish resizing: %v", instanceId, err))
 		}
+
+		if d.Get("running_flag").(bool) {
+			if err := zecService.StartInstance(ctx, instanceId); err != nil {
+				return diag.FromErr(err)
+			}
+			err = resource.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate)-time.Minute, func() *resource.RetryError {
+				instance, errRet := zecService.DescribeInstanceById(ctx, instanceId)
+				if errRet != nil {
+					return common2.RetryError(ctx, errRet, common2.InternalServerError)
+				}
+				if *instance.Status == ZecInstanceStatusRunning {
+					return nil
+				}
+				return resource.RetryableError(fmt.Errorf("waiting for instance %s to start, current status: %s", instanceId, instance.Status))
+			})
+			if err != nil {
+				return diag.FromErr(err)
+			}
+		}
 	}
 
 	if d.HasChange("resource_group_id") {
