@@ -42,8 +42,7 @@ func ResourceZenlayerCloudZecInstance() *schema.Resource {
 			"instance_type": {
 				Type:        schema.TypeString,
 				Required:    true,
-				ForceNew:    true,
-				Description: "The type of the ZEC instance. such as `z2a.cpu.4`.",
+				Description: "The type of the ZEC instance. For regular instances, use `DescribeZoneInstanceConfigInfos` to get available values. For GPU instances, use `DescribeZoneGpuInstanceConfigInfos` to get available values, such as `z3a.g.C49.c8m32.1`.",
 			},
 			"cpu": {
 				Type:        schema.TypeInt,
@@ -368,6 +367,84 @@ func resourceZenlayerCloudZecInstanceUpdate(ctx context.Context, d *schema.Resou
 
 		if err != nil {
 			return diag.FromErr(err)
+		}
+	}
+
+	if d.HasChange("instance_type") {
+		err := zecService.shutdownInstance(ctx, instanceId)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+
+		err = resource.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate)-time.Minute, func() *resource.RetryError {
+			instance, errRet := zecService.DescribeInstanceById(ctx, instanceId)
+			if errRet != nil {
+				return common2.RetryError(ctx, errRet, common2.InternalServerError)
+			}
+			if *instance.Status == ZecInstanceStatusStopped {
+				return nil
+			}
+			if instanceIsOperating(*instance.Status) {
+				return resource.RetryableError(fmt.Errorf("waiting for instance %s stopping, current status: %s", instance.InstanceId, instance.Status))
+			}
+			return resource.NonRetryableError(fmt.Errorf("vm instance status is not stopped, current status %s", instance.Status))
+		})
+		if err != nil {
+			return diag.FromErr(err)
+		}
+
+		err = resource.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate)-time.Minute, func() *resource.RetryError {
+			request := zec.NewModifyInstanceTypeRequest()
+			request.InstanceId = common.String(instanceId)
+			request.InstanceType = common.String(d.Get("instance_type").(string))
+
+			response, err := zecService.client.WithZec2Client().ModifyInstanceType(request)
+			defer common2.LogApiRequest(ctx, "ModifyInstanceType", request, response, err)
+
+			if err != nil {
+				return common2.RetryError(ctx, err, common2.InternalServerError, common.NetworkError)
+			}
+			return nil
+		})
+		if err != nil {
+			return diag.FromErr(err)
+		}
+
+		stateConf := &resource.StateChangeConf{
+			Pending: []string{
+				ZecInstanceStatusResizing,
+			},
+			Target: []string{
+				ZecInstanceStatusRunning,
+				ZecInstanceStatusStopped,
+			},
+			Refresh:        zecService.InstanceStateRefreshFunc(ctx, instanceId, []string{}),
+			Timeout:        d.Timeout(schema.TimeoutUpdate) - time.Minute,
+			Delay:          10 * time.Second,
+			MinTimeout:     5 * time.Second,
+			NotFoundChecks: 3,
+		}
+		if _, err := stateConf.WaitForStateContext(ctx); err != nil {
+			return diag.FromErr(fmt.Errorf("error waiting for zec instance (%s) to finish resizing: %v", instanceId, err))
+		}
+
+		if d.Get("running_flag").(bool) {
+			if err := zecService.StartInstance(ctx, instanceId); err != nil {
+				return diag.FromErr(err)
+			}
+			err = resource.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate)-time.Minute, func() *resource.RetryError {
+				instance, errRet := zecService.DescribeInstanceById(ctx, instanceId)
+				if errRet != nil {
+					return common2.RetryError(ctx, errRet, common2.InternalServerError)
+				}
+				if *instance.Status == ZecInstanceStatusRunning {
+					return nil
+				}
+				return resource.RetryableError(fmt.Errorf("waiting for instance %s to start, current status: %s", instanceId, instance.Status))
+			})
+			if err != nil {
+				return diag.FromErr(err)
+			}
 		}
 	}
 
