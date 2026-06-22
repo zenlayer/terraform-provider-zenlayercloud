@@ -837,9 +837,10 @@ func (s *ZecService) DescribeEipsByFilter(ctx context.Context, filter *EipFilter
 }
 
 func (s *ZecService) DeleteInstance(ctx context.Context, instanceId string) error {
-	request := zec.NewReleaseInstancesRequest()
+	request := zec2.NewReleaseInstancesRequest()
 	request.InstanceIds = []string{instanceId}
-	response, err := s.client.WithZecClient().ReleaseInstances(request)
+	request.DependResource = common2.Bool(false)
+	response, err := s.client.WithZec2Client().ReleaseInstances(request)
 	defer common.LogApiRequest(ctx, "ReleaseInstances", request, response, err)
 
 	return err
