@@ -50,6 +50,7 @@ In addition to all arguments above, the following attributes are exported:
 * `image_status` - Status of the image.
 * `image_type` - Type of the image. Typically `CUSTOM_IMAGE` for resources created here.
 * `image_version` - OS version of the image.
+* `min_disk_size` - Minimum system disk size required to create an instance from this image. Measured in GiB.
 * `nic_network_type` - Supported NIC network types.
 * `os_type` - OS type of the image, such as `windows` or `linux`.
 

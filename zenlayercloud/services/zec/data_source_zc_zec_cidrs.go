@@ -1,15 +1,15 @@
 package zec
 
 import (
-    "context"
-    "github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-    "github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-    "github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-    "github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/common"
-    "github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/connectivity"
-    zec "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/zec20250901"
-    "regexp"
-    "time"
+	"context"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/common"
+	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/connectivity"
+	zec "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/zec20250901"
+	"regexp"
+	"time"
 )
 
 func DataSourceZenlayerCloudCidrs() *schema.Resource {
@@ -102,35 +102,86 @@ func DataSourceZenlayerCloudCidrs() *schema.Resource {
 							Description: "Quantity of used CIDR IPs.",
 						},
 						"network_type": {
-							Type:          schema.TypeString,
-							Computed:      true,
-							Description:   "Network types of public CIDR block. Valid values: `BGPLine`, `CN2Line`, `LocalLine`, `ChinaTelecom`, `ChinaUnicom`, `ChinaMobile`, `Cogent`.",
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "Network types of public CIDR block. Valid values: `BGPLine`, `CN2Line`, `LocalLine`, `ChinaTelecom`, `ChinaUnicom`, `ChinaMobile`, `Cogent`.",
 						},
 						"create_time": {
 							Type:        schema.TypeString,
 							Computed:    true,
 							Description: "Creation time of the elastic IP.",
 						},
-                        "status": {
-                            Type:        schema.TypeString,
-                            Computed:    true,
-                            Description: "Status of the elastic IP.",
-                        },
-                        "asn": {
-                            Type:        schema.TypeInt,
-                            Computed:    true,
-                            Description: "ASN number. Only meaningful when the CIDR block source is `BYOIP`; returns `0` for non-BYOIP CIDR blocks (the underlying API returns null in that case, which Terraform renders as `0` due to the limitation that `TypeInt` cannot represent null).",
-                        },
-                        "tags": {
-                            Type:        schema.TypeMap,
-                            Computed:    true,
-                            Description: "The available tags within this CIDR block.",
-                        },
-                    },
-                },
-            },
-        },
-    }
+						"status": {
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "Status of the elastic IP.",
+						},
+						"asn": {
+							Type:        schema.TypeInt,
+							Computed:    true,
+							Description: "ASN number. Only meaningful when the CIDR block source is `BYOIP`; returns `0` for non-BYOIP CIDR blocks (the underlying API returns null in that case, which Terraform renders as `0` due to the limitation that `TypeInt` cannot represent null).",
+						},
+						"asn_observation": {
+							Type:        schema.TypeList,
+							Computed:    true,
+							Description: "ASN observation result. Only present for `BYOIP` CIDR blocks.",
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"verification_status": {
+										Type:        schema.TypeString,
+										Computed:    true,
+										Description: "ASN verification status.",
+									},
+									"observed_prefix": {
+										Type:        schema.TypeString,
+										Computed:    true,
+										Description: "Observed CIDR prefix.",
+									},
+									"primary_source": {
+										Type:        schema.TypeString,
+										Computed:    true,
+										Description: "Primary data source name, e.g. `RIPE`.",
+									},
+									"primary_status": {
+										Type:        schema.TypeString,
+										Computed:    true,
+										Description: "Query status from the primary data source.",
+									},
+									"primary_asns": {
+										Type:        schema.TypeList,
+										Computed:    true,
+										Elem:        &schema.Schema{Type: schema.TypeInt},
+										Description: "ASN list observed by the primary data source.",
+									},
+									"secondary_source": {
+										Type:        schema.TypeString,
+										Computed:    true,
+										Description: "Secondary data source name. Deprecated, this field has been retired and always returns empty.",
+									},
+									"secondary_status": {
+										Type:        schema.TypeString,
+										Computed:    true,
+										Description: "Query status from the secondary data source. Deprecated, this field has been retired and always returns empty.",
+									},
+									"secondary_asns": {
+										Type:        schema.TypeList,
+										Computed:    true,
+										Elem:        &schema.Schema{Type: schema.TypeInt},
+										Description: "ASN list observed by the secondary data source. Deprecated, this field has been retired and always returns empty.",
+									},
+								},
+							},
+						},
+						"tags": {
+							Type:        schema.TypeMap,
+							Computed:    true,
+							Description: "The available tags within this CIDR block.",
+						},
+					},
+				},
+			},
+		},
+	}
 }
 
 func dataSourceZenlayerCloudCidrsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -196,31 +247,45 @@ func dataSourceZenlayerCloudCidrsRead(ctx context.Context, d *schema.ResourceDat
 		if nameRegex != nil && !nameRegex.MatchString(*cidr.Name) {
 			continue
 		}
-        mapping := map[string]interface{}{
-            "id":                  cidr.CidrId,
-            "region_id":           cidr.RegionId,
-            "name":                cidr.Name,
-            "cidr_block_address":  cidr.CidrBlock,
-            "netmask":             cidr.Netmask,
-            "resource_group_id":   cidr.ResourceGroupId,
-            "resource_group_name": cidr.ResourceGroupName,
-            "type":                cidr.Source,
-            "used_ip_num":         cidr.UsedCount,
-            "network_type":        cidr.EipV4Type,
-            "create_time":         cidr.CreateTime,
-            "status":              cidr.Status,
-            "asn":                 cidr.Asn,
-        }
+		mapping := map[string]interface{}{
+			"id":                  cidr.CidrId,
+			"region_id":           cidr.RegionId,
+			"name":                cidr.Name,
+			"cidr_block_address":  cidr.CidrBlock,
+			"netmask":             cidr.Netmask,
+			"resource_group_id":   cidr.ResourceGroupId,
+			"resource_group_name": cidr.ResourceGroupName,
+			"type":                cidr.Source,
+			"used_ip_num":         cidr.UsedCount,
+			"network_type":        cidr.EipV4Type,
+			"create_time":         cidr.CreateTime,
+			"status":              cidr.Status,
+			"asn":                 cidr.Asn,
+		}
 
-        tagMap, errRet := common.TagsToMap(cidr.Tags)
-        if errRet != nil {
-            return diag.FromErr(errRet)
-        }
-        mapping["tags"] = tagMap
+		if cidr.AsnObservation != nil {
+			obs := cidr.AsnObservation
+			mapping["asn_observation"] = []map[string]interface{}{{
+				"verification_status": obs.VerificationStatus,
+				"observed_prefix":     obs.ObservedPrefix,
+				"primary_source":      obs.PrimarySource,
+				"primary_status":      obs.PrimaryStatus,
+				"primary_asns":        obs.PrimaryAsns,
+				"secondary_source":    obs.SecondarySource,
+				"secondary_status":    obs.SecondaryStatus,
+				"secondary_asns":      obs.SecondaryAsns,
+			}}
+		}
 
-        cidrList = append(cidrList, mapping)
-        ids = append(ids, *cidr.CidrId)
-    }
+		tagMap, errRet := common.TagsToMap(cidr.Tags)
+		if errRet != nil {
+			return diag.FromErr(errRet)
+		}
+		mapping["tags"] = tagMap
+
+		cidrList = append(cidrList, mapping)
+		ids = append(ids, *cidr.CidrId)
+	}
 
 	d.SetId(common.DataResourceIdHash(ids))
 	_ = d.Set("cidrs", cidrList)

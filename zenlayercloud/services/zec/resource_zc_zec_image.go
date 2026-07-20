@@ -102,6 +102,11 @@ func ResourceZenlayerCloudZecImage() *schema.Resource {
 				Computed:    true,
 				Description: "Size of the image, in GiB.",
 			},
+			"min_disk_size": {
+				Type:        schema.TypeInt,
+				Computed:    true,
+				Description: "Minimum system disk size required to create an instance from this image. Measured in GiB.",
+			},
 			"image_version": {
 				Type:        schema.TypeString,
 				Computed:    true,
@@ -232,6 +237,7 @@ func resourceZenlayerCloudZecImageRead(ctx context.Context, d *schema.ResourceDa
 	_ = d.Set("image_source", image.ImageSource)
 	_ = d.Set("image_status", image.ImageStatus)
 	_ = d.Set("image_size", image.ImageSize)
+	_ = d.Set("min_disk_size", image.MinDiskSize)
 	_ = d.Set("image_version", image.ImageVersion)
 	_ = d.Set("image_description", image.ImageDescription)
 	_ = d.Set("category", image.Category)

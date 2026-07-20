@@ -83,6 +83,27 @@ resource "zenlayercloud_zec_instance" "instance" {
     nested_virtualization = true
   }
 }
+
+# Data disks example (multiple data disks attached at creation)
+resource "zenlayercloud_zec_instance" "instance" {
+  availability_zone = var.availability_zone
+  instance_type     = "z2a.cpu.1"
+  image_id          = data.zenlayercloud_zec_images.ubuntu.images.0.id
+  instance_name     = "Example-Instance"
+  key_id            = data.zenlayercloud_key_pairs.all.key_pairs.0.key_id
+  subnet_id         = zenlayercloud_zec_subnet.ipv4.id
+  system_disk_size  = 20
+
+  data_disks {
+    data_disk_size     = 50
+    data_disk_category = "Standard NVMe SSD"
+  }
+
+  data_disks {
+    data_disk_size     = 100
+    data_disk_category = "Basic NVMe SSD"
+  }
+}
 ```
 
 ## Argument Reference
@@ -91,9 +112,10 @@ The following arguments are supported:
 
 * `availability_zone` - (Required, String, ForceNew) The ID of zone that the ZEC instance locates at. such as `asia-southeast-1a`.
 * `image_id` - (Required, String) The image to use for the ZEC instance. Changing `image_id` will cause the ZEC instance reset.
-* `instance_type` - (Required, String, ForceNew) The type of the ZEC instance. such as `z2a.cpu.4`.
+* `instance_type` - (Required, String) The type of the ZEC instance. For regular instances, use `DescribeZoneInstanceConfigInfos` to get available values. For GPU instances, use `DescribeZoneGpuInstanceConfigInfos` to get available values, such as `z3a.g.C49.c8m32.1`.
 * `subnet_id` - (Required, String, ForceNew) The ID of a VPC subnet. Note: The **IPv6 only** stack subnet is not support for instance creation.
 * `system_disk_size` - (Required, Int, ForceNew) Size of the system disk. unit is GiB. If modified, the ZEC instance may force stop.
+* `data_disks` - (Optional, List, ForceNew) Data disks to attach to the ZEC instance at creation. Each element contains the following attributes:
 * `disable_qga_agent` - (Optional, Bool) Indicate whether to disable QEMU Guest Agent (QGA). QGA is enabled by default. Changing `disable_qga_agent` will cause the ZEC instance reset.
 * `enable_ip_forwarding` - (Optional, Bool) Indicate whether to enable IP forwarding. IP forwarding is disabled by default.
 * `force_delete` - (Optional, Bool) Indicate whether to force delete the ZEC instance. Default is `true`. If set true, the ZEC instance will be permanently deleted instead of being moved into the recycle bin.
@@ -107,6 +129,11 @@ The following arguments are supported:
 * `system_disk_category` - (Optional, String, ForceNew) Category of the system disk. Valid values: `Standard NVMe SSD`, `Basic NVMe SSD`, Default is `Standard NVMe SSD`.
 * `tags` - (Optional, Map) The available tags within this ZEC instance.
 * `time_zone` - (Optional, String) Time zone of instance. such as `America/Los_Angeles`. Default is `Asia/Shanghai`. Changing `time_zone` will cause the ZEC instance reset.
+
+The `data_disks` object supports the following:
+
+* `data_disk_size` - (Required, Int, ForceNew) Size of the data disk. Unit: GiB. The minimum value is 20 GiB.
+* `data_disk_category` - (Optional, String, ForceNew) Category of the data disk. Valid values: `Standard NVMe SSD`, `Basic NVMe SSD`. Default is `Standard NVMe SSD`.
 
 The `instance_options` object supports the following:
 

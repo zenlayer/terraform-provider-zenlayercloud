@@ -837,9 +837,10 @@ func (s *ZecService) DescribeEipsByFilter(ctx context.Context, filter *EipFilter
 }
 
 func (s *ZecService) DeleteInstance(ctx context.Context, instanceId string) error {
-	request := zec.NewReleaseInstancesRequest()
+	request := zec2.NewReleaseInstancesRequest()
 	request.InstanceIds = []string{instanceId}
-	response, err := s.client.WithZecClient().ReleaseInstances(request)
+	request.DependResource = common2.Bool(false)
+	response, err := s.client.WithZec2Client().ReleaseInstances(request)
 	defer common.LogApiRequest(ctx, "ReleaseInstances", request, response, err)
 
 	return err
@@ -2389,6 +2390,45 @@ func (s *ZecService) ModifyNetworkInterfacePublicIPv6BandwidthLimitMode(ctx cont
 	return err
 }
 
+func (s *ZecService) ModifyNetworkInterfaceIpv6Bandwidth(ctx context.Context, ipv6CidrId string, bandwidth int) error {
+	request := zec2.NewModifyIpv6BandwidthRequest()
+	request.Ipv6Id = common2.String(ipv6CidrId)
+	request.Bandwidth = common2.Integer(bandwidth)
+	response, err := s.client.WithZec2Client().ModifyIpv6Bandwidth(request)
+	common.LogApiRequest(ctx, "ModifyIpv6Bandwidth", request, response, err)
+	return err
+}
+
+func (s *ZecService) ModifyNetworkInterfaceIpv6TrafficPackage(ctx context.Context, ipv6CidrId string, trafficPackageSize float64) error {
+	request := zec2.NewModifyIpv6TrafficPackageRequest()
+	request.Ipv6Id = common2.String(ipv6CidrId)
+	request.TrafficPackageSize = common2.Float64(trafficPackageSize)
+	response, err := s.client.WithZec2Client().ModifyIpv6TrafficPackage(request)
+	common.LogApiRequest(ctx, "ModifyIpv6TrafficPackage", request, response, err)
+	return err
+}
+
+func (s *ZecService) AssignNetworkInterfaceIpv6(ctx context.Context, nicId string, internetChargeType *string, bandwidth *int, packageSize *float64, clusterId *string, rateLimitMode *string) error {
+	request := zec2.NewAssignNetworkInterfaceIpv6Request()
+	request.NicId = common2.String(nicId)
+	request.InternetChargeType = internetChargeType
+	request.Bandwidth = bandwidth
+	request.PackageSize = packageSize
+	request.ClusterId = clusterId
+	request.RateLimitMode = rateLimitMode
+	response, err := s.client.WithZec2Client().AssignNetworkInterfaceIpv6(request)
+	common.LogApiRequest(ctx, "AssignNetworkInterfaceIpv6", request, response, err)
+	return err
+}
+
+func (s *ZecService) UnassignNetworkInterfaceIpv6(ctx context.Context, nicId string) error {
+	request := zec2.NewUnassignNetworkInterfaceIpv6Request()
+	request.NicId = common2.String(nicId)
+	response, err := s.client.WithZec2Client().UnassignNetworkInterfaceIpv6(request)
+	common.LogApiRequest(ctx, "UnassignNetworkInterfaceIpv6", request, response, err)
+	return err
+}
+
 func (s *ZecService) DescribeVmInventoryCapacity(ctx context.Context, regionIds []string) ([]*zec2.VmRegionCapacityItem, error) {
 	request := zec2.NewDescribeVmInventoryCapacityRequest()
 	if len(regionIds) > 0 {
@@ -2531,4 +2571,23 @@ func (s *ZecService) DescribeHaVipsByFilter(ctx context.Context, filter *HaVipFi
 		return nil, firstErr
 	}
 	return haVips, nil
+}
+
+func (s *ZecService) DescribeGpuInstanceConfigInfos(ctx context.Context, zoneId, instanceType string) ([]*zec2.GpuInstanceTypeQuotaItem, error) {
+	request := zec2.NewDescribeZoneGpuInstanceConfigInfosRequest()
+	if zoneId != "" {
+		request.ZoneId = &zoneId
+	}
+	if instanceType != "" {
+		request.InstanceType = &instanceType
+	}
+	response, err := s.client.WithZec2Client().DescribeZoneGpuInstanceConfigInfos(request)
+	common.LogApiRequest(ctx, "DescribeZoneGpuInstanceConfigInfos", request, response, err)
+	if err != nil {
+		return nil, err
+	}
+	if response == nil || response.Response == nil {
+		return nil, nil
+	}
+	return response.Response.InstanceTypeQuotaSet, nil
 }

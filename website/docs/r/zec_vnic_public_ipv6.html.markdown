@@ -4,10 +4,12 @@ layout: "zenlayercloud"
 page_title: "ZenlayerCloud: zenlayercloud_zec_vnic_public_ipv6"
 sidebar_current: "docs-zenlayercloud-resource-zec_vnic_public_ipv6"
 description: |-
-  Provides a resource to manage the rate limit mode of an existing public IPv6 address on a vNIC.
+  ~> **Deprecated** Use `zenlayercloud_zec_vnic` with `stack_type`, `ipv6_internet_charge_type`, `ipv6_bandwidth`, and `rate_limit_mode` instead.
 ---
 
 # zenlayercloud_zec_vnic_public_ipv6
+
+~> **Deprecated** Use `zenlayercloud_zec_vnic` with `stack_type`, `ipv6_internet_charge_type`, `ipv6_bandwidth`, and `rate_limit_mode` instead.
 
 Provides a resource to manage the rate limit mode of an existing public IPv6 address on a vNIC.
 

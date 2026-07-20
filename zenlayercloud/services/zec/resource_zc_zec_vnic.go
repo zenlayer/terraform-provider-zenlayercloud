@@ -15,6 +15,7 @@ import (
 	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/connectivity"
 	"github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/services/zrm"
 	"github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/common"
+	traffic "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/traffic20240326"
 	user "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/user20240529"
 	zec "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/zec20250901"
 )
@@ -29,7 +30,45 @@ func ResourceZenlayerCloudZecVNic() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		CustomizeDiff: customdiff.All(
-		//stackTypeForceNewFunc(),
+			// ForceNew when ipv6_internet_charge_type changes on an existing IPv6 vNIC.
+			// Only triggers when old value is non-empty (IPv6 already assigned), not on first assignment.
+			customdiff.ForceNewIfChange("ipv6_internet_charge_type", func(_ context.Context, old, new, _ interface{}) bool {
+				return old.(string) != "" && new.(string) != "" && old.(string) != new.(string)
+			}),
+			// Mark computed fields as unknown when stack_type changes.
+			// IPv4_IPv6 -> IPv4: primary_ipv6 and IPv6 billing fields (Optional+Computed) are
+			// cleared by Read after apply, but plan won't show them changing without SetNewComputed.
+			// IPv4 -> IPv4_IPv6: only primary_ipv6 needs marking; billing fields are set explicitly by user.
+			func(_ context.Context, d *schema.ResourceDiff, _ interface{}) error {
+				if d.HasChange("stack_type") {
+					_ = d.SetNewComputed("primary_ipv6")
+					oldVal, _ := d.GetChange("stack_type")
+					if oldVal.(string) == "IPv4_IPv6" {
+						_ = d.SetNewComputed("ipv6_internet_charge_type")
+						_ = d.SetNewComputed("ipv6_bandwidth")
+						_ = d.SetNewComputed("rate_limit_mode")
+					}
+				}
+				return nil
+			},
+			// ipv6_bandwidth_cluster_id is only valid when ipv6_internet_charge_type = BandwidthCluster.
+			func(_ context.Context, d *schema.ResourceDiff, _ interface{}) error {
+				clusterId := d.Get("ipv6_bandwidth_cluster_id").(string)
+				chargeType := d.Get("ipv6_internet_charge_type").(string)
+				if clusterId != "" && chargeType != "BandwidthCluster" {
+					return fmt.Errorf("ipv6_bandwidth_cluster_id can only be set when ipv6_internet_charge_type is BandwidthCluster")
+				}
+				return nil
+			},
+			// ipv6_traffic_package_size is only valid when ipv6_internet_charge_type = ByTrafficPackage.
+			func(_ context.Context, d *schema.ResourceDiff, _ interface{}) error {
+				if v, ok := d.GetOk("ipv6_traffic_package_size"); ok && v.(float64) > 0 {
+					if d.Get("ipv6_internet_charge_type").(string) != "ByTrafficPackage" {
+						return fmt.Errorf("ipv6_traffic_package_size can only be set when ipv6_internet_charge_type is `ByTrafficPackage`")
+					}
+				}
+				return nil
+			},
 		),
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -46,17 +85,17 @@ func ResourceZenlayerCloudZecVNic() *schema.Resource {
 				Description: "The ID of a VPC subnet.",
 			},
 			"stack_type": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Computed:    true,
-				ForceNew:    true,
-				Description: "The stack type of the subnet. Valid values: `IPv4`, `IPv6`, `IPv4_IPv6`.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.StringInSlice([]string{"IPv4", "IPv6", "IPv4_IPv6"}, false),
+				Description:  "The stack type of the vNIC. Valid values: `IPv4`, `IPv6`, `IPv4_IPv6`. Supports in-place update between `IPv4` and `IPv4_IPv6`.",
 			},
 			"security_group_id": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Computed:    true,
-				Description: "The ID of a security group. If absent, the security group under VPC will be used.",
+				Description: "The ID of a security group. If not specified, the security group attached to the VPC will be used. Ensure the VPC has a security group attached via `zenlayercloud_zec_vpc_security_group_attachment` before applying.",
 			},
 			"primary_ipv4": {
 				Type:        schema.TypeString,
@@ -88,29 +127,34 @@ func ResourceZenlayerCloudZecVNic() *schema.Resource {
 			"ipv6_internet_charge_type": {
 				Type:         schema.TypeString,
 				Optional:     true,
+				Computed:     true,
 				ValidateFunc: validation.StringInSlice([]string{"ByBandwidth", "ByTrafficPackage", "BandwidthCluster"}, false),
-				ForceNew:     true,
-				Description:  "Network billing methods for public IPv6. Valid values: `ByBandwidth`, `ByTrafficPackage`, `BandwidthCluster`.",
+				Description:  "Network billing methods for public IPv6. Valid values: `ByBandwidth`, `ByTrafficPackage`, `BandwidthCluster`. Changing this field when a public IPv6 is already assigned forces resource recreation.",
 			},
 			"ipv6_bandwidth": {
 				Type:         schema.TypeInt,
 				Optional:     true,
-				ForceNew:     true,
+				Computed:     true,
 				ValidateFunc: validation.IntAtLeast(1),
 				Description:  "Bandwidth of public IPv6. Measured in Mbps.",
 			},
 			"ipv6_bandwidth_cluster_id": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				ForceNew:    true,
-				Description: "Bandwidth cluster ID for public IPv6. Required when `ipv6_internet_charge_type` is `BandwidthCluster`.",
+				Description: "Bandwidth cluster ID for public IPv6. Required when `ipv6_internet_charge_type` is `BandwidthCluster`. Must not be set for other charge types.",
 			},
 			"ipv6_traffic_package_size": {
 				Type:         schema.TypeFloat,
 				Optional:     true,
-				ForceNew:     true,
 				ValidateFunc: validation.FloatAtLeast(0.0),
-				Description:  "Traffic Package size for public IPv6. Measured in TB. Only valid when `ipv6_internet_charge_type` is `ByTrafficPackage`.",
+				Description:  "Traffic Package size for public IPv6. Measured in TB. Only valid when `ipv6_internet_charge_type` is `ByTrafficPackage`. Range: >= 0.",
+			},
+			"rate_limit_mode": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.StringInSlice([]string{ZecEipRateLimitModeLoose, ZecEipRateLimitModeStrict}, false),
+				Description:  "Bandwidth rate limit mode for public IPv6. Valid values: `LOOSE`, `STRICT`. Only takes effect on public IPv6 with fixed bandwidth (`ipv6_internet_charge_type` = `ByBandwidth`).",
 			},
 			"create_time": {
 				Type:        schema.TypeString,
@@ -219,11 +263,133 @@ func resourceZenlayerCloudZecVNicUpdate(ctx context.Context, d *schema.ResourceD
 			return diag.FromErr(err)
 		}
 	}
+
+	if d.HasChange("stack_type") {
+		oldVal, newVal := d.GetChange("stack_type")
+		oldType, newType := oldVal.(string), newVal.(string)
+
+		if oldType == "IPv4" && newType == "IPv4_IPv6" {
+			var internetChargeType, clusterId, rateLimitMode *string
+			var bandwidth *int
+			var packageSize *float64
+			if v, ok := d.GetOk("ipv6_internet_charge_type"); ok {
+				chargeType := v.(string)
+				internetChargeType = common.String(chargeType)
+				if chargeType == "ByTrafficPackage" {
+					// Always send PackageSize for ByTrafficPackage; d.GetOk returns false for 0.0
+					packageSize = common.Float64(d.Get("ipv6_traffic_package_size").(float64))
+				}
+			}
+			if v, ok := d.GetOk("ipv6_bandwidth"); ok {
+				bandwidth = common.Integer(v.(int))
+			}
+			if v, ok := d.GetOk("ipv6_bandwidth_cluster_id"); ok {
+				clusterId = common.String(v.(string))
+			}
+			if v, ok := d.GetOk("rate_limit_mode"); ok {
+				rateLimitMode = common.String(v.(string))
+			}
+			err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate)-time.Minute, func() *resource.RetryError {
+				if errRet := zecService.AssignNetworkInterfaceIpv6(ctx, nicId, internetChargeType, bandwidth, packageSize, clusterId, rateLimitMode); errRet != nil {
+					return common2.RetryError(ctx, errRet, common2.InternalServerError, common.NetworkError)
+				}
+				return nil
+			})
+			if err != nil {
+				return diag.FromErr(err)
+			}
+		} else if oldType == "IPv4_IPv6" && newType == "IPv4" {
+			err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate)-time.Minute, func() *resource.RetryError {
+				if errRet := zecService.UnassignNetworkInterfaceIpv6(ctx, nicId); errRet != nil {
+					return common2.RetryError(ctx, errRet, common2.InternalServerError, common.NetworkError)
+				}
+				return nil
+			})
+			if err != nil {
+				return diag.FromErr(err)
+			}
+		} else {
+			return diag.FromErr(fmt.Errorf("unsupported stack_type transition: %s -> %s", oldType, newType))
+		}
+	} else if d.HasChanges("rate_limit_mode", "ipv6_bandwidth", "ipv6_traffic_package_size", "ipv6_bandwidth_cluster_id") {
+		address, err := zecService.DescribeNetworkInterfacePublicIPv6ByNicId(ctx, nicId)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		if address == nil || address.Ipv6CidrId == nil {
+			return diag.FromErr(fmt.Errorf("public IPv6 not found on vNIC %s", nicId))
+		}
+		if d.HasChange("ipv6_bandwidth_cluster_id") {
+			req := traffic.NewMigrateBandwidthClusterResourcesRequest()
+			req.ResourceIdList = []string{*address.Ipv6CidrId}
+			req.TargetBandwidthClusterId = common.String(d.Get("ipv6_bandwidth_cluster_id").(string))
+			_, err := zecService.client.WithTrafficClient().MigrateBandwidthClusterResources(req)
+			if err != nil {
+				return diag.FromErr(err)
+			}
+		}
+		if d.HasChange("ipv6_bandwidth") {
+			if err = zecService.ModifyNetworkInterfaceIpv6Bandwidth(ctx, *address.Ipv6CidrId, d.Get("ipv6_bandwidth").(int)); err != nil {
+				return diag.FromErr(err)
+			}
+			err = resource.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate)-time.Minute, func() *resource.RetryError {
+				addr, errRet := zecService.DescribeNetworkInterfacePublicIPv6ByNicId(ctx, nicId)
+				if errRet != nil {
+					return common2.RetryError(ctx, errRet, common2.InternalServerError)
+				}
+				if addr == nil {
+					return resource.NonRetryableError(fmt.Errorf("public IPv6 not found on vNIC %s while waiting for bandwidth update", nicId))
+				}
+				if addr.OperationInfo != nil {
+					if addr.OperationInfo.Status != nil && *addr.OperationInfo.Status == ZecEipOperationStatusFailed {
+						return resource.NonRetryableError(fmt.Errorf("vNIC (%s) ipv6_bandwidth update failed", nicId))
+					}
+					return resource.RetryableError(fmt.Errorf("vNIC (%s) ipv6_bandwidth is still updating", nicId))
+				}
+				return nil
+			})
+			if err != nil {
+				return diag.FromErr(err)
+			}
+		}
+		if d.HasChange("ipv6_traffic_package_size") && d.Get("ipv6_internet_charge_type").(string) == "ByTrafficPackage" {
+			if err = zecService.ModifyNetworkInterfaceIpv6TrafficPackage(ctx, *address.Ipv6CidrId, d.Get("ipv6_traffic_package_size").(float64)); err != nil {
+				return diag.FromErr(err)
+			}
+			err = resource.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate)-time.Minute, func() *resource.RetryError {
+				addr, errRet := zecService.DescribeNetworkInterfacePublicIPv6ByNicId(ctx, nicId)
+				if errRet != nil {
+					return common2.RetryError(ctx, errRet, common2.InternalServerError)
+				}
+				if addr == nil {
+					return resource.NonRetryableError(fmt.Errorf("public IPv6 not found on vNIC %s while waiting for traffic package update", nicId))
+				}
+				if addr.OperationInfo != nil {
+					if addr.OperationInfo.Status != nil && *addr.OperationInfo.Status == ZecEipOperationStatusFailed {
+						return resource.NonRetryableError(fmt.Errorf("vNIC (%s) ipv6_traffic_package_size update failed", nicId))
+					}
+					return resource.RetryableError(fmt.Errorf("vNIC (%s) ipv6_traffic_package_size is still updating", nicId))
+				}
+				return nil
+			})
+			if err != nil {
+				return diag.FromErr(err)
+			}
+		}
+		if d.HasChange("rate_limit_mode") {
+			if err = zecService.ModifyNetworkInterfacePublicIPv6BandwidthLimitMode(ctx, *address.Ipv6CidrId, d.Get("rate_limit_mode").(string)); err != nil {
+				return diag.FromErr(err)
+			}
+		}
+	}
+
 	return resourceZenlayerCloudZecVNicRead(ctx, d, meta)
 }
 
 func resourceZenlayerCloudZecVNicCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	defer common2.LogElapsed(ctx, "resource.zenlayercloud_zec_vnic.create")()
+
+	zecService := ZecService{client: meta.(*connectivity.ZenlayerCloudClient)}
 
 	request := zec.NewCreateNetworkInterfaceRequest()
 	request.SubnetId = common.String(d.Get("subnet_id").(string))
@@ -231,16 +397,18 @@ func resourceZenlayerCloudZecVNicCreate(ctx context.Context, d *schema.ResourceD
 
 	// v6
 	if v, ok := d.GetOk("ipv6_internet_charge_type"); ok {
-		request.InternetChargeType = common.String(v.(string))
+		chargeType := v.(string)
+		request.InternetChargeType = common.String(chargeType)
+		if chargeType == "ByTrafficPackage" {
+			// Always send PackageSize for ByTrafficPackage; d.GetOk returns false for 0.0
+			request.PackageSize = common.Float64(d.Get("ipv6_traffic_package_size").(float64))
+		}
 	}
 	if v, ok := d.GetOk("ipv6_bandwidth"); ok {
 		request.Bandwidth = common.Integer(v.(int))
 	}
 	if v, ok := d.GetOk("ipv6_bandwidth_cluster_id"); ok {
 		request.ClusterId = common.String(v.(string))
-	}
-	if v, ok := d.GetOk("ipv6_traffic_package_size"); ok {
-		request.PackageSize = common.Float64(v.(float64))
 	}
 
 	if v, ok := d.GetOk("resource_group_id"); ok {
@@ -298,6 +466,26 @@ func resourceZenlayerCloudZecVNicCreate(ctx context.Context, d *schema.ResourceD
 	}
 	d.SetId(vnicId)
 
+	if v, ok := d.GetOk("rate_limit_mode"); ok {
+		mode := v.(string)
+		err = resource.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
+			address, errRet := zecService.DescribeNetworkInterfacePublicIPv6ByNicId(ctx, vnicId)
+			if errRet != nil {
+				return common2.RetryError(ctx, errRet)
+			}
+			if address == nil || address.Ipv6CidrId == nil {
+				return resource.RetryableError(fmt.Errorf("waiting for public IPv6 on vNIC %s", vnicId))
+			}
+			if errRet = zecService.ModifyNetworkInterfacePublicIPv6BandwidthLimitMode(ctx, *address.Ipv6CidrId, mode); errRet != nil {
+				return common2.RetryError(ctx, errRet, common2.InternalServerError, common.NetworkError)
+			}
+			return nil
+		})
+		if err != nil {
+			return diag.FromErr(err)
+		}
+	}
+
 	return resourceZenlayerCloudZecVNicRead(ctx, d, meta)
 }
 
@@ -352,13 +540,9 @@ func resourceZenlayerCloudZecVNicRead(ctx context.Context, d *schema.ResourceDat
 	// nic info
 	_ = d.Set("subnet_id", nic.SubnetId)
 	_ = d.Set("name", nic.Name)
+	_ = d.Set("stack_type", nic.NicSubnetType)
 	_ = d.Set("primary_ipv4", nic.PrimaryIpv4)
 	_ = d.Set("primary_ipv6", nic.PrimaryIpv6)
-	// TODO
-	//_ = d.Set("ipv6_internet_charge_type", nic.InternetChargeType)
-	//_ = d.Set("ipv6_bandwidth", nic.Bandwidth)
-	//_ = d.Set("ipv6_bandwidth_cluster_id", nic.ClusterId)
-	//_ = d.Set("ipv6_traffic_package_size", nic.PackageSize)
 	_ = d.Set("resource_group_id", nic.ResourceGroup.ResourceGroupId)
 	_ = d.Set("resource_group_name", nic.ResourceGroup.ResourceGroupName)
 	_ = d.Set("create_time", nic.CreateTime)
@@ -369,6 +553,35 @@ func resourceZenlayerCloudZecVNicRead(ctx context.Context, d *schema.ResourceDat
 		return diag.FromErr(errRet)
 	}
 	_ = d.Set("tags", toMap)
+
+	address, errRet := zecService.DescribeNetworkInterfacePublicIPv6ByNicId(ctx, vnicId)
+	if errRet != nil {
+		return diag.FromErr(errRet)
+	}
+	if address != nil {
+		if address.InternetChargeType != nil {
+			_ = d.Set("ipv6_internet_charge_type", address.InternetChargeType)
+		}
+		if address.Bandwidth != nil {
+			_ = d.Set("ipv6_bandwidth", address.Bandwidth)
+		}
+		if address.BandwidthCluster != nil && address.BandwidthCluster.BandwidthClusterId != nil {
+			_ = d.Set("ipv6_bandwidth_cluster_id", address.BandwidthCluster.BandwidthClusterId)
+		}
+		if address.TrafficPackageSize != nil {
+			_ = d.Set("ipv6_traffic_package_size", address.TrafficPackageSize)
+		} else {
+			_ = d.Set("ipv6_traffic_package_size", 0.0)
+		}
+		_ = d.Set("rate_limit_mode", address.RateLimitMode)
+	} else {
+		_ = d.Set("ipv6_internet_charge_type", "")
+		_ = d.Set("ipv6_bandwidth", 0)
+		_ = d.Set("ipv6_bandwidth_cluster_id", "")
+		_ = d.Set("ipv6_traffic_package_size", 0.0)
+		_ = d.Set("rate_limit_mode", "")
+	}
+
 	return diags
 
 }

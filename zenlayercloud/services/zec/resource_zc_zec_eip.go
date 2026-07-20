@@ -33,6 +33,14 @@ func ResourceZenlayerCloudZecElasticIP() *schema.Resource {
 		CustomizeDiff: customdiff.All(
 			bandwidthClusterIdValidFunc(),
 			bandwidthRequiredForByBandwidthFunc(),
+			func(_ context.Context, diff *schema.ResourceDiff, _ interface{}) error {
+				if v, ok := diff.GetOk("flow_package_size"); ok && v.(float64) > 0 {
+					if diff.Get("internet_charge_type").(string) != "ByTrafficPackage" {
+						return fmt.Errorf("flow_package_size can only be set when internet_charge_type is `ByTrafficPackage`")
+					}
+				}
+				return nil
+			},
 		),
 		Schema: map[string]*schema.Schema{
 			"region_id": {
@@ -51,12 +59,14 @@ func ResourceZenlayerCloudZecElasticIP() *schema.Resource {
 				Optional:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"cidr_id"},
+				AtLeastOneOf:  []string{"ip_network_type", "cidr_id"},
 				ValidateFunc:  validation.StringInSlice([]string{"BGPLine", "CN2Line", "PathBasedBandwidthIP", "LocalLine", "ChinaTelecom", "ChinaUnicom", "ChinaMobile", "Cogent"}, false),
 				Description:   "Network types of public IPv4. Valid values: `BGPLine`, `CN2Line`, `PathBasedBandwidthIP`, `LocalLine`, `ChinaTelecom`, `ChinaUnicom`, `ChinaMobile`, `Cogent`.",
 			},
 			"internet_charge_type": {
 				Type:         schema.TypeString,
 				Required:     true,
+				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice([]string{"ByBandwidth", "ByTrafficPackage", "BandwidthCluster"}, false),
 				Description:  "Network billing methods. Valid values: `ByBandwidth`, `ByTrafficPackage`, `BandwidthCluster`.",
 			},
@@ -70,16 +80,16 @@ func ResourceZenlayerCloudZecElasticIP() *schema.Resource {
 			"flow_package_size": {
 				Type:         schema.TypeFloat,
 				Optional:     true,
-				ForceNew:     true,
 				ValidateFunc: validation.FloatAtLeast(0),
-				Description:  "The Data transfer package. Measured in TB.",
+				Description:  "The Data transfer package. Measured in TB. Only valid when `internet_charge_type` is `ByTrafficPackage`. Range: >= 0.",
 			},
 			"cidr_id": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ForceNew:      true,
-				Description:   "CIDR ID, the elastic ip will allocated from given CIDR.",
 				ConflictsWith: []string{"ip_network_type"},
+				AtLeastOneOf:  []string{"ip_network_type", "cidr_id"},
+				Description:   "CIDR ID, the elastic ip will allocated from given CIDR.",
 			},
 			"peer_region_id": {
 				Type:        schema.TypeString,
@@ -106,7 +116,7 @@ func ResourceZenlayerCloudZecElasticIP() *schema.Resource {
 			"bandwidth_cluster_id": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Bandwidth cluster ID. Required when `internet_charge_type` is `BandwidthCluster`.",
+				Description: "Bandwidth cluster ID. Required when `internet_charge_type` is `BandwidthCluster`. Must not be set for other charge types.",
 			},
 			"rate_limit_mode": {
 				Type:         schema.TypeString,
@@ -135,15 +145,26 @@ func ResourceZenlayerCloudZecElasticIP() *schema.Resource {
 }
 
 func bandwidthClusterIdValidFunc() schema.CustomizeDiffFunc {
-	return customdiff.IfValue("internet_charge_type", func(ctx context.Context, value, meta interface{}) bool {
-		return value == "BandwidthCluster"
-	}, func(ctx context.Context, diff *schema.ResourceDiff, i interface{}) error {
-		if _, ok := diff.GetOk("bandwidth_cluster_id"); !ok {
-			return fmt.Errorf("bandwidth_cluster_id must be set as the internet_charge_type of instance is `BandwidthCluster`")
-		}
-		return nil
-	})
-
+	return customdiff.All(
+		// BandwidthCluster requires bandwidth_cluster_id
+		customdiff.IfValue("internet_charge_type", func(ctx context.Context, value, meta interface{}) bool {
+			return value == "BandwidthCluster"
+		}, func(ctx context.Context, diff *schema.ResourceDiff, i interface{}) error {
+			if _, ok := diff.GetOk("bandwidth_cluster_id"); !ok {
+				return fmt.Errorf("bandwidth_cluster_id must be set when internet_charge_type is `BandwidthCluster`")
+			}
+			return nil
+		}),
+		// bandwidth_cluster_id requires BandwidthCluster
+		func(_ context.Context, diff *schema.ResourceDiff, _ interface{}) error {
+			if clusterId, ok := diff.GetOk("bandwidth_cluster_id"); ok && clusterId.(string) != "" {
+				if diff.Get("internet_charge_type").(string) != "BandwidthCluster" {
+					return fmt.Errorf("bandwidth_cluster_id can only be set when internet_charge_type is `BandwidthCluster`")
+				}
+			}
+			return nil
+		},
+	)
 }
 
 func bandwidthRequiredForByBandwidthFunc() schema.CustomizeDiffFunc {
@@ -171,7 +192,9 @@ func resourceZenlayerCloudZecElasticIPCreate(ctx context.Context, d *schema.Reso
 	request.RegionId = common2.String(d.Get("region_id").(string))
 	request.Name = common2.String(d.Get("name").(string))
 	request.InternetChargeType = common2.String(d.Get("internet_charge_type").(string))
-	request.EipV4Type = common2.String(d.Get("ip_network_type").(string))
+	if v, ok := d.GetOk("ip_network_type"); ok {
+		request.EipV4Type = common2.String(v.(string))
+	}
 
 	if tags := common.GetTags(d, "tags"); len(tags) > 0 {
 		request.Tags = &zec.TagAssociation{}
@@ -189,8 +212,9 @@ func resourceZenlayerCloudZecElasticIPCreate(ctx context.Context, d *schema.Reso
 		request.Bandwidth = common2.Integer(v.(int))
 	}
 
-	if v, ok := d.GetOk("flow_package_size"); ok {
-		request.FlowPackage = common2.Float64(v.(float64))
+	if d.Get("internet_charge_type").(string) == "ByTrafficPackage" {
+		// Always send FlowPackage for ByTrafficPackage; d.GetOk returns false for 0.0
+		request.FlowPackage = common2.Float64(d.Get("flow_package_size").(float64))
 	}
 
 	if v, ok := d.GetOk("cidr_id"); ok {
@@ -276,7 +300,7 @@ func resourceZenlayerCloudZecElasticIPRead(ctx context.Context, d *schema.Resour
 	_ = d.Set("internet_charge_type", eip.InternetChargeType)
 	_ = d.Set("ip_network_type", eip.EipV4Type)
 	_ = d.Set("bandwidth", eip.Bandwidth)
-	_ = d.Set("flow_package", eip.FlowPackage)
+	_ = d.Set("flow_package_size", eip.FlowPackage)
 	_ = d.Set("cidr_id", eip.CidrId)
 	_ = d.Set("public_ip_address", eip.PublicIpAddresses[0])
 	_ = d.Set("resource_group_id", eip.ResourceGroupId)
@@ -329,6 +353,25 @@ func resourceZenlayerCloudZecElasticIPUpdate(ctx context.Context, d *schema.Reso
 		if err != nil {
 			return diag.FromErr(err)
 		}
+		err = resource.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate)-time.Minute, func() *resource.RetryError {
+			eip, errRet := zecService.DescribeEipById(ctx, eipId)
+			if errRet != nil {
+				return common.RetryError(ctx, errRet, common.InternalServerError)
+			}
+			if eip == nil {
+				return resource.NonRetryableError(fmt.Errorf("zec eip (%s) not found while waiting for bandwidth update", eipId))
+			}
+			if eip.OperationInfo != nil {
+				if eip.OperationInfo.Status != nil && *eip.OperationInfo.Status == ZecEipOperationStatusFailed {
+					return resource.NonRetryableError(fmt.Errorf("zec eip (%s) bandwidth update failed", eipId))
+				}
+				return resource.RetryableError(fmt.Errorf("zec eip (%s) bandwidth is still updating", eipId))
+			}
+			return nil
+		})
+		if err != nil {
+			return diag.FromErr(err)
+		}
 	}
 
 	if d.HasChange("rate_limit_mode") {
@@ -341,10 +384,43 @@ func resourceZenlayerCloudZecElasticIPUpdate(ctx context.Context, d *schema.Reso
 		}
 	}
 
+	if d.HasChange("flow_package_size") {
+		request := zec.NewModifyEipTrafficPackageRequest()
+		request.EipId = common2.String(eipId)
+		request.TrafficPackageSize = common2.Float64(d.Get("flow_package_size").(float64))
+		_, err := zecService.client.WithZec2Client().ModifyEipTrafficPackage(request)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		err = resource.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate)-time.Minute, func() *resource.RetryError {
+			eip, errRet := zecService.DescribeEipById(ctx, eipId)
+			if errRet != nil {
+				return common.RetryError(ctx, errRet, common.InternalServerError)
+			}
+			if eip == nil {
+				return resource.NonRetryableError(fmt.Errorf("zec eip (%s) not found while waiting for flow_package_size update", eipId))
+			}
+			if eip.OperationInfo != nil {
+				if eip.OperationInfo.Status != nil && *eip.OperationInfo.Status == ZecEipOperationStatusFailed {
+					return resource.NonRetryableError(fmt.Errorf("zec eip (%s) flow_package_size update failed", eipId))
+				}
+				return resource.RetryableError(fmt.Errorf("zec eip (%s) flow_package_size is still updating", eipId))
+			}
+			return nil
+		})
+		if err != nil {
+			return diag.FromErr(err)
+		}
+	}
+
 	if d.HasChange("bandwidth_cluster_id") {
+		targetClusterId := d.Get("bandwidth_cluster_id").(string)
+		if targetClusterId == "" {
+			return diag.Errorf("bandwidth_cluster_id cannot be cleared while internet_charge_type is BandwidthCluster; change internet_charge_type to recreate the EIP")
+		}
 		request := traffic.NewMigrateBandwidthClusterResourcesRequest()
 		request.ResourceIdList = []string{eipId}
-		request.TargetBandwidthClusterId = common2.String(d.Get("bandwidth_cluster_id").(string))
+		request.TargetBandwidthClusterId = common2.String(targetClusterId)
 		_, err := zecService.client.WithTrafficClient().MigrateBandwidthClusterResources(request)
 		if err != nil {
 			return diag.FromErr(err)
@@ -462,5 +538,5 @@ func resourceZenlayerCloudZecElasticIPDelete(ctx context.Context, d *schema.Reso
 		return diag.FromErr(err)
 	}
 
-	return resourceZenlayerCloudZecElasticIPRead(ctx, d, meta)
+	return nil
 }

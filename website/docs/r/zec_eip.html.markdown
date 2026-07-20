@@ -36,13 +36,13 @@ resource "zenlayercloud_zec_eip" "eip" {
 
 The following arguments are supported:
 
-* `internet_charge_type` - (Required, String) Network billing methods. Valid values: `ByBandwidth`, `ByTrafficPackage`, `BandwidthCluster`.
+* `internet_charge_type` - (Required, String, ForceNew) Network billing methods. Valid values: `ByBandwidth`, `ByTrafficPackage`, `BandwidthCluster`.
 * `name` - (Required, String) Name of the elastic IP.
 * `region_id` - (Required, String, ForceNew) The region ID that the elastic IP locates at.
-* `bandwidth_cluster_id` - (Optional, String) Bandwidth cluster ID. Required when `internet_charge_type` is `BandwidthCluster`.
+* `bandwidth_cluster_id` - (Optional, String) Bandwidth cluster ID. Required when `internet_charge_type` is `BandwidthCluster`. Must not be set for other charge types.
 * `bandwidth` - (Optional, Int) Bandwidth. Measured in Mbps. Required when `internet_charge_type` is `ByBandwidth`.
 * `cidr_id` - (Optional, String, ForceNew) CIDR ID, the elastic ip will allocated from given CIDR.
-* `flow_package_size` - (Optional, Float64, ForceNew) The Data transfer package. Measured in TB.
+* `flow_package_size` - (Optional, Float64) The Data transfer package. Measured in TB. Only valid when `internet_charge_type` is `ByTrafficPackage`. Range: >= 0.
 * `ip_network_type` - (Optional, String, ForceNew) Network types of public IPv4. Valid values: `BGPLine`, `CN2Line`, `PathBasedBandwidthIP`, `LocalLine`, `ChinaTelecom`, `ChinaUnicom`, `ChinaMobile`, `Cogent`.
 * `peer_region_id` - (Optional, String, ForceNew) Remote region ID.
 * `rate_limit_mode` - (Optional, String) Bandwidth rate limit mode. Valid values: `LOOSE`, `STRICT`.

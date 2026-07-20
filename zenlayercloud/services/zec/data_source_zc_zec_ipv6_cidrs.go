@@ -138,6 +138,57 @@ func DataSourceZenlayerCloudIpv6Cidrs() *schema.Resource {
 							Computed:    true,
 							Description: "ASN number. Only meaningful when the IPv6 CIDR block source is `BYOIP`; returns `0` for non-BYOIP CIDR blocks (the underlying API returns null in that case, which Terraform renders as `0` due to the limitation that `TypeInt` cannot represent null).",
 						},
+						"asn_observation": {
+							Type:        schema.TypeList,
+							Computed:    true,
+							Description: "ASN observation result. Only present for `BYOIP` CIDR blocks.",
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"verification_status": {
+										Type:        schema.TypeString,
+										Computed:    true,
+										Description: "ASN verification status.",
+									},
+									"observed_prefix": {
+										Type:        schema.TypeString,
+										Computed:    true,
+										Description: "Observed CIDR prefix.",
+									},
+									"primary_source": {
+										Type:        schema.TypeString,
+										Computed:    true,
+										Description: "Primary data source name, e.g. `RIPE`.",
+									},
+									"primary_status": {
+										Type:        schema.TypeString,
+										Computed:    true,
+										Description: "Query status from the primary data source.",
+									},
+									"primary_asns": {
+										Type:        schema.TypeList,
+										Computed:    true,
+										Elem:        &schema.Schema{Type: schema.TypeInt},
+										Description: "ASN list observed by the primary data source.",
+									},
+									"secondary_source": {
+										Type:        schema.TypeString,
+										Computed:    true,
+										Description: "Secondary data source name. Deprecated, this field has been retired and always returns empty.",
+									},
+									"secondary_status": {
+										Type:        schema.TypeString,
+										Computed:    true,
+										Description: "Query status from the secondary data source. Deprecated, this field has been retired and always returns empty.",
+									},
+									"secondary_asns": {
+										Type:        schema.TypeList,
+										Computed:    true,
+										Elem:        &schema.Schema{Type: schema.TypeInt},
+										Description: "ASN list observed by the secondary data source. Deprecated, this field has been retired and always returns empty.",
+									},
+								},
+							},
+						},
 						"tags": {
 							Type:        schema.TypeMap,
 							Computed:    true,
@@ -236,6 +287,20 @@ func dataSourceZenlayerCloudIpv6CidrsRead(ctx context.Context, d *schema.Resourc
 		if cidr.ResourceGroup != nil {
 			mapping["resource_group_id"] = cidr.ResourceGroup.ResourceGroupId
 			mapping["resource_group_name"] = cidr.ResourceGroup.ResourceGroupName
+		}
+
+		if cidr.AsnObservation != nil {
+			obs := cidr.AsnObservation
+			mapping["asn_observation"] = []map[string]interface{}{{
+				"verification_status": obs.VerificationStatus,
+				"observed_prefix":     obs.ObservedPrefix,
+				"primary_source":      obs.PrimarySource,
+				"primary_status":      obs.PrimaryStatus,
+				"primary_asns":        obs.PrimaryAsns,
+				"secondary_source":    obs.SecondarySource,
+				"secondary_status":    obs.SecondaryStatus,
+				"secondary_asns":      obs.SecondaryAsns,
+			}}
 		}
 
 		tagMap, errRet := common.TagsToMap(cidr.Tags)

@@ -68,6 +68,15 @@ The following arguments are supported:
 In addition to all arguments above, the following attributes are exported:
 
 * `cidrs` - An information list of IPv6 CIDR blocks. Each element contains the following attributes:
+   * `asn_observation` - ASN observation result. Only present for `BYOIP` CIDR blocks.
+      * `observed_prefix` - Observed CIDR prefix.
+      * `primary_asns` - ASN list observed by the primary data source.
+      * `primary_source` - Primary data source name, e.g. `RIPE`.
+      * `primary_status` - Query status from the primary data source.
+      * `secondary_asns` - ASN list observed by the secondary data source. Deprecated, this field has been retired and always returns empty.
+      * `secondary_source` - Secondary data source name. Deprecated, this field has been retired and always returns empty.
+      * `secondary_status` - Query status from the secondary data source. Deprecated, this field has been retired and always returns empty.
+      * `verification_status` - ASN verification status.
    * `asn` - ASN number. Only meaningful when the IPv6 CIDR block source is `BYOIP`; returns `0` for non-BYOIP CIDR blocks (the underlying API returns null in that case, which Terraform renders as `0` due to the limitation that `TypeInt` cannot represent null).
    * `cidr_block_address` - IPv6 CIDR block address.
    * `create_time` - Creation time of the IPv6 CIDR block.

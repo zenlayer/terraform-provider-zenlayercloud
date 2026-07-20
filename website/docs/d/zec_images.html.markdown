@@ -51,6 +51,7 @@ In addition to all arguments above, the following attributes are exported:
    * `image_status` - The status of image. Values: 'CREATING', 'AVAILABLE', 'UNAVAILABLE', 'SYNCING', 'FAILED', 'DELETING'.
    * `image_type` - Type of the image. With value: `PUBLIC_IMAGE` and `CUSTOM_IMAGE`.
    * `image_version` - The version of image, such as 'Server 20.04 LTS'.
+   * `min_disk_size` - Minimum system disk size required to create an instance from this image. Measured in GiB.
    * `nic_network_type` - The supported NIC network types of image. Each element is one of: `auto` (adaptive), `vf,virtio` (failover), `virtio` (software emulation), `vf` (physical passthrough).
    * `os_type` - Type of the image, `windows` or `linux`.
    * `tags` - The available tags within this image.

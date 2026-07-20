@@ -32,6 +32,10 @@ const (
 	ZecEipRateLimitModeLoose  = "LOOSE"
 	ZecEipRateLimitModeStrict = "STRICT"
 
+	ZecEipOperationStatusOperating = "OPERATING"
+	ZecEipOperationStatusFailed    = "FAILED"
+	ZecEipOperationModifyFlowPackage = "ModifyFlowPackage"
+
 	ZecInstanceStatusPending      = "PENDING"
 	ZecInstanceStatusDeloying     = "DEPLOYING"
 	ZecInstanceStatusCreateFailed = "CREATE_FAILED"

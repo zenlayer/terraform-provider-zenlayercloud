@@ -74,6 +74,27 @@ resource "zenlayercloud_zec_instance" "instance" {
   }
 }
 
+# Data disks example (multiple data disks attached at creation)
+resource "zenlayercloud_zec_instance" "instance" {
+  availability_zone = var.availability_zone
+  instance_type = "z2a.cpu.1"
+  image_id =data.zenlayercloud_zec_images.ubuntu.images.0.id
+  instance_name = "Example-Instance"
+  key_id = data.zenlayercloud_key_pairs.all.key_pairs.0.key_id
+  subnet_id = zenlayercloud_zec_subnet.ipv4.id
+  system_disk_size = 20
+
+  data_disks {
+    data_disk_size     = 50
+    data_disk_category = "Standard NVMe SSD"
+  }
+
+  data_disks {
+    data_disk_size     = 100
+    data_disk_category = "Basic NVMe SSD"
+  }
+}
+
 ```
 
 Import

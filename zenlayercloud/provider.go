@@ -106,6 +106,7 @@ Zenlayer Elastic Compute(ZEC)
 	zenlayercloud_zec_vnic_public_ipv6
 	zenlayercloud_zec_eips
 	zenlayercloud_zec_vm_inventory_capacities
+	zenlayercloud_zec_gpu_instance_configs
 	zenlayercloud_zec_instances
 	zenlayercloud_zec_vnics
 	zenlayercloud_zec_nat_gateways
@@ -428,6 +429,7 @@ func dataSourcesMap() map[string]*schema.Resource {
 		"zenlayercloud_zec_placement_groups":  zec.DataSourceZenlayerCloudZecPlacementGroups(),
 		"zenlayercloud_zec_qos_policy_groups":        zec.DataSourceZenlayerCloudZecQosPolicyGroups(),
 		"zenlayercloud_zec_vm_inventory_capacities": zec.DataSourceZenlayerCloudZecVmInventoryCapacities(),
+		"zenlayercloud_zec_gpu_instance_configs":    zec.DataSourceZenlayerCloudZecGpuInstanceConfigs(),
 		"zenlayercloud_zec_havips":                   zec.DataSourceZenlayerCloudZecHaVips(),
 		"zenlayercloud_zec_ddos_policies":            zec.DataSourceZenlayerCloudZecDDoSPolicies(),
 
