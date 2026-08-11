@@ -101,11 +101,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	common2 "github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/common"
 	"math/big"
 	"strconv"
 	"strings"
 	"time"
+
+	common2 "github.com/zenlayer/terraform-provider-zenlayercloud/zenlayercloud/common"
 
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -750,11 +751,14 @@ func resourceZenlayerCloudAcceleratorCreate(ctx context.Context, d *schema.Resou
 				return common2.RetryError(ctx, errRet, common2.InternalServerError)
 			}
 		}
+		var errRet error
 		if acEnable {
-			errRet := zgaService.OpenAcceleratorAccessControl(ctx, acceleratorId)
-			if errRet != nil {
-				return common2.RetryError(ctx, errRet, common2.InternalServerError)
-			}
+			errRet = zgaService.OpenAcceleratorAccessControl(ctx, acceleratorId)
+		} else {
+			errRet = zgaService.CloseAcceleratorAccessControl(ctx, acceleratorId)
+		}
+		if errRet != nil {
+			return common2.RetryError(ctx, errRet, common2.InternalServerError)
 		}
 		return nil
 	})
