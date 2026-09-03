@@ -15,6 +15,8 @@ Provides a instance resource.
 
 ~> **NOTE:** Currently this resource doesn't support create instance through `Windows` and `Generic` image.
 
+~> **NOTE:** The API does not return the user data of an instance. Therefore the provider cannot read `user_data` back from the instance. After an import, the first plan shows a difference on this argument, which resets the instance. Set the argument to the value which the instance already has, or use `terraform plan -refresh-only` to check before you apply.
+
 ## Example Usage
 
 ```hcl
@@ -84,6 +86,39 @@ resource "zenlayercloud_zec_instance" "instance" {
   }
 }
 
+# User data example (cloud-init)
+resource "zenlayercloud_zec_instance" "instance" {
+  availability_zone = var.availability_zone
+  instance_type     = "z2a.cpu.1"
+  image_id          = data.zenlayercloud_zec_images.ubuntu.images.0.id
+  instance_name     = "Example-Instance"
+  key_id            = data.zenlayercloud_key_pairs.all.key_pairs.0.key_id
+  subnet_id         = zenlayercloud_zec_subnet.ipv4.id
+  system_disk_size  = 20
+
+  user_data = <<-EOT
+    #cloud-config
+    package_update: true
+    packages:
+      - curl
+    runcmd:
+      - [ sh, -c, "curl -fsSL https://example.com/bootstrap.sh | sh" ]
+  EOT
+}
+
+# User data example (a cloud-init document which is kept in a file)
+resource "zenlayercloud_zec_instance" "instance" {
+  availability_zone = var.availability_zone
+  instance_type     = "z2a.cpu.1"
+  image_id          = data.zenlayercloud_zec_images.ubuntu.images.0.id
+  instance_name     = "Example-Instance"
+  key_id            = data.zenlayercloud_key_pairs.all.key_pairs.0.key_id
+  subnet_id         = zenlayercloud_zec_subnet.ipv4.id
+  system_disk_size  = 20
+
+  user_data = file("${path.module}/cloud-init.yaml")
+}
+
 # Data disks example (multiple data disks attached at creation)
 resource "zenlayercloud_zec_instance" "instance" {
   availability_zone = var.availability_zone
@@ -129,6 +164,7 @@ The following arguments are supported:
 * `system_disk_category` - (Optional, String, ForceNew) Category of the system disk. Valid values: `Standard NVMe SSD`, `Basic NVMe SSD`, Default is `Standard NVMe SSD`.
 * `tags` - (Optional, Map) The available tags within this ZEC instance.
 * `time_zone` - (Optional, String) Time zone of instance. such as `America/Los_Angeles`. Default is `Asia/Shanghai`. Changing `time_zone` will cause the ZEC instance reset.
+* `user_data` - (Optional, String) The user data to run when the ZEC instance starts for the first time. The API takes the value as plain text, thus give a plain text script, such as a `#cloud-config` document for cloud-init. The maximum size is 64 KB. Changing `user_data` will cause the ZEC instance reset.
 
 The `data_disks` object supports the following:
 

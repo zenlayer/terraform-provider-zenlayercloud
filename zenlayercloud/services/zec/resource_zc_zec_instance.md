@@ -4,6 +4,8 @@ Provides a instance resource.
 
 ~> **NOTE:** Currently this resource doesn't support create instance through `Windows` and `Generic` image.
 
+~> **NOTE:** The API does not return the user data of an instance. Therefore the provider cannot read `user_data` back from the instance. After an import, the first plan shows a difference on this argument, which resets the instance. Set the argument to the value which the instance already has, or use `terraform plan -refresh-only` to check before you apply.
+
 Example Usage
 
 ```hcl
@@ -72,6 +74,39 @@ resource "zenlayercloud_zec_instance" "instance" {
   instance_options {
     nested_virtualization = true
   }
+}
+
+# User data example (cloud-init)
+resource "zenlayercloud_zec_instance" "instance" {
+  availability_zone = var.availability_zone
+  instance_type = "z2a.cpu.1"
+  image_id =data.zenlayercloud_zec_images.ubuntu.images.0.id
+  instance_name = "Example-Instance"
+  key_id = data.zenlayercloud_key_pairs.all.key_pairs.0.key_id
+  subnet_id = zenlayercloud_zec_subnet.ipv4.id
+  system_disk_size = 20
+
+  user_data = <<-EOT
+    #cloud-config
+    package_update: true
+    packages:
+      - curl
+    runcmd:
+      - [ sh, -c, "curl -fsSL https://example.com/bootstrap.sh | sh" ]
+  EOT
+}
+
+# User data example (a cloud-init document which is kept in a file)
+resource "zenlayercloud_zec_instance" "instance" {
+  availability_zone = var.availability_zone
+  instance_type = "z2a.cpu.1"
+  image_id =data.zenlayercloud_zec_images.ubuntu.images.0.id
+  instance_name = "Example-Instance"
+  key_id = data.zenlayercloud_key_pairs.all.key_pairs.0.key_id
+  subnet_id = zenlayercloud_zec_subnet.ipv4.id
+  system_disk_size = 20
+
+  user_data = file("${path.module}/cloud-init.yaml")
 }
 
 # Data disks example (multiple data disks attached at creation)
