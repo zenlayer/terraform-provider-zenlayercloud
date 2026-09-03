@@ -18,6 +18,8 @@ import (
 	zec "github.com/zenlayer/zenlayercloud-sdk-go/zenlayercloud/zec20250901"
 )
 
+const zecInstanceUserDataMaxSize = 64 * 1024
+
 func ResourceZenlayerCloudZecInstance() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: resourceZenlayerCloudZecInstanceCreate,
@@ -85,6 +87,12 @@ func ResourceZenlayerCloudZecInstance() *schema.Resource {
 				Description:   "The key pair id to use for the ZEC instance. Changing `key_id` will cause the ZEC instance reset.",
 				ConflictsWith: []string{"password"},
 				AtLeastOneOf:  []string{"password", "key_id"},
+			},
+			"user_data": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validateZecInstanceUserData,
+				Description:  "The user data to run when the ZEC instance starts for the first time. The API takes the value as plain text, thus give a plain text script, such as a `#cloud-config` document for cloud-init. The maximum size is 64 KB. Changing `user_data` will cause the ZEC instance reset.",
 			},
 			"tags": {
 				Type:        schema.TypeMap,
@@ -513,7 +521,7 @@ func resourceZenlayerCloudZecInstanceUpdate(ctx context.Context, d *schema.Resou
 
 	reset := false
 
-	if d.HasChanges("image_id", "key_id", "time_zone", "disable_qga_agent") {
+	if d.HasChanges("image_id", "key_id", "time_zone", "disable_qga_agent", "user_data") {
 		reset = true
 		err := zecService.shutdownInstance(ctx, instanceId)
 		if err != nil {
@@ -560,6 +568,8 @@ func resourceZenlayerCloudZecInstanceUpdate(ctx context.Context, d *schema.Resou
 		} else {
 			request.EnableAgent = common.Bool(true)
 		}
+
+		request.UserData = zecInstanceUserData(d)
 
 		err = zecService.resetInstance(ctx, request)
 		if err != nil {
@@ -732,6 +742,8 @@ func resourceZenlayerCloudZecInstanceCreate(ctx context.Context, d *schema.Resou
 	if v, ok := d.GetOk("key_id"); ok {
 		request.KeyId = common.String(v.(string))
 	}
+	request.UserData = zecInstanceUserData(d)
+
 	system := &zec.SystemDisk{}
 	system.DiskSize = common.Integer(d.Get("system_disk_size").(int))
 
@@ -971,6 +983,21 @@ func resourceZenlayerCloudZecInstanceRead(ctx context.Context, d *schema.Resourc
 	_ = d.Set("tags", tagMap)
 	return diags
 
+}
+
+func zecInstanceUserData(d *schema.ResourceData) *string {
+	if v, ok := d.GetOk("user_data"); ok {
+		return common.String(v.(string))
+	}
+	return nil
+}
+
+func validateZecInstanceUserData(i interface{}, k string) (warnings []string, errors []error) {
+	size := len(i.(string))
+	if size > zecInstanceUserDataMaxSize {
+		errors = append(errors, fmt.Errorf("expected size of %s to be at most %d bytes, got %d", k, zecInstanceUserDataMaxSize, size))
+	}
+	return
 }
 
 func instanceIsOperating(status string) bool {
